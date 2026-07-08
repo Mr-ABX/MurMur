@@ -1,0 +1,39 @@
+# Murmur .gitignore
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+*.local
+
+# Rust / Cargo
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Tauri generated
+src-tauri/gen/
+
+# macOS
+.DS_Store
+*.dmg
+
+# Windows
+*.exe
+*.msi
+
+# Models (large binary files)
+src-tauri/models/
+~/.local/share/Murmur/models/
+
+# Env files
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# Logs
+*.log

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Microphone access for voice recording -->
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+    <!-- Accessibility API for auto-paste / keyboard simulation -->
+    <key>com.apple.security.temporary-exception.iokit-user-client-class</key>
+    <array>
+        <string>IOHIDParamUserClient</string>
+    </array>
+    <!-- Allow outbound network for model download -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <!-- Required for Tauri / WebView -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
