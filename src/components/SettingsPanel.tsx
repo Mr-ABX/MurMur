@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Volume2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X, Cloud, Key, Trash2
+  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X, Cloud, Key, Trash2, FolderOpen
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 
@@ -238,20 +239,18 @@ export default function SettingsPanel({ state }: Props) {
                         <div className="ml-3 flex-shrink-0 flex items-center gap-2">
                           {downloaded ? (
                             <>
-                              {model !== "base" && (
-                                <button
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    if (window.confirm(`Are you sure you want to delete the ${model} model file from your disk?`)) {
-                                      deleteModel(model); 
-                                    }
-                                  }}
-                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-murmur-muted hover:text-red-400 transition-colors"
-                                  title="Delete Model"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              )}
+                              <button
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  if (window.confirm(`Are you sure you want to delete the ${model} model file from your disk?`)) {
+                                    deleteModel(model); 
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-red-500/10 text-murmur-muted hover:text-red-400 transition-colors"
+                                title="Delete Model"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                               <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-murmur-primary" : "bg-murmur-card"}`}>
                                 <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-murmur-accent"} />
                               </div>
@@ -287,6 +286,15 @@ export default function SettingsPanel({ state }: Props) {
                     </motion.div>
                   );
                 })}
+                <div className="mt-4 flex justify-center">
+                  <button
+                    onClick={() => invoke("open_models_directory")}
+                    className="flex items-center gap-2 text-xs font-medium text-murmur-muted hover:text-murmur-text transition-colors bg-murmur-surface px-4 py-2 rounded-full border border-murmur-border"
+                  >
+                    <FolderOpen size={14} />
+                    Open Models Directory
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
