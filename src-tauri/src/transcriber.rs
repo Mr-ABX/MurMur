@@ -19,9 +19,11 @@ impl TranscriberState {
         }
     }
 
-    /// Load the whisper model from disk
     pub fn load_model(&mut self, model_path: &PathBuf) -> Result<()> {
         log::info!("Loading Whisper model from {:?}", model_path);
+        
+        // Explicitly drop the old context to free RAM before loading the new one
+        self.context = None;
 
         if !model_path.exists() {
             return Err(anyhow!("Model file not found: {:?}", model_path));

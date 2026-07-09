@@ -57,3 +57,18 @@ pub async fn download_model_file(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn delete_model_file(
+    model: crate::settings::WhisperModel,
+    state: tauri::State<'_, crate::MurmurState>,
+) -> Result<(), String> {
+    let settings = state.settings.lock().unwrap().clone();
+    let model_path = settings.model_path(&model);
+    
+    if model_path.exists() {
+        tokio::fs::remove_file(model_path).await.map_err(|e| e.to_string())?;
+    }
+    
+    Ok(())
+}

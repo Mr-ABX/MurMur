@@ -31,6 +31,7 @@ export interface AppState {
   stopRecording: () => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
   downloadModel: (model: WhisperModel) => void;
+  deleteModel: (model: WhisperModel) => void;
   clearTranscript: () => void;
 }
 
@@ -157,6 +158,19 @@ export function useAppState(): AppState {
     }
   }, []);
 
+  const deleteModel = useCallback(async (model: WhisperModel) => {
+    try {
+      await invoke("delete_model_file", { model });
+      setIsModelDownloaded((prev) => ({ ...prev, [model]: false }));
+      // Optional: switch to base if deleted model was active
+      if (settings.model === model && model !== "base") {
+        updateSettings({ model: "base" });
+      }
+    } catch (err) {
+      setError(String(err));
+    }
+  }, [settings.model, updateSettings]);
+
   const clearTranscript = useCallback(() => {
     setTranscript("");
     setPartialTranscript("");
@@ -175,6 +189,7 @@ export function useAppState(): AppState {
     stopRecording,
     updateSettings,
     downloadModel,
+    deleteModel,
     clearTranscript,
   };
 }

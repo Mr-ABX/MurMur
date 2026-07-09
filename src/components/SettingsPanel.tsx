@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Volume2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X, Cloud, Key
+  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X, Cloud, Key, Trash2
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 
@@ -77,7 +77,7 @@ function SettingRow({
 }
 
 export default function SettingsPanel({ state }: Props) {
-  const { settings, updateSettings, isModelDownloaded, isDownloading, downloadProgress, downloadModel } = state;
+  const { settings, updateSettings, isModelDownloaded, isDownloading, downloadProgress, downloadModel, deleteModel } = state;
   const [activeTab, setActiveTab] = useState<Tab>("general");
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -235,11 +235,27 @@ export default function SettingsPanel({ state }: Props) {
                           </div>
                         </div>
 
-                        <div className="ml-3 flex-shrink-0">
+                        <div className="ml-3 flex-shrink-0 flex items-center gap-2">
                           {downloaded ? (
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-murmur-primary" : "bg-murmur-card"}`}>
-                              <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-murmur-accent"} />
-                            </div>
+                            <>
+                              {model !== "base" && (
+                                <button
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    if (window.confirm(`Are you sure you want to delete the ${model} model file from your disk?`)) {
+                                      deleteModel(model); 
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-murmur-muted hover:text-red-400 transition-colors"
+                                  title="Delete Model"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-murmur-primary" : "bg-murmur-card"}`}>
+                                <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-murmur-accent"} />
+                              </div>
+                            </>
                           ) : isThisDownloading ? (
                             <div className="flex flex-col items-center gap-1">
                               <Loader2 size={16} className="text-murmur-primary animate-spin" />

@@ -96,6 +96,7 @@ pub fn run() {
             commands::save_settings,
             commands::get_downloaded_models,
             commands::download_model,
+            model_manager::delete_model_file,
             commands::quit_app,
         ])
         .run(tauri::generate_context!())
