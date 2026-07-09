@@ -61,11 +61,11 @@ pub async fn download_model_file(
                 last_reported = progress;
                 should_report = true;
             }
-        } else {
-            // If total is unknown, report every 1MB
-            if downloaded - last_reported_bytes > 1_000_000 {
-                should_report = true;
-            }
+        }
+        
+        // Always report at least every 500KB to keep the UI feeling responsive
+        if downloaded - last_reported_bytes > 500_000 {
+            should_report = true;
         }
 
         if should_report {

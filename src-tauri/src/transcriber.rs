@@ -45,8 +45,11 @@ impl TranscriberState {
         let ctx = self.context.as_ref()
             .ok_or_else(|| anyhow!("Whisper model not loaded"))?;
 
-        // Build inference parameters
-        let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+        // Build inference parameters - use Beam Search for larger models to improve accuracy
+        let mut params = match self.model {
+            WhisperModel::Tiny | WhisperModel::Base => FullParams::new(SamplingStrategy::Greedy { best_of: 1 }),
+            WhisperModel::Small | WhisperModel::Medium => FullParams::new(SamplingStrategy::BeamSearch { beam_size: 5, patience: -1.0 }),
+        };
 
         params.set_language(Some(language));
         params.set_translate(false);

@@ -301,7 +301,7 @@ export default function SettingsPanel({ state }: Props) {
                               <Loader2 size={16} className="text-[#00E5FF] animate-spin" />
                               <span className="text-xs text-[#00E5FF]">
                                 {downloadProgress.total > 0 
-                                  ? `${downloadProgress.progress}%` 
+                                  ? `${downloadProgress.progress}% (${(downloadProgress.downloaded / 1048576).toFixed(1)} MB)` 
                                   : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
                               </span>
                             </div>
