@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Volume2, Globe, ChevronRight,
@@ -106,7 +108,10 @@ export default function SettingsPanel({ state }: Props) {
             <p className="text-xs text-murmur-muted">Settings</p>
           </div>
         </div>
-        <button className="p-1.5 rounded-lg text-murmur-muted hover:text-murmur-text hover:bg-murmur-card transition-all">
+        <button 
+          onClick={() => getCurrentWindow().hide()}
+          className="p-1.5 rounded-lg text-murmur-muted hover:text-murmur-text hover:bg-murmur-card transition-all"
+        >
           <X size={14} />
         </button>
       </div>
@@ -177,6 +182,30 @@ export default function SettingsPanel({ state }: Props) {
                   </select>
                 </SettingRow>
               </div>
+
+              <div className="pt-4 border-t border-murmur-border mt-6">
+                <h3 className="text-xs font-semibold text-red-400 mb-3 uppercase tracking-wider">Danger Zone</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-murmur-text">Clear All App Data</p>
+                    <p className="text-xs text-murmur-muted">This deletes all settings and downloaded models, then uninstalls the app data.</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const confirmed = await ask("Are you sure you want to completely clear all Murmur app data? This will delete all your settings, downloaded models, and close the app. You will need to start fresh next time.", {
+                        title: 'Clear All App Data',
+                        kind: 'warning',
+                      });
+                      if (confirmed) {
+                        invoke("clear_all_app_data");
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-lg transition-colors border border-red-500/20"
+                  >
+                    Clear Data & Quit
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -240,9 +269,13 @@ export default function SettingsPanel({ state }: Props) {
                           {downloaded ? (
                             <>
                               <button
-                                onClick={(e) => { 
+                                onClick={async (e) => { 
                                   e.stopPropagation(); 
-                                  if (window.confirm(`Are you sure you want to delete the ${model} model file from your disk?`)) {
+                                  const confirmed = await ask(`Are you sure you want to delete the ${model} model file from your disk?`, {
+                                    title: 'Delete Model',
+                                    kind: 'warning',
+                                  });
+                                  if (confirmed) {
                                     deleteModel(model); 
                                   }
                                 }}

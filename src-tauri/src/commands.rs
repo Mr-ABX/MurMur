@@ -244,3 +244,15 @@ pub async fn download_model(
 pub fn quit_app() {
     std::process::exit(0);
 }
+
+#[tauri::command]
+pub async fn clear_all_app_data(app: tauri::AppHandle) -> Result<(), String> {
+    let data_dir = crate::settings::AppSettings::data_dir();
+    if data_dir.exists() {
+        tokio::fs::remove_dir_all(&data_dir).await.map_err(|e| e.to_string())?;
+    }
+    
+    // Also quit the app after clearing
+    app.exit(0);
+    Ok(())
+}

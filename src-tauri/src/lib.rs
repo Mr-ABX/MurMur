@@ -35,6 +35,16 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_dialog::init())
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                if window.label() == "settings" {
+                    window.hide().unwrap();
+                    api.prevent_close();
+                }
+            }
+            _ => {}
+        })
         .setup(|app| {
             let settings = AppSettings::load_or_default();
             let transcriber_state = TranscriberState::new(&settings.model);
@@ -98,6 +108,7 @@ pub fn run() {
             commands::download_model,
             model_manager::delete_model_file,
             model_manager::open_models_directory,
+            commands::clear_all_app_data,
             commands::quit_app,
         ])
         .run(tauri::generate_context!())
