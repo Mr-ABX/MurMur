@@ -111,6 +111,12 @@ async fn handle_transcription(
         return;
     }
 
+    let max_amp = samples.iter().map(|s| s.abs()).fold(0.0f32, |a, b| a.max(b));
+    if max_amp < 0.005 {
+        let _ = app.emit("murmur://error", "Microphone input was silent (is it muted?)");
+        return;
+    }
+
     // Run inference (cloud first, fallback to local)
     match transcriber::transcribe_hybrid(&samples, &settings, &transcriber).await {
         Ok(mut text) => {
@@ -247,9 +253,20 @@ pub fn quit_app() {
 
 #[tauri::command]
 pub async fn clear_all_app_data(app: tauri::AppHandle) -> Result<(), String> {
-    let data_dir = crate::settings::AppSettings::data_dir();
-    if data_dir.exists() {
-        tokio::fs::remove_dir_all(&data_dir).await.map_err(|e| e.to_string())?;
+    // Delete settings directory
+    let config_path = crate::settings::AppSettings::config_path();
+    if let Some(config_dir) = config_path.parent() {
+        if config_dir.exists() {
+            let _ = tokio::fs::remove_dir_all(config_dir).await;
+        }
+    }
+    
+    // Delete models directory
+    let models_dir = crate::settings::AppSettings::models_dir();
+    if let Some(data_dir) = models_dir.parent() {
+        if data_dir.exists() {
+            let _ = tokio::fs::remove_dir_all(data_dir).await;
+        }
     }
     
     // Also quit the app after clearing

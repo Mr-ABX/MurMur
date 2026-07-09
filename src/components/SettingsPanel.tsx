@@ -80,7 +80,7 @@ function SettingRow({
 }
 
 export default function SettingsPanel({ state }: Props) {
-  const { settings, updateSettings, isModelDownloaded, isDownloading, downloadProgress, downloadModel, deleteModel } = state;
+  const { settings, updateSettings, isModelDownloaded, isDownloading, downloadingModel, downloadProgress, downloadModel, deleteModel } = state;
   const [activeTab, setActiveTab] = useState<Tab>("general");
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -171,16 +171,23 @@ export default function SettingsPanel({ state }: Props) {
               <SectionHeader icon={<Globe size={14} />} title="Language" />
               <div className="glass-card rounded-xl px-4 mb-4">
                 <SettingRow label="Transcription Language" description="Language spoken during recording">
-                  <select
-                    value={settings.language}
-                    onChange={(e) => updateSettings({ language: e.target.value })}
-                    className="text-xs rounded-lg px-2 py-1.5 outline-none cursor-pointer"
-                    style={{ background: "rgba(42, 42, 58, 0.5)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang.code} value={lang.code}>{lang.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={settings.language}
+                      onChange={(e) => updateSettings({ language: e.target.value })}
+                      className="text-xs rounded-lg pl-3 pr-8 py-1.5 outline-none cursor-pointer appearance-none transition-all hover:bg-white/10"
+                      style={{ background: "rgba(42, 42, 58, 0.5)", color: "#e8e8f0", border: "1px solid rgba(255, 255, 255, 0.1)" }}
+                    >
+                      {LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code} className="bg-[#1F1F1F] text-white">
+                          {lang.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  </div>
                 </SettingRow>
               </div>
 
@@ -227,7 +234,7 @@ export default function SettingsPanel({ state }: Props) {
                   const info = MODEL_INFO[model];
                   const downloaded = isModelDownloaded[model];
                   const isSelected = settings.model === model;
-                  const isThisDownloading = isDownloading && settings.model === model;
+                  const isThisDownloading = isDownloading && downloadingModel === model;
 
                   return (
                     <motion.div
@@ -348,16 +355,21 @@ export default function SettingsPanel({ state }: Props) {
               
               <div className="glass-card rounded-xl px-4 mb-4">
                 <SettingRow label="Primary Engine" description="Choose which engine handles transcription first">
-                  <select
-                    value={settings.cloudProvider}
-                    onChange={(e) => updateSettings({ cloudProvider: e.target.value as any })}
-                    className="text-xs rounded-lg px-2 py-1.5 outline-none cursor-pointer"
-                    style={{ background: "rgba(42, 42, 58, 0.5)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
-                  >
-                    <option value="local">Local (Whisper.cpp)</option>
-                    <option value="gemini">Google Gemini (Free Tier)</option>
-                    <option value="groq">Groq Whisper (Free Tier)</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={settings.cloudProvider}
+                      onChange={(e) => updateSettings({ cloudProvider: e.target.value as any })}
+                      className="text-xs rounded-lg pl-3 pr-8 py-1.5 outline-none cursor-pointer appearance-none transition-all hover:bg-white/10"
+                      style={{ background: "rgba(42, 42, 58, 0.5)", color: "#e8e8f0", border: "1px solid rgba(255, 255, 255, 0.1)" }}
+                    >
+                      <option value="local" className="bg-[#1F1F1F] text-white">Local (Whisper.cpp)</option>
+                      <option value="gemini" className="bg-[#1F1F1F] text-white">Google Gemini (Free Tier)</option>
+                      <option value="groq" className="bg-[#1F1F1F] text-white">Groq Whisper (Free Tier)</option>
+                    </select>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  </div>
                 </SettingRow>
               </div>
 

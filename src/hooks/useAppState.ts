@@ -25,6 +25,7 @@ export interface AppState {
   settings: AppSettings;
   isModelDownloaded: Record<WhisperModel, boolean>;
   isDownloading: boolean;
+  downloadingModel: WhisperModel | null;
   downloadProgress: number;
   error: string | null;
   startRecording: () => void;
@@ -60,6 +61,7 @@ export function useAppState(): AppState {
     medium: false,
   });
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingModel, setDownloadingModel] = useState<WhisperModel | null>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,6 +100,7 @@ export function useAppState(): AppState {
         await listen<WhisperModel>("murmur://model-downloaded", (e) => {
           setIsModelDownloaded((prev) => ({ ...prev, [e.payload]: true }));
           setIsDownloading(false);
+          setDownloadingModel(null);
           setDownloadProgress(0);
           setSettings((prev) => {
             const next = { ...prev, model: e.payload };
@@ -149,12 +152,14 @@ export function useAppState(): AppState {
 
   const downloadModel = useCallback(async (model: WhisperModel) => {
     setIsDownloading(true);
+    setDownloadingModel(model);
     setDownloadProgress(0);
     try {
       await invoke("download_model", { model });
     } catch (err) {
       setError(String(err));
       setIsDownloading(false);
+      setDownloadingModel(null);
     }
   }, []);
 
@@ -183,6 +188,7 @@ export function useAppState(): AppState {
     settings,
     isModelDownloaded,
     isDownloading,
+    downloadingModel,
     downloadProgress,
     error,
     startRecording,
