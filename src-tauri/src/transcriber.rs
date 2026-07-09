@@ -75,7 +75,16 @@ impl TranscriberState {
         for i in 0..num_segments {
             let segment = state.full_get_segment_text(i)
                 .map_err(|e| anyhow!("Failed to get segment text: {}", e))?;
-            transcript.push_str(&segment);
+            
+            // Filter out common hallucinations caused by silence
+            let cleaned = segment
+                .replace("[BLANK_AUDIO]", "")
+                .replace("[ Silence ]", "")
+                .replace("(silence)", "")
+                .replace("[Silence]", "")
+                .replace("(clicks)", "");
+                
+            transcript.push_str(&cleaned);
         }
 
         Ok(transcript.trim().to_string())
