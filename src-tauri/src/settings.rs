@@ -14,6 +14,17 @@ pub struct AppSettings {
     pub sound_effects: bool,
     pub language: String,
     pub input_device: String,
+    pub cloud_provider: CloudProvider,
+    pub gemini_api_key: String,
+    pub groq_api_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum CloudProvider {
+    Local,
+    Gemini,
+    Groq,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -60,6 +71,9 @@ impl Default for AppSettings {
             sound_effects: true,
             language: "en".to_string(),
             input_device: "default".to_string(),
+            cloud_provider: CloudProvider::Local,
+            gemini_api_key: "".to_string(),
+            groq_api_key: "".to_string(),
         }
     }
 }

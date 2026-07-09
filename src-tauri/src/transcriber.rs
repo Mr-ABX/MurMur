@@ -93,3 +93,147 @@ pub fn ensure_model_loaded(
     }
     Ok(())
 }
+
+fn encode_wav(audio: &[f32]) -> Result<Vec<u8>> {
+    let mut cursor = std::io::Cursor::new(Vec::new());
+    let spec = hound::WavSpec {
+        channels: 1,
+        sample_rate: 16000,
+        bits_per_sample: 16,
+        sample_format: hound::SampleFormat::Int,
+    };
+    let mut writer = hound::WavWriter::new(&mut cursor, spec)?;
+    for &sample in audio {
+        // Convert f32 [-1.0, 1.0] to i16
+        let amplitude = (sample * std::i16::MAX as f32) as i16;
+        writer.write_sample(amplitude)?;
+    }
+    writer.finalize()?;
+    Ok(cursor.into_inner())
+}
+
+async fn transcribe_gemini(wav_bytes: &[u8], api_key: &str) -> Result<String> {
+    use base64::{Engine as _, engine::general_purpose::STANDARD as base64_std};
+    
+    let encoded_audio = base64_std.encode(wav_bytes);
+    let url = format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}", api_key);
+    
+    let body = serde_json::json!({
+        "contents": [{
+            "parts": [
+                { "text": "You are a highly accurate audio transcription tool. Please transcribe the provided audio accurately. Output ONLY the raw transcription text, no formatting, no conversational filler, no markdown." },
+                {
+                    "inline_data": {
+                        "mime_type": "audio/wav",
+                        "data": encoded_audio
+                    }
+                }
+            ]
+        }]
+    });
+
+    let client = reqwest::Client::new();
+    let res = client.post(&url)
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .await?;
+
+    if !res.status().is_success() {
+        let err_text = res.text().await.unwrap_or_default();
+        return Err(anyhow!("Gemini API error: {}", err_text));
+    }
+
+    let json: serde_json::Value = res.json().await?;
+    let text = json["candidates"][0]["content"]["parts"][0]["text"].as_str()
+        .ok_or_else(|| anyhow!("Invalid Gemini response format"))?;
+
+    Ok(text.trim().to_string())
+}
+
+async fn transcribe_groq(wav_bytes: &[u8], api_key: &str, language: &str) -> Result<String> {
+    let url = "https://api.groq.com/openai/v1/audio/transcriptions";
+    
+    let part = reqwest::multipart::Part::bytes(wav_bytes.to_vec())
+        .file_name("audio.wav")
+        .mime_str("audio/wav")?;
+
+    let form = reqwest::multipart::Form::new()
+        .part("file", part)
+        .text("model", "whisper-large-v3")
+        .text("language", language.to_string())
+        .text("response_format", "json");
+
+    let client = reqwest::Client::new();
+    let res = client.post(url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .multipart(form)
+        .send()
+        .await?;
+
+    if !res.status().is_success() {
+        let err_text = res.text().await.unwrap_or_default();
+        return Err(anyhow!("Groq API error: {}", err_text));
+    }
+
+    let json: serde_json::Value = res.json().await?;
+    let text = json["text"].as_str()
+        .ok_or_else(|| anyhow!("Invalid Groq response format"))?;
+
+    Ok(text.trim().to_string())
+}
+
+pub async fn transcribe_hybrid(
+    audio: &[f32],
+    settings: &AppSettings,
+    transcriber_mutex: &std::sync::Arc<std::sync::Mutex<TranscriberState>>
+) -> Result<String> {
+    let cloud_mode = match settings.cloud_provider {
+        crate::settings::CloudProvider::Gemini => {
+            if !settings.gemini_api_key.is_empty() {
+                Some("gemini")
+            } else {
+                None
+            }
+        },
+        crate::settings::CloudProvider::Groq => {
+            if !settings.groq_api_key.is_empty() {
+                Some("groq")
+            } else {
+                None
+            }
+        },
+        crate::settings::CloudProvider::Local => None,
+    };
+
+    if let Some(mode) = cloud_mode {
+        match encode_wav(audio) {
+            Ok(wav_bytes) => {
+                let cloud_result = if mode == "gemini" {
+                    log::info!("Attempting Gemini cloud transcription");
+                    transcribe_gemini(&wav_bytes, &settings.gemini_api_key).await
+                } else {
+                    log::info!("Attempting Groq cloud transcription");
+                    transcribe_groq(&wav_bytes, &settings.groq_api_key, &settings.language).await
+                };
+
+                match cloud_result {
+                    Ok(text) => return Ok(text),
+                    Err(e) => {
+                        log::warn!("Cloud API failed, falling back to Local Whisper: {}", e);
+                        // Fall through to local fallback
+                    }
+                }
+            }
+            Err(e) => {
+                log::warn!("Failed to encode wav for cloud: {}. Falling back to local.", e);
+            }
+        }
+    }
+
+    // Local Fallback / Local Mode
+    log::info!("Using Local Whisper.cpp for transcription");
+    let mut ts = transcriber_mutex.lock().unwrap();
+    ensure_model_loaded(&mut ts, settings)?;
+    ts.transcribe(audio, &settings.language, settings.voxcoder_mode)
+}

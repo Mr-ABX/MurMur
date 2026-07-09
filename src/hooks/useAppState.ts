@@ -13,6 +13,9 @@ export interface AppSettings {
   soundEffects: boolean;
   language: string;
   inputDevice: string;
+  cloudProvider: "local" | "gemini" | "groq";
+  geminiApiKey: string;
+  groqApiKey: string;
 }
 
 export interface AppState {
@@ -39,6 +42,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   soundEffects: true,
   language: "en",
   inputDevice: "default",
+  cloudProvider: "local",
+  geminiApiKey: "",
+  groqApiKey: "",
 };
 
 export function useAppState(): AppState {

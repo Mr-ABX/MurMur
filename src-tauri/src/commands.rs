@@ -69,7 +69,9 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
                 match audio.stop() {
                     Ok(samples) => {
                         let _ = app_clone.emit("murmur://recording-stopped", ());
-                        handle_transcription(app_clone, samples, settings, transcriber);
+                        tauri::async_runtime::spawn(async move {
+                            handle_transcription(app_clone, samples, settings, transcriber).await;
+                        });
                     }
                     Err(e) => {
                         let _ = app_clone.emit("murmur://error", format!("Audio error: {}", e));
@@ -98,7 +100,7 @@ pub async fn stop_recording_internal(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn handle_transcription(
+async fn handle_transcription(
     app: AppHandle,
     samples: Vec<f32>,
     settings: AppSettings,
@@ -109,16 +111,8 @@ fn handle_transcription(
         return;
     }
 
-    let mut ts = transcriber.lock().unwrap();
-
-    // Load model if needed
-    if let Err(e) = transcriber::ensure_model_loaded(&mut ts, &settings) {
-        let _ = app.emit("murmur://error", format!("Model error: {}", e));
-        return;
-    }
-
-    // Run inference
-    match ts.transcribe(&samples, &settings.language, settings.voxcoder_mode) {
+    // Run inference (cloud first, fallback to local)
+    match transcriber::transcribe_hybrid(&samples, &settings, &transcriber).await {
         Ok(mut text) => {
             if text.is_empty() {
                 let _ = app.emit("murmur://error", "No speech detected");

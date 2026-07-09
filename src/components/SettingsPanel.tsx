@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Volume2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X
+  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X, Cloud, Key
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 
@@ -30,7 +30,7 @@ const LANGUAGES = [
   { code: "ru", name: "Russian" },
 ];
 
-type Tab = "general" | "model" | "voxcoder" | "about";
+type Tab = "general" | "model" | "cloud" | "voxcoder" | "about";
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -83,6 +83,7 @@ export default function SettingsPanel({ state }: Props) {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "general", label: "General", icon: <Settings size={14} /> },
     { id: "model", label: "AI Model", icon: <Cpu size={14} /> },
+    { id: "cloud", label: "Cloud APIs", icon: <Cloud size={14} /> },
     { id: "voxcoder", label: "VoxCoder", icon: <Code2 size={14} /> },
     { id: "about", label: "About", icon: <Mic size={14} /> },
   ];
@@ -268,6 +269,61 @@ export default function SettingsPanel({ state }: Props) {
                     </motion.div>
                   );
                 })}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "cloud" && (
+            <motion.div
+              key="cloud"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SectionHeader icon={<Cloud size={14} />} title="Cloud Transcribers" />
+              <p className="text-xs text-murmur-muted mb-4">
+                Use cloud APIs for perfect accuracy. Automatically falls back to Local if offline.
+              </p>
+              
+              <div className="glass-card rounded-xl px-4 mb-4">
+                <SettingRow label="Primary Engine" description="Choose which engine handles transcription first">
+                  <select
+                    value={settings.cloudProvider}
+                    onChange={(e) => updateSettings({ cloudProvider: e.target.value as any })}
+                    className="text-xs rounded-lg px-2 py-1.5 outline-none cursor-pointer"
+                    style={{ background: "rgba(42, 42, 58, 0.5)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
+                  >
+                    <option value="local">Local (Whisper.cpp)</option>
+                    <option value="gemini">Google Gemini (Free Tier)</option>
+                    <option value="groq">Groq Whisper (Free Tier)</option>
+                  </select>
+                </SettingRow>
+              </div>
+
+              <SectionHeader icon={<Key size={14} />} title="API Keys" />
+              <div className="glass-card rounded-xl px-4 mb-4">
+                <SettingRow label="Google Gemini API Key" description="Required for Gemini transcription">
+                  <input
+                    type="password"
+                    placeholder="AIzaSy..."
+                    value={settings.geminiApiKey}
+                    onChange={(e) => updateSettings({ geminiApiKey: e.target.value })}
+                    className="text-xs rounded-lg px-3 py-1.5 outline-none w-48 transition-all focus:ring-1 focus:ring-murmur-primary"
+                    style={{ background: "rgba(19, 19, 26, 0.6)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
+                  />
+                </SettingRow>
+
+                <SettingRow label="Groq API Key" description="Required for Groq Whisper transcription">
+                  <input
+                    type="password"
+                    placeholder="gsk_..."
+                    value={settings.groqApiKey}
+                    onChange={(e) => updateSettings({ groqApiKey: e.target.value })}
+                    className="text-xs rounded-lg px-3 py-1.5 outline-none w-48 transition-all focus:ring-1 focus:ring-murmur-primary"
+                    style={{ background: "rgba(19, 19, 26, 0.6)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
+                  />
+                </SettingRow>
               </div>
             </motion.div>
           )}
