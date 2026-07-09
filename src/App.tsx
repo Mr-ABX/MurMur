@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import OverlayWindow from "./components/OverlayWindow";
 import SettingsPanel from "./components/SettingsPanel";
 import TrayMenu from "./components/TrayMenu";

@@ -26,7 +26,7 @@ export interface AppState {
   isModelDownloaded: Record<WhisperModel, boolean>;
   isDownloading: boolean;
   downloadingModel: WhisperModel | null;
-  downloadProgress: number;
+  downloadProgress: { progress: number, downloaded: number, total: number };
   error: string | null;
   startRecording: () => void;
   stopRecording: () => void;
@@ -62,7 +62,7 @@ export function useAppState(): AppState {
   });
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingModel, setDownloadingModel] = useState<WhisperModel | null>(null);
-  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadProgress, setDownloadProgress] = useState({ progress: 0, downloaded: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
 
   // Listen to backend events
@@ -92,16 +92,18 @@ export function useAppState(): AppState {
         await listen<string>("murmur://error", (e) => {
           setError(e.payload);
           setRecordingState("error");
+          setIsDownloading(false);
+          setDownloadingModel(null);
           setTimeout(() => setRecordingState("idle"), 3000);
         }),
-        await listen<number>("murmur://download-progress", (e) => {
+        await listen<{ progress: number, downloaded: number, total: number }>("murmur://download-progress", (e) => {
           setDownloadProgress(e.payload);
         }),
         await listen<WhisperModel>("murmur://model-downloaded", (e) => {
           setIsModelDownloaded((prev) => ({ ...prev, [e.payload]: true }));
           setIsDownloading(false);
           setDownloadingModel(null);
-          setDownloadProgress(0);
+          setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
           setSettings((prev) => {
             const next = { ...prev, model: e.payload };
             invoke("save_settings", { settings: next }).catch(console.error);
@@ -153,7 +155,7 @@ export function useAppState(): AppState {
   const downloadModel = useCallback(async (model: WhisperModel) => {
     setIsDownloading(true);
     setDownloadingModel(model);
-    setDownloadProgress(0);
+    setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
     try {
       await invoke("download_model", { model });
     } catch (err) {

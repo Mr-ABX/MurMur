@@ -4,8 +4,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Settings, Mic, Cpu, Code2, Volume2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, ClipboardPaste, X, Cloud, Key, Trash2, FolderOpen
+  Settings, Mic, Cpu, Code2, Globe, ChevronRight,
+  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 
@@ -299,7 +299,11 @@ export default function SettingsPanel({ state }: Props) {
                           ) : isThisDownloading ? (
                             <div className="flex flex-col items-center gap-1">
                               <Loader2 size={16} className="text-[#00E5FF] animate-spin" />
-                              <span className="text-xs text-[#00E5FF]">{downloadProgress}%</span>
+                              <span className="text-xs text-[#00E5FF]">
+                                {downloadProgress.total > 0 
+                                  ? `${downloadProgress.progress}%` 
+                                  : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
+                              </span>
                             </div>
                           ) : (
                             <button
@@ -314,12 +318,12 @@ export default function SettingsPanel({ state }: Props) {
                       </div>
 
                       {/* Download progress bar */}
-                      {isThisDownloading && (
+                      {isThisDownloading && downloadProgress.total > 0 && (
                         <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: "rgba(42, 42, 58, 0.5)" }}>
                           <motion.div
                             className="h-full rounded-full bg-gradient-to-r from-[#00E5FF] to-[#B250FF]"
                             initial={{ width: "0%" }}
-                            animate={{ width: `${downloadProgress}%` }}
+                            animate={{ width: `${downloadProgress.progress}%` }}
                             transition={{ duration: 0.3 }}
                           />
                         </div>

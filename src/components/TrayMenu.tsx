@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Mic, Settings, Power, CircleSlash } from "lucide-react";
+import { Mic, Settings, Power } from "lucide-react";
 import type { AppState } from "../hooks/useAppState";
 import { invoke } from "@tauri-apps/api/core";
 

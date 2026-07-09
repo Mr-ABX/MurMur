@@ -2,9 +2,17 @@
 
 use anyhow::{anyhow, Result};
 use reqwest::Client;
+use serde::Serialize;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter};
 use tokio::io::AsyncWriteExt;
+
+#[derive(Clone, Serialize)]
+pub struct ProgressPayload {
+    pub progress: u32,
+    pub downloaded: u64,
+    pub total: u64,
+}
 
 /// Download a Whisper model file with progress reporting
 pub async fn download_model_file(
@@ -33,6 +41,7 @@ pub async fn download_model_file(
     let total = response.content_length().unwrap_or(0);
     let mut downloaded: u64 = 0;
     let mut last_reported = 0u32;
+    let mut last_reported_bytes = 0u64;
 
     let mut file = tokio::fs::File::create(dest_path).await?;
     let mut stream = response.bytes_stream();
@@ -43,12 +52,29 @@ pub async fn download_model_file(
         file.write_all(&chunk).await?;
         downloaded += chunk.len() as u64;
 
+        let mut should_report = false;
+        let mut progress = 0;
+
         if total > 0 {
-            let progress = ((downloaded as f64 / total as f64) * 100.0) as u32;
+            progress = ((downloaded as f64 / total as f64) * 100.0) as u32;
             if progress != last_reported {
                 last_reported = progress;
-                let _ = app.emit("murmur://download-progress", progress);
+                should_report = true;
             }
+        } else {
+            // If total is unknown, report every 1MB
+            if downloaded - last_reported_bytes > 1_000_000 {
+                should_report = true;
+            }
+        }
+
+        if should_report {
+            last_reported_bytes = downloaded;
+            let _ = app.emit("murmur://download-progress", ProgressPayload {
+                progress,
+                downloaded,
+                total,
+            });
         }
     }
 
