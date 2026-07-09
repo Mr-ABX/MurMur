@@ -98,6 +98,11 @@ export function useAppState(): AppState {
           setIsModelDownloaded((prev) => ({ ...prev, [e.payload]: true }));
           setIsDownloading(false);
           setDownloadProgress(0);
+          setSettings((prev) => {
+            const next = { ...prev, model: e.payload };
+            invoke("save_settings", { settings: next }).catch(console.error);
+            return next;
+          });
         }),
       );
     };

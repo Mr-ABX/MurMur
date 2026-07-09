@@ -10,11 +10,11 @@ interface Props {
   state: AppState;
 }
 
-const MODEL_INFO: Record<WhisperModel, { size: string; speed: string; quality: string; description: string }> = {
-  tiny: { size: "75 MB", speed: "~50ms", quality: "Good", description: "Fastest, lowest memory. Perfect for simple dictation." },
-  base: { size: "142 MB", speed: "~200ms", quality: "Great", description: "Recommended. Best balance of speed and accuracy." },
-  small: { size: "466 MB", speed: "~500ms", quality: "Excellent", description: "Higher accuracy for complex, technical terms." },
-  medium: { size: "1.5 GB", speed: "~1s", quality: "Near-perfect", description: "Best accuracy. Slower on older hardware." },
+const MODEL_INFO: Record<WhisperModel, { size: string; ram: string; speed: string; quality: string; description: string }> = {
+  tiny: { size: "75 MB", ram: "~300 MB", speed: "~50ms", quality: "Good", description: "Fastest, lowest memory. Perfect for simple dictation." },
+  base: { size: "142 MB", ram: "~500 MB", speed: "~200ms", quality: "Great", description: "Recommended. Best balance of speed and accuracy." },
+  small: { size: "466 MB", ram: "~1.5 GB", speed: "~500ms", quality: "Excellent", description: "Higher accuracy for complex, technical terms." },
+  medium: { size: "1.5 GB", ram: "~4.0 GB", speed: "~1s", quality: "Near-perfect", description: "Best accuracy. Slower on older hardware." },
 };
 
 const LANGUAGES = [
@@ -225,9 +225,11 @@ export default function SettingsPanel({ state }: Props) {
                           </div>
                           <p className="text-xs text-murmur-muted mb-2">{info.description}</p>
                           <div className="flex items-center gap-3 text-xs text-murmur-muted">
-                            <span className="font-mono">{info.size}</span>
+                            <span className="font-mono" title="Disk Size">💾 {info.size}</span>
                             <span>·</span>
-                            <span>~{info.speed} latency</span>
+                            <span className="font-mono text-murmur-text" title="RAM Required">🧠 {info.ram} RAM</span>
+                            <span>·</span>
+                            <span title="Latency">⏱️ {info.speed}</span>
                             <span>·</span>
                             <span className="text-murmur-accent">{info.quality}</span>
                           </div>
