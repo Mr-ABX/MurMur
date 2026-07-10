@@ -57,6 +57,15 @@ pub fn run() {
 
             app.manage(murmur_state);
 
+            #[cfg(target_os = "macos")]
+            {
+                if settings.show_dock_icon {
+                    app.set_activation_policy(tauri::ActivationPolicy::Regular);
+                } else {
+                    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                }
+            }
+
             // Build system tray menu
             let settings_item = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;

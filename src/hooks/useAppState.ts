@@ -16,6 +16,9 @@ export interface AppSettings {
   cloudProvider: "local" | "gemini" | "groq";
   geminiApiKey: string;
   groqApiKey: string;
+  showDockIcon: boolean;
+  liveStreaming: boolean;
+  aiRewrite: boolean;
 }
 
 export interface AppState {
@@ -47,6 +50,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   cloudProvider: "local",
   geminiApiKey: "",
   groqApiKey: "",
+  showDockIcon: false,
+  liveStreaming: false,
+  aiRewrite: false,
 };
 
 export function useAppState(): AppState {

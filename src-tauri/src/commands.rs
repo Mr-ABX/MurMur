@@ -197,11 +197,23 @@ pub fn get_settings(state: State<'_, MurmurState>) -> AppSettings {
 #[tauri::command]
 pub fn save_settings(
     settings: AppSettings,
+    app: AppHandle,
     state: State<'_, MurmurState>,
 ) -> Result<(), String> {
     let mut current = state.settings.lock().unwrap();
     *current = settings.clone();
-    settings.save().map_err(|e| e.to_string())
+    let res = settings.save().map_err(|e| e.to_string());
+
+    #[cfg(target_os = "macos")]
+    {
+        if settings.show_dock_icon {
+            let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
+        } else {
+            let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+        }
+    }
+
+    res
 }
 
 // ============================================================

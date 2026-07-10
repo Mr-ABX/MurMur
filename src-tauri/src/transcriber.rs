@@ -220,34 +220,112 @@ pub async fn transcribe_hybrid(
         crate::settings::CloudProvider::Local => None,
     };
 
-    if let Some(mode) = cloud_mode {
-        match encode_wav(audio) {
-            Ok(wav_bytes) => {
-                let cloud_result = if mode == "gemini" {
-                    log::info!("Attempting Gemini cloud transcription");
-                    transcribe_gemini(&wav_bytes, &settings.gemini_api_key).await
-                } else {
-                    log::info!("Attempting Groq cloud transcription");
-                    transcribe_groq(&wav_bytes, &settings.groq_api_key, &settings.language).await
-                };
+    let mut final_text = match encode_wav(audio) {
+        Ok(wav_bytes) if cloud_mode.is_some() => {
+            let mode = cloud_mode.unwrap();
+            let cloud_result = if mode == "gemini" {
+                log::info!("Attempting Gemini cloud transcription");
+                transcribe_gemini(&wav_bytes, &settings.gemini_api_key).await
+            } else {
+                log::info!("Attempting Groq cloud transcription");
+                transcribe_groq(&wav_bytes, &settings.groq_api_key, &settings.language).await
+            };
 
-                match cloud_result {
-                    Ok(text) => return Ok(text),
-                    Err(e) => {
-                        log::warn!("Cloud API failed, falling back to Local Whisper: {}", e);
-                        // Fall through to local fallback
-                    }
+            match cloud_result {
+                Ok(text) => text,
+                Err(e) => {
+                    log::warn!("Cloud API failed, falling back to Local Whisper: {}", e);
+                    log::info!("Using Local Whisper.cpp for transcription");
+                    let mut ts = transcriber_mutex.lock().unwrap();
+                    ensure_model_loaded(&mut ts, settings)?;
+                    ts.transcribe(audio, &settings.language, settings.voxcoder_mode)?
                 }
             }
-            Err(e) => {
-                log::warn!("Failed to encode wav for cloud: {}. Falling back to local.", e);
-            }
+        }
+        _ => {
+            log::info!("Using Local Whisper.cpp for transcription");
+            let mut ts = transcriber_mutex.lock().unwrap();
+            ensure_model_loaded(&mut ts, settings)?;
+            ts.transcribe(audio, &settings.language, settings.voxcoder_mode)?
+        }
+    };
+
+    if settings.ai_rewrite {
+        log::info!("AI Rewrite is enabled. Polishing transcript...");
+        match rewrite_transcript(&final_text, settings).await {
+            Ok(polished) => final_text = polished,
+            Err(e) => log::warn!("AI Rewrite failed, using original transcript: {}", e),
         }
     }
 
-    // Local Fallback / Local Mode
-    log::info!("Using Local Whisper.cpp for transcription");
-    let mut ts = transcriber_mutex.lock().unwrap();
-    ensure_model_loaded(&mut ts, settings)?;
-    ts.transcribe(audio, &settings.language, settings.voxcoder_mode)
+    Ok(final_text)
+}
+
+async fn rewrite_transcript(text: &str, settings: &AppSettings) -> Result<String> {
+    if !settings.groq_api_key.is_empty() {
+        let url = "https://api.groq.com/openai/v1/chat/completions";
+        let body = serde_json::json!({
+            "model": "llama3-8b-8192",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a transcript polisher. Fix any grammatical errors, spelling mistakes, or weird stutters in the provided text. Maintain the original meaning perfectly. ONLY output the corrected text, without any conversational filler."
+                },
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ],
+            "temperature": 0.3
+        });
+
+        let client = reqwest::Client::new();
+        let res = client.post(url)
+            .header("Authorization", format!("Bearer {}", settings.groq_api_key))
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(anyhow!("Groq rewrite error: {}", err_text));
+        }
+
+        let json: serde_json::Value = res.json().await?;
+        let rewritten = json["choices"][0]["message"]["content"].as_str()
+            .ok_or_else(|| anyhow!("Invalid Groq rewrite response format"))?;
+            
+        return Ok(rewritten.trim().to_string());
+    } else if !settings.gemini_api_key.is_empty() {
+        let url = format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}", settings.gemini_api_key);
+        let body = serde_json::json!({
+            "contents": [{
+                "parts": [{ "text": format!("You are a transcript polisher. Fix any grammatical errors, spelling mistakes, or weird stutters in the following text. Maintain the original meaning perfectly. ONLY output the corrected text, without any conversational filler, intro, or markdown formatting.\n\nText to polish:\n{}", text) }]
+            }],
+            "generationConfig": {
+                "temperature": 0.3
+            }
+        });
+
+        let client = reqwest::Client::new();
+        let res = client.post(&url)
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(anyhow!("Gemini rewrite error: {}", err_text));
+        }
+
+        let json: serde_json::Value = res.json().await?;
+        let rewritten = json["candidates"][0]["content"]["parts"][0]["text"].as_str()
+            .ok_or_else(|| anyhow!("Invalid Gemini rewrite response format"))?;
+            
+        return Ok(rewritten.trim().to_string());
+    }
+
+    Ok(text.to_string())
 }

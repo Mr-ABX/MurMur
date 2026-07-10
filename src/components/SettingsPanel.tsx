@@ -5,7 +5,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen
+  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 
@@ -33,7 +33,7 @@ const LANGUAGES = [
   { code: "ru", name: "Russian" },
 ];
 
-type Tab = "general" | "model" | "cloud" | "voxcoder" | "about";
+type Tab = "general" | "model" | "cloud" | "voxcoder" | "experimental" | "about";
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -88,6 +88,7 @@ export default function SettingsPanel({ state }: Props) {
     { id: "model", label: "AI Model", icon: <Cpu size={14} /> },
     { id: "cloud", label: "Cloud APIs", icon: <Cloud size={14} /> },
     { id: "voxcoder", label: "VoxCoder", icon: <Code2 size={14} /> },
+    { id: "experimental", label: "Experimental", icon: <Beaker size={14} /> },
     { id: "about", label: "About", icon: <Mic size={14} /> },
   ];
 
@@ -165,6 +166,10 @@ export default function SettingsPanel({ state }: Props) {
 
                 <SettingRow label="Sound Effects" description="Play sounds on recording start/stop">
                   <Toggle enabled={settings.soundEffects} onChange={(v) => updateSettings({ soundEffects: v })} />
+                </SettingRow>
+
+                <SettingRow label="Show App in Dock" description="Show the app icon in the macOS Dock (restart required for some behaviors)">
+                  <Toggle enabled={settings.showDockIcon} onChange={(v) => updateSettings({ showDockIcon: v })} />
                 </SettingRow>
               </div>
 
@@ -448,6 +453,37 @@ export default function SettingsPanel({ state }: Props) {
                     </div>
                   ))}
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "experimental" && (
+            <motion.div
+              key="experimental"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SectionHeader icon={<Beaker size={14} />} title="Experimental Features" />
+              <p className="text-xs text-gray-400 mb-4">
+                These features are currently in testing. They may be unstable or change in the future.
+              </p>
+              
+              <div className="glass-card rounded-xl px-4 mb-4">
+                <SettingRow 
+                  label="Live Streaming Transcription" 
+                  description="Transcribe audio in real-time as you speak instead of waiting until the end. Uses Deepgram API or local VAD chunking."
+                >
+                  <Toggle enabled={settings.liveStreaming} onChange={(v) => updateSettings({ liveStreaming: v })} />
+                </SettingRow>
+
+                <SettingRow 
+                  label="AI Rewrite & Polisher" 
+                  description="Automatically use a free LLM (Groq/Llama 3) to polish the final transcript for better grammar and clarity."
+                >
+                  <Toggle enabled={settings.aiRewrite} onChange={(v) => updateSettings({ aiRewrite: v })} />
+                </SettingRow>
               </div>
             </motion.div>
           )}

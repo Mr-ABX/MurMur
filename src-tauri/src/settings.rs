@@ -17,6 +17,9 @@ pub struct AppSettings {
     pub cloud_provider: CloudProvider,
     pub gemini_api_key: String,
     pub groq_api_key: String,
+    pub show_dock_icon: bool,
+    pub live_streaming: bool,
+    pub ai_rewrite: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -74,6 +77,9 @@ impl Default for AppSettings {
             cloud_provider: CloudProvider::Local,
             gemini_api_key: "".to_string(),
             groq_api_key: "".to_string(),
+            show_dock_icon: false,
+            live_streaming: false,
+            ai_rewrite: false,
         }
     }
 }
