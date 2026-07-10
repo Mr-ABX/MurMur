@@ -374,6 +374,7 @@ export default function SettingsPanel({ state }: Props) {
                       <option value="local" className="bg-[#1F1F1F] text-white">Local (Whisper.cpp)</option>
                       <option value="gemini" className="bg-[#1F1F1F] text-white">Google Gemini (Free Tier)</option>
                       <option value="groq" className="bg-[#1F1F1F] text-white">Groq Whisper (Free Tier)</option>
+                      <option value="deepgram" className="bg-[#1F1F1F] text-white">Deepgram (Live & Fast)</option>
                     </select>
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -401,6 +402,17 @@ export default function SettingsPanel({ state }: Props) {
                     placeholder="gsk_..."
                     value={settings.groqApiKey}
                     onChange={(e) => updateSettings({ groqApiKey: e.target.value })}
+                    className="text-xs rounded-lg px-3 py-1.5 outline-none w-48 transition-all focus:ring-1 focus:ring-[#00E5FF]"
+                    style={{ background: "rgba(19, 19, 26, 0.6)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
+                  />
+                </SettingRow>
+
+                <SettingRow label="Deepgram API Key" description="Required for Deepgram (Live Streaming) transcription">
+                  <input
+                    type="password"
+                    placeholder="dg_..."
+                    value={settings.deepgramApiKey}
+                    onChange={(e) => updateSettings({ deepgramApiKey: e.target.value })}
                     className="text-xs rounded-lg px-3 py-1.5 outline-none w-48 transition-all focus:ring-1 focus:ring-[#00E5FF]"
                     style={{ background: "rgba(19, 19, 26, 0.6)", color: "#e8e8f0", border: "1px solid rgba(42, 42, 58, 0.8)" }}
                   />

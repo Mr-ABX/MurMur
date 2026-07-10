@@ -13,9 +13,10 @@ export interface AppSettings {
   soundEffects: boolean;
   language: string;
   inputDevice: string;
-  cloudProvider: "local" | "gemini" | "groq";
+  cloudProvider: "local" | "gemini" | "groq" | "deepgram";
   geminiApiKey: string;
   groqApiKey: string;
+  deepgramApiKey: string;
   showDockIcon: boolean;
   liveStreaming: boolean;
   aiRewrite: boolean;
@@ -50,6 +51,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   cloudProvider: "local",
   geminiApiKey: "",
   groqApiKey: "",
+  deepgramApiKey: "",
   showDockIcon: false,
   liveStreaming: false,
   aiRewrite: false,

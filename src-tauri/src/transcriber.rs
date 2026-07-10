@@ -197,6 +197,28 @@ async fn transcribe_groq(wav_bytes: &[u8], api_key: &str, language: &str) -> Res
     Ok(text.trim().to_string())
 }
 
+async fn transcribe_deepgram(wav_bytes: &[u8], api_key: &str) -> Result<String> {
+    let url = "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true";
+    let client = reqwest::Client::new();
+    let res = client.post(url)
+        .header("Authorization", format!("Token {}", api_key))
+        .header("Content-Type", "audio/wav")
+        .body(wav_bytes.to_vec())
+        .send()
+        .await?;
+
+    if !res.status().is_success() {
+        let err_text = res.text().await.unwrap_or_default();
+        return Err(anyhow!("Deepgram API error: {}", err_text));
+    }
+
+    let json: serde_json::Value = res.json().await?;
+    let text = json["results"]["channels"][0]["alternatives"][0]["transcript"].as_str()
+        .unwrap_or_default();
+
+    Ok(text.trim().to_string())
+}
+
 pub async fn transcribe_hybrid(
     audio: &[f32],
     settings: &AppSettings,
@@ -217,6 +239,13 @@ pub async fn transcribe_hybrid(
                 None
             }
         },
+        crate::settings::CloudProvider::Deepgram => {
+            if !settings.deepgram_api_key.is_empty() {
+                Some("deepgram")
+            } else {
+                None
+            }
+        },
         crate::settings::CloudProvider::Local => None,
     };
 
@@ -226,6 +255,9 @@ pub async fn transcribe_hybrid(
             let cloud_result = if mode == "gemini" {
                 log::info!("Attempting Gemini cloud transcription");
                 transcribe_gemini(&wav_bytes, &settings.gemini_api_key).await
+            } else if mode == "deepgram" {
+                log::info!("Attempting Deepgram cloud transcription");
+                transcribe_deepgram(&wav_bytes, &settings.deepgram_api_key).await
             } else {
                 log::info!("Attempting Groq cloud transcription");
                 transcribe_groq(&wav_bytes, &settings.groq_api_key, &settings.language).await

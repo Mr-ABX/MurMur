@@ -88,6 +88,31 @@ impl AudioCapture {
         Ok(resampled)
     }
 
+    pub fn get_samples(&self) -> Result<Vec<f32>> {
+        let buffer = self.buffer.lock().unwrap();
+        let input = &*buffer;
+        let in_rate = self.sample_rate;
+        let out_rate = 16000u32;
+        
+        let resampled = if in_rate == out_rate || input.is_empty() {
+            input.to_vec()
+        } else {
+            let ratio = in_rate as f32 / out_rate as f32;
+            let out_len = (input.len() as f32 / ratio).ceil() as usize;
+            let mut out = Vec::with_capacity(out_len);
+            for i in 0..out_len {
+                let in_idx = i as f32 * ratio;
+                let idx1 = in_idx.floor() as usize;
+                let idx2 = (idx1 + 1).min(input.len() - 1);
+                let frac = in_idx - idx1 as f32;
+                let val = input[idx1] * (1.0 - frac) + input[idx2] * frac;
+                out.push(val);
+            }
+            out
+        };
+        Ok(resampled)
+    }
+
     pub fn clear_buffer(&self) {
         self.buffer.lock().unwrap().clear();
     }

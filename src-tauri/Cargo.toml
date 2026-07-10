@@ -46,6 +46,8 @@ reqwest = { version = "0.12", features = ["stream", "json", "multipart"] }
 futures-util = "0.3"
 base64 = "0.22"
 hound = "3.5"
+tokio-tungstenite = { version = "0.21", features = ["rustls-tls-native-roots"] }
+url = "2.5"
 
 # CPU thread count for inference
 num_cpus = "1"
