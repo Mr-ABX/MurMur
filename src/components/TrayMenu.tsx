@@ -21,18 +21,18 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
     <div
       className="flex flex-col py-1 min-w-[200px] rounded-xl overflow-hidden animate-fade-in"
       style={{
-        background: "rgba(13, 13, 20, 0.96)",
-        border: "1px solid rgba(42, 42, 58, 0.8)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 1px rgba(124,106,247,0.2)",
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 1px var(--border-strong)",
       }}
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-murmur-border/30">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-murmur-primary to-murmur-accent flex items-center justify-center shadow-lg">
-            <Mic size={14} className="text-white" strokeWidth={1.5} />
+          <div className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center shadow-sm">
+            <Mic size={14} className="text-zinc-300" strokeWidth={1.5} />
           </div>
           <div>
             <p className="text-sm font-bold text-murmur-text leading-none">Murmur</p>
@@ -50,8 +50,7 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
           <span className="text-xs text-murmur-muted">Start recording</span>
           <div className="flex items-center gap-1">
             {["⌘", "⇧", "Space"].map((k) => (
-              <kbd key={k} className="px-1.5 py-0.5 text-xs rounded font-mono"
-                style={{ background: "rgba(42,42,58,0.6)", color: "#8080a0", border: "1px solid rgba(42,42,58,1)" }}>
+              <kbd key={k} className="px-1.5 py-0.5 text-xs rounded font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
                 {k}
               </kbd>
             ))}
@@ -67,8 +66,8 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
             onClick={() => state.updateSettings({ voxcoderMode: !settings.voxcoderMode })}
             className={`text-xs px-2 py-0.5 rounded-full font-medium transition-all ${
               settings.voxcoderMode
-                ? "bg-murmur-primary/20 text-murmur-primary border border-murmur-primary/30"
-                : "bg-murmur-card text-murmur-muted border border-murmur-border/50"
+                ? "bg-zinc-800 text-zinc-200 border border-zinc-600"
+                : "bg-zinc-900/50 text-zinc-500 border border-zinc-800"
             }`}
           >
             {settings.voxcoderMode ? "ON" : "OFF"}
@@ -79,7 +78,7 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
       {/* Menu Items */}
       <div className="py-1">
         <motion.button
-          whileHover={{ background: "rgba(124, 106, 247, 0.08)" }}
+          whileHover={{ background: "var(--bg-surface-elevated)" }}
           onClick={onOpenSettings}
           className="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
         >
@@ -88,7 +87,7 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
         </motion.button>
 
         <motion.button
-          whileHover={{ background: "rgba(255, 71, 87, 0.08)" }}
+          whileHover={{ background: "rgba(239, 68, 68, 0.1)" }}
           onClick={handleQuit}
           className="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
         >

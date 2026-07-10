@@ -6,19 +6,18 @@
 
 @layer base {
   :root {
-    --bg-base: #0A0A0A;
-    --bg-surface: #141414;
-    --bg-surface-elevated: #1F1F1F;
-    --text-primary: #FFFFFF;
-    --text-secondary: #A0A0A0;
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-strong: rgba(255, 255, 255, 0.15);
+    --bg-base: #09090b;
+    --bg-surface: #18181b;
+    --bg-surface-elevated: #27272a;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-strong: rgba(255, 255, 255, 0.1);
     
-    /* Logo Gradients: Cyan to Purple */
-    --accent-cyan: #38ef7d;
-    --accent-purple: #11998e;
-    --accent-gradient: linear-gradient(135deg, #00E5FF, #B250FF);
-    --accent-glow: rgba(178, 80, 255, 0.4);
+    /* Minimal Accent */
+    --accent-primary: #6366f1; /* soft indigo */
+    --accent-gradient: linear-gradient(135deg, #818cf8, #6366f1);
+    --accent-glow: rgba(99, 102, 241, 0.2);
   }
 
   * {

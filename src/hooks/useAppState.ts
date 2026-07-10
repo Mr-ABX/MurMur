@@ -20,6 +20,7 @@ export interface AppSettings {
   showDockIcon: boolean;
   liveStreaming: boolean;
   aiRewrite: boolean;
+  customVocabulary: string;
 }
 
 export interface AppState {
@@ -55,6 +56,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   showDockIcon: false,
   liveStreaming: false,
   aiRewrite: false,
+  customVocabulary: "",
 };
 
 export function useAppState(): AppState {

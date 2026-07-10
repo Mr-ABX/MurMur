@@ -13,23 +13,23 @@ const stateConfig: Record<RecordingState, {
 }> = {
   idle: {
     label: "Ready",
-    color: "text-gray-400",
-    icon: <Mic size={18} className="text-gray-400" />,
+    color: "text-zinc-500",
+    icon: <Mic size={18} className="text-zinc-500" />,
   },
   recording: {
     label: "Listening...",
-    color: "text-[#38ef7d]",
-    icon: <Mic size={18} className="text-[#38ef7d]" />,
+    color: "text-zinc-300",
+    icon: <Mic size={18} className="text-zinc-300" />,
   },
   transcribing: {
     label: "Transcribing...",
-    color: "text-[#00E5FF]",
-    icon: <Loader2 size={18} className="text-[#00E5FF] animate-spin" />,
+    color: "text-zinc-400",
+    icon: <Loader2 size={18} className="text-zinc-400 animate-spin" />,
   },
   done: {
     label: "Done!",
-    color: "text-[#B250FF]",
-    icon: <CheckCircle2 size={18} className="text-[#B250FF]" />,
+    color: "text-zinc-100",
+    icon: <CheckCircle2 size={18} className="text-zinc-100" />,
   },
   error: {
     label: "Error",
@@ -80,28 +80,26 @@ export default function OverlayWindow({ state }: Props) {
       >
         {/* Ambient Glow behind the panel */}
         <AnimatePresence>
-          {isRecording && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 0.4, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute inset-0 rounded-[32px] blur-3xl -z-10"
-              style={{ background: "var(--accent-gradient)" }}
-            />
-          )}
+          {isRecording &&              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 0.1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute inset-0 rounded-[32px] blur-3xl -z-10 bg-zinc-100"
+              />
+          }
         </AnimatePresence>
 
         <div className="glass-panel relative rounded-[28px] p-5 overflow-hidden">
           {/* Header row */}
           <div className="flex items-center gap-4">
             <motion.div 
-              className={`flex items-center justify-center w-12 h-12 rounded-[18px] relative ${isRecording ? 'bg-[#38ef7d]/10' : 'bg-white/5'}`}
+              className={`flex items-center justify-center w-12 h-12 rounded-[18px] relative ${isRecording ? 'bg-zinc-800' : 'bg-zinc-800/50 border border-zinc-700/50'}`}
               layout
             >
               {isRecording && (
                 <>
-                  <div className="absolute inset-0 rounded-[18px] border-2 border-[#38ef7d]/50 animate-ping" style={{ animationDuration: '2s' }} />
-                  <div className="absolute inset-0 rounded-[18px] border-2 border-[#38ef7d]/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '1s' }} />
+                  <div className="absolute inset-0 rounded-[18px] border-2 border-zinc-500/50 animate-ping" style={{ animationDuration: '2s' }} />
+                  <div className="absolute inset-0 rounded-[18px] border-2 border-zinc-500/30 animate-ping" style={{ animationDuration: '2s', animationDelay: '1s' }} />
                 </>
               )}
               {config.icon}
@@ -113,8 +111,8 @@ export default function OverlayWindow({ state }: Props) {
                   {config.label}
                 </span>
                 {isRecording && (
-                  <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#38ef7d] uppercase tracking-wider bg-[#38ef7d]/10 px-2 py-0.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#38ef7d] animate-pulse" />
+                  <span className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-300 uppercase tracking-wider bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
                     REC
                   </span>
                 )}
@@ -138,7 +136,7 @@ export default function OverlayWindow({ state }: Props) {
             </AnimatePresence>
             
             {recordingState === "transcribing" && (
-              <Sparkles size={22} className="text-[#00E5FF] animate-pulse ml-2" />
+              <Sparkles size={22} className="text-zinc-400 animate-pulse ml-2" />
             )}
           </div>
 
@@ -156,7 +154,7 @@ export default function OverlayWindow({ state }: Props) {
                   <p className="text-[14px] text-white/90 font-medium leading-relaxed">
                     {displayText}
                     {partialTranscript && (
-                      <span className="inline-block w-1.5 h-4 bg-[#00E5FF] ml-1 animate-pulse align-middle rounded-full" />
+                      <span className="inline-block w-1.5 h-4 bg-zinc-400 ml-1 animate-pulse align-middle rounded-full" />
                     )}
                   </p>
                 </div>
@@ -165,14 +163,13 @@ export default function OverlayWindow({ state }: Props) {
           </AnimatePresence>
 
           {/* Bottom strip: app brand */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800">
             <div className="flex items-center gap-2 opacity-60">
-              <div className="w-4 h-4 rounded-full" style={{ background: "var(--accent-gradient)" }} />
+              <div className="w-4 h-4 rounded-full bg-zinc-700" />
               <span className="text-[11px] font-bold text-white tracking-[0.2em] uppercase">murmur</span>
             </div>
             {state.settings.voxcoderMode && (
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
-                style={{ background: "rgba(178, 80, 255, 0.15)", color: "#B250FF", border: "1px solid rgba(178, 80, 255, 0.25)" }}>
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-zinc-800 text-zinc-300 border border-zinc-700">
                 VoxCoder Mode
               </span>
             )}

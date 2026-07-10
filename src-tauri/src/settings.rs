@@ -21,6 +21,8 @@ pub struct AppSettings {
     pub show_dock_icon: bool,
     pub live_streaming: bool,
     pub ai_rewrite: bool,
+    #[serde(default)]
+    pub custom_vocabulary: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -83,6 +85,7 @@ impl Default for AppSettings {
             show_dock_icon: false,
             live_streaming: false,
             ai_rewrite: false,
+            custom_vocabulary: "".to_string(),
         }
     }
 }
