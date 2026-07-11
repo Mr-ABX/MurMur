@@ -63,7 +63,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
 }
 
 function SettingRow({
-  label, description, children, interactive = false
+  label, description, children
 }: {
   label: string;
   description?: string;
