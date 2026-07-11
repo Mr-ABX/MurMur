@@ -18,6 +18,7 @@ export interface AppSettings {
   groqApiKey: string;
   deepgramApiKey: string;
   showDockIcon: boolean;
+  trayIconStyle: "color" | "flat";
   liveStreaming: boolean;
   aiRewrite: boolean;
   customVocabulary: string;
@@ -54,6 +55,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   groqApiKey: "",
   deepgramApiKey: "",
   showDockIcon: false,
+  trayIconStyle: "color",
   liveStreaming: false,
   aiRewrite: false,
   customVocabulary: "",

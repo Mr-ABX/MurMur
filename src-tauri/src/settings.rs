@@ -23,6 +23,8 @@ pub struct AppSettings {
     pub ai_rewrite: bool,
     #[serde(default)]
     pub custom_vocabulary: String,
+    #[serde(default)]
+    pub tray_icon_style: TrayIconStyle,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -41,6 +43,19 @@ pub enum WhisperModel {
     Base,
     Small,
     Medium,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum TrayIconStyle {
+    Color,
+    Flat,
+}
+
+impl Default for TrayIconStyle {
+    fn default() -> Self {
+        Self::Color
+    }
 }
 
 impl WhisperModel {
@@ -86,6 +101,7 @@ impl Default for AppSettings {
             live_streaming: false,
             ai_rewrite: false,
             custom_vocabulary: "".to_string(),
+            tray_icon_style: TrayIconStyle::Color,
         }
     }
 }

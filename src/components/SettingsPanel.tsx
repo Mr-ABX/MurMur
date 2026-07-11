@@ -195,6 +195,22 @@ export default function SettingsPanel({ state }: Props) {
                   <SettingRow label="Show App in Dock" description="Show the app icon in the macOS Dock (restart required)">
                     <Toggle enabled={settings.showDockIcon} onChange={(v) => updateSettings({ showDockIcon: v })} />
                   </SettingRow>
+
+                  <SettingRow label="Tray Icon Style" description="Choose the style of the menu bar icon">
+                    <div className="relative w-full sm:w-64">
+                      <select
+                        value={settings.trayIconStyle || "color"}
+                        onChange={(e) => updateSettings({ trayIconStyle: e.target.value as "color" | "flat" })}
+                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                      >
+                        <option value="color" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Color</option>
+                        <option value="flat" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Flat</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
+                  </SettingRow>
                 </div>
 
                 <SectionHeader icon={<Globe size={16} />} title="Language & Vocabulary" />
