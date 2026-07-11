@@ -74,13 +74,17 @@ pub fn run() {
             let menu = Menu::with_items(app, &[&settings_item, &separator, &quit_item])?;
 
             // Load tray icon
-            let tray_icon_bytes = include_bytes!("../icons/tray.png");
+            let tray_icon_bytes = match settings.tray_icon_style {
+                crate::settings::TrayIconStyle::Flat => include_bytes!("../icons/tray-flat.png").as_slice(),
+                crate::settings::TrayIconStyle::Color => include_bytes!("../icons/tray.png").as_slice(),
+            };
             let tray_icon = tauri::image::Image::from_bytes(tray_icon_bytes)
                 .unwrap_or_else(|_| app.default_window_icon().cloned().unwrap());
 
             // Build tray icon
-            let _tray = TrayIconBuilder::new()
+            let _tray = TrayIconBuilder::with_id("main")
                 .icon(tray_icon)
+                .icon_as_template(settings.tray_icon_style == crate::settings::TrayIconStyle::Flat)
                 .menu(&menu)
                 .tooltip("Murmur — Press ⌘⇧Space to record")
                 .on_menu_event(|app_handle, event| {
