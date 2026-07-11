@@ -161,3 +161,11 @@ fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
         log::info!("Registered global shortcut: {}", hotkey);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_sanity_check() {
+        assert_eq!(1 + 1, 2);
+    }
+}

@@ -34,9 +34,16 @@ jobs:
       - name: install frontend dependencies
         run: npm install
 
+      - name: Run Tests (Frontend)
+        run: npm run test
+
       - name: Check TypeScript (Frontend)
         run: npm run build
 
       - name: Check Rust (Backend)
         run: cargo check
+        working-directory: src-tauri
+
+      - name: Test Rust (Backend)
+        run: cargo test
         working-directory: src-tauri
