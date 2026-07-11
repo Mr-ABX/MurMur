@@ -8,6 +8,7 @@ import {
   Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
+import murmurIcon from "../assets/murmur_icon.png";
 
 interface Props {
   state: AppState;
@@ -103,8 +104,8 @@ export default function SettingsPanel({ state }: Props) {
         {/* Header in sidebar */}
         <div data-tauri-drag-region className="px-6 py-6 flex flex-col gap-2 pb-8">
           <div className="flex items-center gap-3 pointer-events-none">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm">
-              <Mic size={18} className="text-[var(--text-primary)]" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden">
+              <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-base font-bold tracking-wide text-[var(--text-primary)] leading-tight">Murmur</h1>
@@ -564,9 +565,9 @@ export default function SettingsPanel({ state }: Props) {
               >
                 {/* App Icon */}
                 <motion.div
-                  className="w-24 h-24 rounded-3xl bg-[var(--bg-surface-elevated)] border border-[var(--border-strong)] flex items-center justify-center shadow-lg mb-6"
+                  className="w-24 h-24 rounded-3xl bg-[var(--bg-surface-elevated)] border border-[var(--border-strong)] flex items-center justify-center shadow-lg mb-6 overflow-hidden"
                 >
-                  <Mic size={40} className="text-[var(--text-primary)]" strokeWidth={1.5} />
+                  <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
                 </motion.div>
 
                 <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1 tracking-tight">Murmur</h2>

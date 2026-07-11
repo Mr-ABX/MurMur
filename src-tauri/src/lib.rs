@@ -74,7 +74,7 @@ pub fn run() {
             let menu = Menu::with_items(app, &[&settings_item, &separator, &quit_item])?;
 
             // Load tray icon
-            let tray_icon_bytes = include_bytes!("../icons/tray.png");
+            let tray_icon_bytes = include_bytes!("../icons/32x32.png");
             let tray_icon = tauri::image::Image::from_bytes(tray_icon_bytes)
                 .unwrap_or_else(|_| app.default_window_icon().cloned().unwrap());
 
