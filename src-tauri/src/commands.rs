@@ -358,6 +358,18 @@ pub fn save_settings(
         }
     }
 
+    // Update tray icon dynamically
+    if let Some(tray) = app.tray_by_id("main") {
+        let tray_icon_bytes = match settings.tray_icon_style {
+            crate::settings::TrayIconStyle::Flat => include_bytes!("../icons/tray-flat.png").as_slice(),
+            crate::settings::TrayIconStyle::Color => include_bytes!("../icons/tray.png").as_slice(),
+        };
+        if let Ok(tray_icon) = tauri::image::Image::from_bytes(tray_icon_bytes) {
+            let _ = tray.set_icon(Some(tray_icon));
+            let _ = tray.set_icon_as_template(settings.tray_icon_style == crate::settings::TrayIconStyle::Flat);
+        }
+    }
+
     res
 }
 
