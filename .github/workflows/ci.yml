@@ -29,7 +29,11 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf cmake clang libclang-dev libavdevice-dev libavfilter-dev libavformat-dev libavcodec-dev libswscale-dev libswresample-dev ffmpeg
+
+      - name: install dependencies (windows only)
+        if: matrix.platform == 'windows-latest'
+        run: choco install cmake llvm -y
 
       - name: install frontend dependencies
         run: npm install
