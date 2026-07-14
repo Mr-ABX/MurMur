@@ -307,9 +307,12 @@ fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
 
     #[cfg(target_os = "windows")]
     {
-        use enigo::{Enigo, Keyboard, Key, Settings, Direction, Modifiers};
+        use enigo::{Enigo, Keyboard, Key, Settings, Direction};
         let mut enigo = Enigo::new(&Settings::default())?;
-        enigo.key(Key::V, Direction::Click, Modifiers::CONTROL)?;
+        // Press Control down, click V, release Control — simulates Ctrl+V
+        enigo.key(Key::Control, Direction::Press)?;
+        enigo.key(Key::Unicode('v'), Direction::Click)?;
+        enigo.key(Key::Control, Direction::Release)?;
     }
 
     Ok(())
