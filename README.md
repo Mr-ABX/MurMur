@@ -1,12 +1,13 @@
 <div align="center">
-  <img src="app-icon.jpg" alt="MurMur Logo" width="200" height="200" style="border-radius: 20px;">
+  <img src="assets/logo-animated.svg" alt="MurMur Logo" width="180" height="180">
   <h1>MurMur: Your AI Voice Prompting Solution 🎙️</h1>
   <p><strong>Free, lightning-fast, and entirely local voice-to-text for AI workflows.</strong></p>
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![Platform: macOS | Windows | Linux](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)]()
-  [![Tauri](https://img.shields.io/badge/Built%20with-Tauri-orange.svg)](https://tauri.app/)
-  [![Whisper.cpp](https://img.shields.io/badge/Powered%20by-Whisper.cpp-purple.svg)](https://github.com/ggerganov/whisper.cpp)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-7c6df2.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+  [![Platform: macOS | Windows | Linux](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-5dd99e.svg?style=flat-square)]()
+  [![Tauri](https://img.shields.io/badge/Built%20with-Tauri-f06ba0.svg?style=flat-square)](https://tauri.app/)
+  [![Whisper.cpp](https://img.shields.io/badge/Powered%20by-Whisper.cpp-c4b5fd.svg?style=flat-square)](https://github.com/ggerganov/whisper.cpp)
+  [![Build](https://img.shields.io/github/actions/workflow/status/Mr-ABX/MurMur/release.yml?style=flat-square&label=release%20build)](https://github.com/Mr-ABX/MurMur/actions)
 </div>
 
 ---
