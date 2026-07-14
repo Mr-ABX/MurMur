@@ -36,7 +36,7 @@ cpal = "0.15"
 enigo = { version = "0.2", features = [] }
 
 # whisper.cpp bindings
-whisper-rs = { version = "0.11", features = [] }
+whisper-rs = { version = "=0.11.0", features = [] }
 
 # Global hotkey (used as fallback/alternative)
 rdev = "0.5"
