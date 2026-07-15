@@ -5,10 +5,12 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History
+  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 import murmurIcon from "../assets/murmur_icon.png";
+import NotesTab from "./tabs/NotesTab";
+import SkillsTab from "./tabs/SkillsTab";
 
 interface Props {
   state: AppState;
@@ -34,7 +36,7 @@ const LANGUAGES = [
   { code: "ru", name: "Russian" },
 ];
 
-type Tab = "general" | "model" | "cloud" | "voxcoder" | "history" | "experimental" | "about";
+type Tab = "notes" | "skills" | "general" | "model" | "cloud" | "voxcoder" | "history" | "experimental" | "about";
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -85,9 +87,11 @@ function SettingRow({
 
 export default function SettingsPanel({ state }: Props) {
   const { settings, updateSettings, isModelDownloaded, isDownloading, downloadingModel, downloadProgress, downloadModel, deleteModel } = state;
-  const [activeTab, setActiveTab] = useState<Tab>("general");
+  const [activeTab, setActiveTab] = useState<Tab>("notes");
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: "notes", label: "Notes", icon: <FileText size={16} /> },
+    { id: "skills", label: "Skills", icon: <Wrench size={16} /> },
     { id: "general", label: "General", icon: <Settings size={16} /> },
     { id: "model", label: "AI Model", icon: <Cpu size={16} /> },
     { id: "cloud", label: "Cloud APIs", icon: <Cloud size={16} /> },
@@ -148,6 +152,32 @@ export default function SettingsPanel({ state }: Props) {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-10 pt-20">
           <AnimatePresence mode="wait">
+            {activeTab === "notes" && (
+              <motion.div
+                key="notes"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="h-full"
+              >
+                <NotesTab state={state} />
+              </motion.div>
+            )}
+
+            {activeTab === "skills" && (
+              <motion.div
+                key="skills"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="h-full"
+              >
+                <SkillsTab state={state} />
+              </motion.div>
+            )}
+
             {activeTab === "general" && (
               <motion.div
                 key="general"

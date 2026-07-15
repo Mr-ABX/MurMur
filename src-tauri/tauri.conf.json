@@ -58,7 +58,10 @@
     ],
     "macOS": {
       "entitlements": "entitlements.plist",
-      "signingIdentity": null
+      "signingIdentity": null,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Murmur needs microphone access to convert your speech to text."
+      }
     }
   },
   "plugins": {

@@ -5740,9 +5740,9 @@ dependencies = [
 
 [[package]]
 name = "whisper-rs"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9f169758120051a81a2a1e369fd963d5c7e71e91e3cb89e7be6455318475b06"
+checksum = "ed7a191078e189d96d029244ab1dff159775adec71dc89a222e9bb9d21a7d161"
 dependencies = [
  "whisper-rs-sys",
 ]
