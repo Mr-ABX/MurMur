@@ -220,4 +220,17 @@ impl AppSettings {
     pub fn is_model_downloaded(&self, model: &WhisperModel) -> bool {
         self.model_path(model).exists()
     }
+
+    pub fn gemma_model_path(&self, model: &GemmaModel) -> PathBuf {
+        let mut path = Self::models_dir();
+        path.push("gemma");
+        path.push(model.as_str());
+        path
+    }
+
+    pub fn is_gemma_model_downloaded(&self, model: &GemmaModel) -> bool {
+        let path = self.gemma_model_path(model);
+        // It's considered downloaded if model.safetensors exists
+        path.join("model.safetensors").exists()
+    }
 }

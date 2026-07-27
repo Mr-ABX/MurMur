@@ -84,6 +84,32 @@ pub async fn download_model_file(
     Ok(())
 }
 
+pub async fn download_gemma_model(
+    model: &crate::settings::GemmaModel,
+    dest_dir: &PathBuf,
+    app: &AppHandle,
+) -> Result<()> {
+    let repo_id = model.repo_id();
+    let files = [
+        "config.json",
+        "generation_config.json",
+        "model.safetensors",
+        "special_tokens_map.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+    ];
+
+    for file in files.iter() {
+        let url = format!("https://huggingface.co/{}/resolve/main/{}", repo_id, file);
+        let dest_path = dest_dir.join(file);
+        
+        let model_name_file = format!("{}/{}", model.as_str(), file);
+        download_model_file(&url, &dest_path, app, &model_name_file).await?;
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn delete_model_file(
     model: crate::settings::WhisperModel,

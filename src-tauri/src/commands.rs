@@ -414,6 +414,54 @@ pub async fn download_model(
     Ok(())
 }
 
+#[tauri::command]
+pub fn get_downloaded_gemma_models(state: State<'_, MurmurState>) -> HashMap<String, bool> {
+    let settings = state.settings.lock().unwrap();
+    let models = [crate::settings::GemmaModel::E2B, crate::settings::GemmaModel::E4B];
+    models.iter().map(|m| {
+        (m.as_str().to_string(), settings.is_gemma_model_downloaded(m))
+    }).collect()
+}
+
+#[tauri::command]
+pub async fn download_gemma_model_cmd(
+    model: crate::settings::GemmaModel,
+    app: AppHandle,
+    state: State<'_, MurmurState>,
+) -> Result<(), String> {
+    let settings = state.settings.lock().unwrap().clone();
+    let dest_dir = settings.gemma_model_path(&model);
+    let model_name = model.as_str().to_string();
+
+    task::spawn(async move {
+        match model_manager::download_gemma_model(&model, &dest_dir, &app).await {
+            Ok(()) => {
+                let _ = app.emit("murmur://gemma-downloaded", model_name);
+            }
+            Err(e) => {
+                let _ = app.emit("murmur://error", format!("Gemma download failed: {}", e));
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_gemma_model(
+    model: crate::settings::GemmaModel,
+    state: State<'_, MurmurState>,
+) -> Result<(), String> {
+    let settings = state.settings.lock().unwrap().clone();
+    let dest_dir = settings.gemma_model_path(&model);
+
+    if dest_dir.exists() {
+        tokio::fs::remove_dir_all(dest_dir).await.map_err(|e| e.to_string())?;
+    }
+    
+    Ok(())
+}
+
 // ============================================================
 // App Commands
 // ============================================================
