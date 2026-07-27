@@ -25,6 +25,12 @@ export interface AppSettings {
   systemPrompt: string;
   localAssistantModel: string;
   experimentalWakeWord: boolean;
+  operatingMode: "dictation" | "assistant" | "hybrid";
+  assistantHotkey: string;
+  wakeWord: string;
+  widgetNotchEnabled: boolean;
+  widgetPetEnabled: boolean;
+  gemmaModel: "e2b" | "e4b" | null;
 }
 
 export interface AppState {
@@ -65,6 +71,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   systemPrompt: "You are a helpful screen-aware assistant. Be extremely concise. Only answer what is asked. Do not output markdown unless required.",
   localAssistantModel: "gemini-2.0-flash-lite-preview-02-05",
   experimentalWakeWord: false,
+  operatingMode: "dictation",
+  assistantHotkey: "CommandOrControl+Shift+A",
+  wakeWord: "hey murmur",
+  widgetNotchEnabled: true,
+  widgetPetEnabled: false,
+  gemmaModel: null,
 };
 
 export function useAppState(): AppState {

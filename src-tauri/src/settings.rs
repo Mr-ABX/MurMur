@@ -31,6 +31,18 @@ pub struct AppSettings {
     pub local_assistant_model: String,
     #[serde(default)]
     pub experimental_wake_word: bool,
+    #[serde(default)]
+    pub operating_mode: OperatingMode,
+    #[serde(default)]
+    pub assistant_hotkey: String,
+    #[serde(default)]
+    pub wake_word: String,
+    #[serde(default)]
+    pub widget_notch_enabled: bool,
+    #[serde(default)]
+    pub widget_pet_enabled: bool,
+    #[serde(default)]
+    pub gemma_model: Option<GemmaModel>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -40,6 +52,43 @@ pub enum CloudProvider {
     Gemini,
     Groq,
     Deepgram,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum OperatingMode {
+    Dictation,
+    Assistant,
+    Hybrid,
+}
+
+impl Default for OperatingMode {
+    fn default() -> Self {
+        Self::Dictation
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum GemmaModel {
+    E2B,
+    E4B,
+}
+
+impl GemmaModel {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            GemmaModel::E2B => "e2b",
+            GemmaModel::E4B => "e4b",
+        }
+    }
+    
+    pub fn repo_id(&self) -> &'static str {
+        match self {
+            GemmaModel::E2B => "google/gemma-4-E2B-it-assistant",
+            GemmaModel::E4B => "google/gemma-4-E4B-it-assistant",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -111,6 +160,12 @@ impl Default for AppSettings {
             system_prompt: "You are a helpful screen-aware assistant. Be extremely concise. Only answer what is asked. Do not output markdown unless required.".to_string(),
             local_assistant_model: "gemini-2.0-flash-lite-preview-02-05".to_string(),
             experimental_wake_word: false,
+            operating_mode: OperatingMode::Dictation,
+            assistant_hotkey: "CommandOrControl+Shift+A".to_string(),
+            wake_word: "hey murmur".to_string(),
+            widget_notch_enabled: true,
+            widget_pet_enabled: false,
+            gemma_model: None,
         }
     }
 }
