@@ -7,7 +7,7 @@ import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
   Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot
 } from "lucide-react";
-import type { AppState, WhisperModel } from "../hooks/useAppState";
+import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
 import murmurIcon from "../assets/murmur_icon.png";
 import NotesTab from "./tabs/NotesTab";
 import SkillsTab from "./tabs/SkillsTab";
@@ -21,6 +21,11 @@ const MODEL_INFO: Record<WhisperModel, { size: string; ram: string; speed: strin
   base: { size: "142 MB", ram: "~500 MB", speed: "~200ms", quality: "Great", description: "Recommended. Best balance of speed and accuracy." },
   small: { size: "466 MB", ram: "~1.5 GB", speed: "~500ms", quality: "Excellent", description: "Higher accuracy for complex, technical terms." },
   medium: { size: "1.5 GB", ram: "~4.0 GB", speed: "~1s", quality: "Near-perfect", description: "Best accuracy. Slower on older hardware." },
+};
+
+const GEMMA_MODEL_INFO: Record<GemmaModel, { size: string; ram: string; speed: string; quality: string; description: string }> = {
+  e2b: { size: "~1.5 GB", ram: "~2.0 GB", speed: "Fast", quality: "Good", description: "Fast and lightweight for basic tasks." },
+  e4b: { size: "~2.7 GB", ram: "~3.5 GB", speed: "Medium", quality: "Great", description: "Better reasoning for complex tasks." },
 };
 
 const LANGUAGES = [
@@ -86,7 +91,14 @@ function SettingRow({
 }
 
 export default function SettingsPanel({ state }: Props) {
-  const { settings, updateSettings, isModelDownloaded, isDownloading, downloadingModel, downloadProgress, downloadModel, deleteModel } = state;
+  const { 
+    settings, updateSettings, 
+    isModelDownloaded, isGemmaModelDownloaded,
+    isDownloading, downloadingModel, downloadingGemmaModel, 
+    downloadProgress, 
+    downloadModel, deleteModel,
+    downloadGemmaModel, deleteGemmaModel
+  } = state;
   const [activeTab, setActiveTab] = useState<Tab>("notes");
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -463,6 +475,108 @@ export default function SettingsPanel({ state }: Props) {
                       placeholder="You are a helpful screen-aware assistant..."
                     />
                   </SettingRow>
+                </div>
+
+                <SectionHeader icon={<Cpu size={16} />} title="Local Assistant Models (Gemma)" />
+                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                  Download local LLMs to run the screen assistant entirely on-device without using cloud APIs.
+                </p>
+                <div className="flex flex-col gap-4 mb-10">
+                  {(["e2b", "e4b"] as GemmaModel[]).map((model) => {
+                    const info = GEMMA_MODEL_INFO[model];
+                    const downloaded = isGemmaModelDownloaded[model];
+                    const isSelected = settings.gemmaModel === model;
+                    const isThisDownloading = isDownloading && downloadingGemmaModel === model;
+
+                    return (
+                      <motion.div
+                        key={model}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => downloaded && updateSettings({ gemmaModel: model })}
+                        className={`relative rounded-xl p-4 cursor-pointer transition-all ${
+                          isSelected ? "ring-1 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10" : "hover:border-[var(--border-strong)]"
+                        }`}
+                        style={{
+                          background: isSelected ? "var(--bg-surface-elevated)" : "var(--bg-surface)",
+                          border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-semibold text-[var(--text-primary)] uppercase">{model}</span>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)] mb-2">{info.description}</p>
+                            <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                              <span className="font-mono" title="Disk Size">💾 {info.size}</span>
+                              <span>·</span>
+                              <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
+                              <span>·</span>
+                              <span title="Speed">⚡ {info.speed}</span>
+                              <span>·</span>
+                              <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
+                            </div>
+                          </div>
+
+                          <div className="ml-3 flex-shrink-0 flex items-center gap-2">
+                            {downloaded ? (
+                              <>
+                                <button
+                                  onClick={async (e) => { 
+                                    e.stopPropagation(); 
+                                    const confirmed = await ask(`Are you sure you want to delete the Gemma ${model} model file from your disk?`, {
+                                      title: 'Delete Model',
+                                      kind: 'warning',
+                                    });
+                                    if (confirmed) {
+                                      deleteGemmaModel(model); 
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors"
+                                  title="Delete Model"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-[var(--accent-primary)]" : "bg-[var(--bg-surface-elevated)]"}`}>
+                                  <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
+                                </div>
+                              </>
+                            ) : isThisDownloading ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <Loader2 size={16} className="text-[var(--accent-primary)] animate-spin" />
+                                <span className="text-xs text-[var(--accent-primary)]">
+                                  {downloadProgress.total > 0 
+                                    ? `${downloadProgress.progress}% (${(downloadProgress.downloaded / 1048576).toFixed(1)} MB)` 
+                                    : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
+                                </span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); downloadGemmaModel(model); }}
+                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium bg-[var(--bg-surface-elevated)] hover:bg-[var(--accent-primary)] border border-[var(--border-strong)] hover:border-[var(--accent-primary)] text-[var(--text-primary)] transition-all"
+                              >
+                                <Download size={14} />
+                                Get
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Download progress bar */}
+                        {isThisDownloading && downloadProgress.total > 0 && (
+                          <div className="mt-3 h-1 rounded-full overflow-hidden bg-[var(--bg-base)]">
+                            <motion.div
+                              className="h-full rounded-full bg-[var(--accent-primary)]"
+                              initial={{ width: "0%" }}
+                              animate={{ width: `${downloadProgress.progress}%` }}
+                              transition={{ duration: 0.3 }}
+                            />
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
             )}

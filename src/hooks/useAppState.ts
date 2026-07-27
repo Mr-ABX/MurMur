@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 
 export type RecordingState = "idle" | "recording" | "transcribing" | "done" | "error";
 export type WhisperModel = "tiny" | "base" | "small" | "medium";
+export type GemmaModel = "e2b" | "e4b";
 
 export interface AppSettings {
   hotkey: string;
@@ -39,8 +40,10 @@ export interface AppState {
   partialTranscript: string;
   settings: AppSettings;
   isModelDownloaded: Record<WhisperModel, boolean>;
+  isGemmaModelDownloaded: Record<GemmaModel, boolean>;
   isDownloading: boolean;
   downloadingModel: WhisperModel | null;
+  downloadingGemmaModel: GemmaModel | null;
   downloadProgress: { progress: number, downloaded: number, total: number };
   error: string | null;
   startRecording: () => void;
@@ -48,6 +51,8 @@ export interface AppState {
   updateSettings: (settings: Partial<AppSettings>) => void;
   downloadModel: (model: WhisperModel) => void;
   deleteModel: (model: WhisperModel) => void;
+  downloadGemmaModel: (model: GemmaModel) => void;
+  deleteGemmaModel: (model: GemmaModel) => void;
   clearTranscript: () => void;
 }
 
@@ -90,8 +95,13 @@ export function useAppState(): AppState {
     small: false,
     medium: false,
   });
+  const [isGemmaModelDownloaded, setIsGemmaModelDownloaded] = useState<Record<GemmaModel, boolean>>({
+    e2b: false,
+    e4b: false,
+  });
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingModel, setDownloadingModel] = useState<WhisperModel | null>(null);
+  const [downloadingGemmaModel, setDownloadingGemmaModel] = useState<GemmaModel | null>(null);
   const [downloadProgress, setDownloadProgress] = useState({ progress: 0, downloaded: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
 
@@ -140,6 +150,12 @@ export function useAppState(): AppState {
             return next;
           });
         }),
+        await listen<GemmaModel>("murmur://gemma-downloaded", (e) => {
+          setIsGemmaModelDownloaded((prev) => ({ ...prev, [e.payload]: true }));
+          setIsDownloading(false);
+          setDownloadingGemmaModel(null);
+          setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
+        }),
       );
     };
 
@@ -148,6 +164,7 @@ export function useAppState(): AppState {
     // Load initial state from backend
     invoke<AppSettings>("get_settings").then(setSettings).catch(console.error);
     invoke<Record<WhisperModel, boolean>>("get_downloaded_models").then(setIsModelDownloaded).catch(console.error);
+    invoke<Record<GemmaModel, boolean>>("get_downloaded_gemma_models").then(setIsGemmaModelDownloaded).catch(console.error);
 
     return () => {
       unlisten.forEach((fn) => fn());
@@ -208,6 +225,31 @@ export function useAppState(): AppState {
     }
   }, [settings.model, updateSettings]);
 
+  const downloadGemmaModel = useCallback(async (model: GemmaModel) => {
+    setIsDownloading(true);
+    setDownloadingGemmaModel(model);
+    setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
+    try {
+      await invoke("download_gemma_model_cmd", { model });
+    } catch (err) {
+      setError(String(err));
+      setIsDownloading(false);
+      setDownloadingGemmaModel(null);
+    }
+  }, []);
+
+  const deleteGemmaModel = useCallback(async (model: GemmaModel) => {
+    try {
+      await invoke("delete_gemma_model", { model });
+      setIsGemmaModelDownloaded((prev) => ({ ...prev, [model]: false }));
+      if (settings.gemmaModel === model) {
+        updateSettings({ gemmaModel: null });
+      }
+    } catch (err) {
+      setError(String(err));
+    }
+  }, [settings.gemmaModel, updateSettings]);
+
   const clearTranscript = useCallback(() => {
     setTranscript("");
     setPartialTranscript("");
@@ -219,8 +261,10 @@ export function useAppState(): AppState {
     partialTranscript,
     settings,
     isModelDownloaded,
+    isGemmaModelDownloaded,
     isDownloading,
     downloadingModel,
+    downloadingGemmaModel,
     downloadProgress,
     error,
     startRecording,
@@ -228,6 +272,8 @@ export function useAppState(): AppState {
     updateSettings,
     downloadModel,
     deleteModel,
+    downloadGemmaModel,
+    deleteGemmaModel,
     clearTranscript,
   };
 }
