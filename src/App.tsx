@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import OverlayWindow from "./components/OverlayWindow";
 import SettingsPanel from "./components/SettingsPanel";
 import TrayMenu from "./components/TrayMenu";
+import MiniWidget from "./components/MiniWidget";
 import { useAppState } from "./hooks/useAppState";
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -13,9 +14,10 @@ const windowLabel = getCurrentWindow().label;
 
 function App() {
   const appState = useAppState();
-  const [view, setView] = useState<"tray" | "overlay" | "settings">(
+  const [view, setView] = useState<"tray" | "overlay" | "settings" | "widget">(
     windowLabel === "overlay" ? "overlay" :
     windowLabel === "settings" ? "settings" :
+    windowLabel === "widget" ? "widget" :
     "tray"
   );
 
@@ -29,6 +31,9 @@ function App() {
       )}
       {view === "tray" && (
         <TrayMenu key="tray" state={appState} onOpenSettings={() => setView("settings")} />
+      )}
+      {view === "widget" && (
+        <MiniWidget key="widget" />
       )}
     </AnimatePresence>
   );

@@ -5,7 +5,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench
+  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot
 } from "lucide-react";
 import type { AppState, WhisperModel } from "../hooks/useAppState";
 import murmurIcon from "../assets/murmur_icon.png";
@@ -36,7 +36,7 @@ const LANGUAGES = [
   { code: "ru", name: "Russian" },
 ];
 
-type Tab = "notes" | "skills" | "general" | "model" | "cloud" | "voxcoder" | "history" | "experimental" | "about";
+type Tab = "notes" | "skills" | "general" | "model" | "assistant" | "cloud" | "voxcoder" | "history" | "experimental" | "about";
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -94,6 +94,7 @@ export default function SettingsPanel({ state }: Props) {
     { id: "skills", label: "Skills", icon: <Wrench size={16} /> },
     { id: "general", label: "General", icon: <Settings size={16} /> },
     { id: "model", label: "AI Model", icon: <Cpu size={16} /> },
+    { id: "assistant", label: "Assistant", icon: <Bot size={16} /> },
     { id: "cloud", label: "Cloud APIs", icon: <Cloud size={16} /> },
     { id: "voxcoder", label: "VoxCoder", icon: <Code2 size={16} /> },
     { id: "history", label: "History", icon: <History size={16} /> },
@@ -428,6 +429,44 @@ export default function SettingsPanel({ state }: Props) {
               </motion.div>
             )}
 
+            {activeTab === "assistant" && (
+              <motion.div
+                key="assistant"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="max-w-3xl"
+              >
+                <SectionHeader icon={<Bot size={16} />} title="Screen Assistant" />
+                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                  Configure the AI assistant that can see your screen and answer questions in the menu bar.
+                </p>
+                
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                  <SettingRow label="Assistant Model" description="The model used for screen-aware answering.">
+                    <input
+                      type="text"
+                      value={settings.localAssistantModel}
+                      onChange={(e) => updateSettings({ localAssistantModel: e.target.value })}
+                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                      placeholder="gemini-2.0-flash-lite-preview-02-05"
+                    />
+                  </SettingRow>
+
+                  <SettingRow label="System Prompt" description="Instructions given to the assistant before answering.">
+                    <textarea
+                      value={settings.systemPrompt}
+                      onChange={(e) => updateSettings({ systemPrompt: e.target.value })}
+                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm resize-y border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                      rows={5}
+                      placeholder="You are a helpful screen-aware assistant..."
+                    />
+                  </SettingRow>
+                </div>
+              </motion.div>
+            )}
+
             {activeTab === "cloud" && (
               <motion.div
                 key="cloud"
@@ -595,6 +634,13 @@ export default function SettingsPanel({ state }: Props) {
                     description="Automatically use a free LLM (Groq/Llama 3) to polish the final transcript for better grammar and clarity."
                   >
                     <Toggle enabled={settings.aiRewrite} onChange={(v) => updateSettings({ aiRewrite: v })} />
+                  </SettingRow>
+                  
+                  <SettingRow 
+                    label="Wake Word (Experimental)" 
+                    description="Continuously listen for a wake word (e.g. 'Hey Murmur' or loud noise) to start recording without a hotkey."
+                  >
+                    <Toggle enabled={settings.experimentalWakeWord} onChange={(v) => updateSettings({ experimentalWakeWord: v })} />
                   </SettingRow>
                 </div>
               </motion.div>

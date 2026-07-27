@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Mic, Settings, Power } from "lucide-react";
 import type { AppState } from "../hooks/useAppState";
 import { invoke } from "@tauri-apps/api/core";
+import { useState } from "react";
 
 interface Props {
   state: AppState;
@@ -10,6 +11,9 @@ interface Props {
 
 export default function TrayMenu({ state, onOpenSettings }: Props) {
   const { recordingState, settings } = state;
+  const [assistantPrompt, setAssistantPrompt] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
+  const [assistantResponse, setAssistantResponse] = useState("");
 
   const isRecording = recordingState === "recording";
 
@@ -73,6 +77,63 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
             {settings.voxcoderMode ? "ON" : "OFF"}
           </button>
         </div>
+      </div>
+
+      {/* Screen Assistant */}
+      <div className="px-4 py-3 border-b border-murmur-border/20">
+        <span className="text-xs text-murmur-muted block mb-2">Screen Assistant</span>
+        <form 
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!assistantPrompt.trim() || isAsking) return;
+            
+            setIsAsking(true);
+            setAssistantResponse("");
+            try {
+              const b64 = await invoke<string>("capture_screen_base64");
+              
+              // Find and show widget window
+              const { Window } = await import('@tauri-apps/api/window');
+              const widgetWindow = await Window.getByLabel("widget");
+              if (widgetWindow) {
+                await widgetWindow.show();
+                await widgetWindow.setFocus();
+              }
+
+              const res = await invoke<string>("ask_screen_assistant", { 
+                prompt: assistantPrompt, 
+                imageBase64: b64 
+              });
+              setAssistantResponse(res);
+              setAssistantPrompt("");
+
+              // Emit event to trigger widget
+              const { emit } = await import('@tauri-apps/api/event');
+              await emit("assistant_response", res);
+
+            } catch (err: any) {
+              setAssistantResponse("Error: " + err);
+            } finally {
+              setIsAsking(false);
+            }
+          }}
+          className="flex flex-col gap-2"
+        >
+          <input 
+            type="text" 
+            placeholder="Ask about your screen..." 
+            value={assistantPrompt}
+            onChange={(e) => setAssistantPrompt(e.target.value)}
+            disabled={isAsking}
+            className="w-full bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 px-3 py-1.5 rounded-md focus:outline-none focus:border-zinc-500 placeholder-zinc-500"
+          />
+        </form>
+        {isAsking && <p className="text-xs text-zinc-400 mt-2 animate-pulse">Thinking...</p>}
+        {assistantResponse && (
+          <div className="mt-2 p-2 bg-zinc-900 border border-zinc-800 rounded-md max-h-40 overflow-y-auto">
+            <p className="text-xs text-zinc-300 whitespace-pre-wrap">{assistantResponse}</p>
+          </div>
+        )}
       </div>
 
       {/* Menu Items */}

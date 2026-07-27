@@ -8,6 +8,7 @@ mod overlay;
 mod settings;
 mod transcriber;
 mod voxcoder;
+mod screen_assistant;
 
 use std::sync::{Arc, Mutex};
 use tauri::{
@@ -128,6 +129,8 @@ pub fn run() {
             model_manager::open_models_directory,
             commands::clear_all_app_data,
             commands::quit_app,
+            screen_assistant::capture_screen_base64,
+            screen_assistant::ask_screen_assistant,
         ])
         .run(tauri::generate_context!())
         .expect("error while running murmur");

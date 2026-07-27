@@ -17,6 +17,36 @@
     },
     "windows": [
       {
+        "label": "widget",
+        "title": "Murmur Widget",
+        "url": "/",
+        "width": 350,
+        "height": 250,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "shadow": false,
+        "focus": false
+      },
+      {
+        "label": "tray",
+        "title": "Murmur Menu",
+        "url": "/",
+        "width": 300,
+        "height": 450,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "shadow": false,
+        "focus": true
+      },
+      {
         "label": "overlay",
         "title": "Murmur Overlay",
         "url": "/",
@@ -58,10 +88,7 @@
     ],
     "macOS": {
       "entitlements": "entitlements.plist",
-      "signingIdentity": null,
-      "infoPlist": {
-        "NSMicrophoneUsageDescription": "Murmur needs microphone access to convert your speech to text."
-      }
+      "signingIdentity": null
     }
   },
   "plugins": {

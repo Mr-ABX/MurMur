@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Mic, Play, FileText } from "lucide-react";
+import { Plus, Trash2, Mic, FileText } from "lucide-react";
 import { AppState } from "../../hooks/useAppState";
 
 interface Props {
@@ -13,10 +13,21 @@ interface Note {
   timestamp: number;
 }
 
-export default function NotesTab({ state }: Props) {
-  // In a real implementation, this would be loaded from Tauri's fs or a local DB
-  const [notes, setNotes] = useState<Note[]>([]);
+export default function NotesTab({}: Props) {
+  const [notes, setNotes] = useState<Note[]>(() => {
+    try {
+      const saved = localStorage.getItem("murmur-notes");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to load notes:", e);
+    }
+    return [];
+  });
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    localStorage.setItem("murmur-notes", JSON.stringify(notes));
+  }, [notes]);
 
   const createNote = () => {
     const newNote: Note = {

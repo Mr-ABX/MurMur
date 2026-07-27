@@ -25,6 +25,12 @@ pub struct AppSettings {
     pub custom_vocabulary: String,
     #[serde(default)]
     pub tray_icon_style: TrayIconStyle,
+    #[serde(default)]
+    pub system_prompt: String,
+    #[serde(default)]
+    pub local_assistant_model: String,
+    #[serde(default)]
+    pub experimental_wake_word: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -102,6 +108,9 @@ impl Default for AppSettings {
             ai_rewrite: false,
             custom_vocabulary: "".to_string(),
             tray_icon_style: TrayIconStyle::Color,
+            system_prompt: "You are a helpful screen-aware assistant. Be extremely concise. Only answer what is asked. Do not output markdown unless required.".to_string(),
+            local_assistant_model: "gemini-2.0-flash-lite-preview-02-05".to_string(),
+            experimental_wake_word: false,
         }
     }
 }

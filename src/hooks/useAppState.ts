@@ -22,6 +22,9 @@ export interface AppSettings {
   liveStreaming: boolean;
   aiRewrite: boolean;
   customVocabulary: string;
+  systemPrompt: string;
+  localAssistantModel: string;
+  experimentalWakeWord: boolean;
 }
 
 export interface AppState {
@@ -59,6 +62,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   liveStreaming: false,
   aiRewrite: false,
   customVocabulary: "",
+  systemPrompt: "You are a helpful screen-aware assistant. Be extremely concise. Only answer what is asked. Do not output markdown unless required.",
+  localAssistantModel: "gemini-2.0-flash-lite-preview-02-05",
+  experimentalWakeWord: false,
 };
 
 export function useAppState(): AppState {
