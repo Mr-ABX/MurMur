@@ -71,30 +71,39 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                     if let Ok(ns_win) = window_clone.ns_window() {
                         let ns_win = ns_win as *mut AnyObject;
                         unsafe {
-                            // Level 101 = NSPopUpMenuWindowLevel — allows drawing over menu bar without constraints
+                            // NSPopUpMenuWindowLevel (101) — floats above the menu bar rendering layer
                             let _: () = msg_send![ns_win, setLevel: 101i64];
-                            // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
-                            let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
-                            // Enable FullSizeContentView (1 << 15 = 32768) to allow content to draw into menu bar area
-                            let current_style: u64 = msg_send![ns_win, styleMask];
-                            let new_style = current_style | (1u64 << 15);
-                            let _: () = msg_send![ns_win, setStyleMask: new_style];
-                            let _: () = msg_send![ns_win, setTitlebarAppearsTransparent: true];
-                            let _: () = msg_send![ns_win, setTitleVisibility: 1i64]; // NSWindowTitleHidden
+                            // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) = 81
+                            let _: () = msg_send![ns_win, setCollectionBehavior: 81u64];
 
-                            // Get current frame and screen
-                            let frame: NSRect = msg_send![ns_win, frame];
+                            // Get full screen frame (NOT visibleFrame — visibleFrame excludes menu bar)
                             let screen: *mut AnyObject = msg_send![ns_win, screen];
                             if !screen.is_null() {
                                 let screen_frame: NSRect = msg_send![screen, frame];
-                                let new_frame = NSRect {
-                                    origin: NSPoint { 
-                                        x: screen_frame.origin.x + (screen_frame.size.width - frame.size.width) / 2.0, 
-                                        y: screen_frame.origin.y + screen_frame.size.height - frame.size.height 
-                                    },
-                                    size: frame.size,
+                                let win_size: NSSize = {
+                                    let f: NSRect = msg_send![ns_win, frame];
+                                    f.size
                                 };
-                                let _: () = msg_send![ns_win, setFrame: new_frame, display: true];
+
+                                // Build target frame: centered horizontally, flush against top of screen
+                                let target_frame = NSRect {
+                                    origin: NSPoint {
+                                        x: screen_frame.origin.x + (screen_frame.size.width - win_size.width) / 2.0,
+                                        // y in Cocoa = bottom-left of window.
+                                        // Top of screen = screen_frame.origin.y + screen_frame.size.height
+                                        // Bottom of our window = top_of_screen - window_height
+                                        y: screen_frame.origin.y + screen_frame.size.height - win_size.height,
+                                    },
+                                    size: win_size,
+                                };
+
+                                // *** THE FIX ***
+                                // setFrame:display: internally calls constrainFrameRect:toScreen:
+                                // which clamps Y to visibleFrame (below the menu bar) — that's why it never worked.
+                                // _setFrame:constrainingToScreen:NO bypasses that constraint entirely.
+                                // This private API is used by Bartender, iStat Menus, and every real menu bar app.
+                                let _: () = msg_send![ns_win, _setFrame: target_frame, constrainingToScreen: false];
+                                let _: () = msg_send![ns_win, display];
                             }
                         }
                     }
