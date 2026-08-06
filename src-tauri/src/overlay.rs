@@ -33,7 +33,8 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
             #[cfg(target_os = "macos")]
             {
                 use objc2::msg_send;
-                use objc2::runtime::AnyObject;
+                use objc2::runtime::{AnyObject, AnyClass, Sel};
+                use objc2::ffi::class_replaceMethod;
 
                 #[repr(C)]
                 #[derive(Clone, Copy)]
@@ -66,6 +67,15 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                     );
                 }
 
+                unsafe extern "C" fn unconstrained_constrain_frame_rect(
+                    _this: *mut AnyObject,
+                    _cmd: Sel,
+                    frame_rect: NSRect,
+                    _screen: *mut AnyObject,
+                ) -> NSRect {
+                    frame_rect
+                }
+
                 let window_clone = window.clone();
                 let _ = app.run_on_main_thread(move || {
                     if let Ok(ns_win) = window_clone.ns_window() {
@@ -76,34 +86,37 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                             // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) = 81
                             let _: () = msg_send![ns_win, setCollectionBehavior: 81u64];
 
+                            // Override constrainFrameRect:toScreen: so Cocoa won't clamp Y to visibleFrame (below menu bar)
+                            let class: *const AnyClass = msg_send![ns_win, class];
+                            let sel_name = b"constrainFrameRect:toScreen:\0";
+                            let sel_ptr = objc2::ffi::sel_registerName(sel_name.as_ptr() as *const _);
+                            let types = b"{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}@\0";
+                            let imp: unsafe extern "C-unwind" fn() = std::mem::transmute(
+                                unconstrained_constrain_frame_rect as unsafe extern "C" fn(*mut AnyObject, Sel, NSRect, *mut AnyObject) -> NSRect
+                            );
+                            class_replaceMethod(
+                                class as *mut _,
+                                sel_ptr.unwrap(),
+                                imp,
+                                types.as_ptr() as *const _,
+                            );
+
                             // Get full screen frame (NOT visibleFrame — visibleFrame excludes menu bar)
                             let screen: *mut AnyObject = msg_send![ns_win, screen];
                             if !screen.is_null() {
                                 let screen_frame: NSRect = msg_send![screen, frame];
-                                let win_size: NSSize = {
-                                    let f: NSRect = msg_send![ns_win, frame];
-                                    f.size
-                                };
+                                let win_frame: NSRect = msg_send![ns_win, frame];
 
-                                // Build target frame: centered horizontally, flush against top of screen
+                                // Target frame: centered horizontally, flush against top edge of physical screen
                                 let target_frame = NSRect {
                                     origin: NSPoint {
-                                        x: screen_frame.origin.x + (screen_frame.size.width - win_size.width) / 2.0,
-                                        // y in Cocoa = bottom-left of window.
-                                        // Top of screen = screen_frame.origin.y + screen_frame.size.height
-                                        // Bottom of our window = top_of_screen - window_height
-                                        y: screen_frame.origin.y + screen_frame.size.height - win_size.height,
+                                        x: screen_frame.origin.x + (screen_frame.size.width - win_frame.size.width) / 2.0,
+                                        y: screen_frame.origin.y + screen_frame.size.height - win_frame.size.height,
                                     },
-                                    size: win_size,
+                                    size: win_frame.size,
                                 };
 
-                                // *** THE FIX ***
-                                // setFrame:display: internally calls constrainFrameRect:toScreen:
-                                // which clamps Y to visibleFrame (below the menu bar) — that's why it never worked.
-                                // _setFrame:constrainingToScreen:NO bypasses that constraint entirely.
-                                // This private API is used by Bartender, iStat Menus, and every real menu bar app.
-                                let _: () = msg_send![ns_win, _setFrame: target_frame, constrainingToScreen: false];
-                                let _: () = msg_send![ns_win, display];
+                                let _: () = msg_send![ns_win, setFrame: target_frame, display: true];
                             }
                         }
                     }
