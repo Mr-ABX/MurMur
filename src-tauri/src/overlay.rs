@@ -33,7 +33,9 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
             #[cfg(target_os = "macos")]
             {
                 use objc2::msg_send;
-                use objc2::runtime::AnyObject;
+                use objc2::runtime::{AnyObject, Sel};
+                use objc2::sel;
+                use std::ffi::CString;
 
                 #[repr(C)]
                 #[derive(Clone, Copy)]
@@ -66,15 +68,56 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                     );
                 }
 
+                extern "C-unwind" fn constrain_frame_rect(
+                    _self: *mut AnyObject,
+                    _cmd: Sel,
+                    frame_rect: NSRect,
+                    _screen: *mut AnyObject,
+                ) -> NSRect {
+                    frame_rect
+                }
+
                 let window_clone = window.clone();
                 let _ = app.run_on_main_thread(move || {
                     if let Ok(ns_win) = window_clone.ns_window() {
                         let ns_win = ns_win as *mut AnyObject;
                         unsafe {
+                            // Safely create a dedicated subclass for the notch window if not created yet
+                            let subcls_name = CString::new("MurmurNotchWindow").unwrap();
+                            let mut subcls = objc2::ffi::objc_getClass(subcls_name.as_ptr()) as *mut objc2::runtime::AnyClass;
+
+                            if subcls.is_null() {
+                                let parent_cls: *mut AnyObject = msg_send![ns_win, class];
+                                subcls = objc2::ffi::objc_allocateClassPair(
+                                    parent_cls as *mut _,
+                                    subcls_name.as_ptr(),
+                                    0,
+                                ) as *mut _;
+
+                                if !subcls.is_null() {
+                                    let sel = sel!(constrainFrameRect:toScreen:);
+                                    let types = CString::new("{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}@").unwrap();
+                                    objc2::ffi::class_addMethod(
+                                        subcls as *mut _,
+                                        std::mem::transmute(sel),
+                                        std::mem::transmute::<_, unsafe extern "C-unwind" fn()>(
+                                            constrain_frame_rect as *const ()
+                                        ),
+                                        types.as_ptr(),
+                                    );
+                                    objc2::ffi::objc_registerClassPair(subcls as *mut _);
+                                }
+                            }
+
+                            if !subcls.is_null() {
+                                // Change ONLY this specific window instance's class to MurmurNotchWindow
+                                objc2::ffi::object_setClass(ns_win as *mut _, subcls as *mut _);
+                            }
+
                             // Level 1000 = NSScreenSaverWindowLevel — ensures it renders ABOVE the menu bar and notch
                             let _: () = msg_send![ns_win, setLevel: 1000i64];
-                            // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) = 81
-                            let _: () = msg_send![ns_win, setCollectionBehavior: 81u64];
+                            // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
+                            let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
                             // Enable FullSizeContentView (1 << 15 = 32768) to allow drawing over/into the menu bar
                             let current_style: u64 = msg_send![ns_win, styleMask];
                             let new_style = current_style | (1u64 << 15);
