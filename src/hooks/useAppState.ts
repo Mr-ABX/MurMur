@@ -32,6 +32,9 @@ export interface AppSettings {
   widgetNotchEnabled: boolean;
   widgetPetEnabled: boolean;
   gemmaModel: "e2b" | "e4b" | null;
+  autoUpdateCheck: boolean;
+  visibilityMode: "alwayson" | "autohidden";
+  notchStyle: "dynamicisland" | "macbook";
 }
 
 export interface AppState {
@@ -82,6 +85,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   widgetNotchEnabled: true,
   widgetPetEnabled: false,
   gemmaModel: null,
+  autoUpdateCheck: true,
+  visibilityMode: "alwayson",
+  notchStyle: "macbook",
 };
 
 export function useAppState(): AppState {
@@ -123,9 +129,34 @@ export function useAppState(): AppState {
           setPartialTranscript(e.payload);
         }),
         await listen<string>("murmur://transcript-done", (e) => {
-          setTranscript(e.payload);
+          const text = e.payload;
+          setTranscript(text);
           setPartialTranscript("");
           setRecordingState("done");
+
+          // Voice note trigger detection ("hey murmur, take note..." or "take note...")
+          const lower = text.toLowerCase();
+          if (lower.includes("take note") || lower.includes("take a note")) {
+            const noteContent = text
+              .replace(/hey murmur,?\s*/i, "")
+              .replace(/take a note:?\s*/i, "")
+              .replace(/take note:?\s*/i, "")
+              .trim();
+            if (noteContent) {
+              try {
+                const existingNotes = JSON.parse(localStorage.getItem("murmur_notes") || "[]");
+                existingNotes.unshift({
+                  id: Date.now(),
+                  text: noteContent,
+                  timestamp: new Date().toISOString(),
+                });
+                localStorage.setItem("murmur_notes", JSON.stringify(existingNotes));
+              } catch (err) {
+                console.error("Failed to save voice note:", err);
+              }
+            }
+          }
+
           // Reset to idle after showing result
           setTimeout(() => setRecordingState("idle"), 3000);
         }),

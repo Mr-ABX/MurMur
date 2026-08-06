@@ -1,37 +1,164 @@
 // overlay.rs - Controls overlay and settings window visibility
 
 use tauri::{AppHandle, Manager};
+use crate::settings::AppSettings;
 
-/// Show the recording overlay window, positioned at the bottom center of the screen
-pub fn show_overlay(app: &AppHandle) {
-    if let Some(window) = app.get_webview_window("overlay") {
-        // Get the primary monitor size
-        if let Ok(Some(monitor)) = window.primary_monitor() {
-            let screen_size = monitor.size();
-            let scale = monitor.scale_factor();
-            let screen_w = screen_size.width as f64 / scale;
-            let screen_h = screen_size.height as f64 / scale;
+/// Show the appropriate visualizer window based on settings
+pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
+    // We don't want to hide if AlwaysOn, but we might be switching visualizer types.
+    // For now, let's just forcefully hide the others that are NOT the active one.
+    if settings.widget_pet_enabled {
+        if let Some(w) = app.get_webview_window("overlay") { let _ = w.hide(); }
+        if let Some(w) = app.get_webview_window("notch") { let _ = w.hide(); }
+    } else if settings.widget_notch_enabled {
+        if let Some(w) = app.get_webview_window("overlay") { let _ = w.hide(); }
+        if let Some(w) = app.get_webview_window("widget") { let _ = w.hide(); }
+    } else {
+        if let Some(w) = app.get_webview_window("notch") { let _ = w.hide(); }
+        if let Some(w) = app.get_webview_window("widget") { let _ = w.hide(); }
+    }
 
-            let overlay_w = 500.0;
-            let overlay_h = 160.0;
+    if settings.widget_pet_enabled {
+        if let Some(window) = app.get_webview_window("widget") {
+            let _ = window.show();
+        }
+    } else if settings.widget_notch_enabled {
+        if let Some(window) = app.get_webview_window("notch") {
+            let _ = window.set_always_on_top(true);
+            let _ = window.set_visible_on_all_workspaces(true);
 
-            let x = (screen_w - overlay_w) / 2.0;
-            let y = screen_h - overlay_h - 100.0; // 100px from bottom
+            // Show window first so window is initialized by Tauri
+            let _ = window.show();
 
-            let _ = window.set_position(tauri::PhysicalPosition::new(
-                (x * scale) as i32,
-                (y * scale) as i32,
-            ));
+            #[cfg(target_os = "macos")]
+            {
+                use objc2::msg_send;
+                use objc2::runtime::AnyObject;
+
+                #[repr(C)]
+                #[derive(Clone, Copy)]
+                struct NSPoint { x: f64, y: f64 }
+
+                #[repr(C)]
+                #[derive(Clone, Copy)]
+                struct NSSize { width: f64, height: f64 }
+
+                #[repr(C)]
+                #[derive(Clone, Copy)]
+                struct NSRect { origin: NSPoint, size: NSSize }
+
+                unsafe impl objc2::Encode for NSPoint {
+                    const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                        "CGPoint",
+                        &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
+                    );
+                }
+                unsafe impl objc2::Encode for NSSize {
+                    const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                        "CGSize",
+                        &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
+                    );
+                }
+                unsafe impl objc2::Encode for NSRect {
+                    const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                        "CGRect",
+                        &[<NSPoint as objc2::Encode>::ENCODING, <NSSize as objc2::Encode>::ENCODING],
+                    );
+                }
+
+                let window_clone = window.clone();
+                let _ = app.run_on_main_thread(move || {
+                    if let Ok(ns_win) = window_clone.ns_window() {
+                        let ns_win = ns_win as *mut AnyObject;
+                        unsafe {
+                            // Level 1000 = NSScreenSaverWindowLevel — ensures it renders ABOVE the menu bar and notch
+                            let _: () = msg_send![ns_win, setLevel: 1000i64];
+                            // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) = 81
+                            let _: () = msg_send![ns_win, setCollectionBehavior: 81u64];
+                            // Enable FullSizeContentView (1 << 15 = 32768) to allow drawing over/into the menu bar
+                            let current_style: u64 = msg_send![ns_win, styleMask];
+                            let new_style = current_style | (1u64 << 15);
+                            let _: () = msg_send![ns_win, setStyleMask: new_style];
+                            let _: () = msg_send![ns_win, setTitlebarAppearsTransparent: true];
+                            let _: () = msg_send![ns_win, setTitleVisibility: 1i64]; // NSWindowTitleHidden
+
+                            // Get current frame and screen
+                            let frame: NSRect = msg_send![ns_win, frame];
+                            let screen: *mut AnyObject = msg_send![ns_win, screen];
+                            if !screen.is_null() {
+                                let screen_frame: NSRect = msg_send![screen, frame];
+                                let new_frame = NSRect {
+                                    origin: NSPoint { 
+                                        x: screen_frame.origin.x + (screen_frame.size.width - frame.size.width) / 2.0, 
+                                        y: screen_frame.origin.y + screen_frame.size.height - frame.size.height 
+                                    },
+                                    size: frame.size,
+                                };
+                                let _: () = msg_send![ns_win, setFrame: new_frame, display: true];
+                            }
+                        }
+                    }
+                });
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            {
+                let monitor = app.primary_monitor().ok().flatten()
+                    .or_else(|| window.primary_monitor().ok().flatten());
+
+                if let Some(monitor) = monitor {
+                    let scale = monitor.scale_factor();
+                    let screen_w = monitor.size().width as f64 / scale;
+                    let notch_w = 250.0_f64;
+                    let x = (screen_w - notch_w) / 2.0;
+
+                    let target_x = (x * scale) as i32;
+                    let _ = window.set_position(tauri::PhysicalPosition::new(target_x, 0));
+                }
+            }
         }
 
-        let _ = window.show();
+    } else {
+        // Fallback to overlay
+        if let Some(window) = app.get_webview_window("overlay") {
+            let monitor = app.primary_monitor().ok().flatten()
+                .or_else(|| window.primary_monitor().ok().flatten());
+
+            if let Some(monitor) = monitor {
+                let screen_size = monitor.size();
+                let scale = monitor.scale_factor();
+                let screen_w = screen_size.width as f64 / scale;
+                let screen_h = screen_size.height as f64 / scale;
+
+                let overlay_w = 500.0;
+                let overlay_h = 160.0;
+
+                let x = (screen_w - overlay_w) / 2.0;
+                let y = screen_h - overlay_h - 100.0;
+
+                let _ = window.set_position(tauri::PhysicalPosition::new(
+                    (x * scale) as i32,
+                    (y * scale) as i32,
+                ));
+            }
+            let _ = window.show();
+        }
     }
 }
 
-/// Hide the recording overlay window
-#[allow(dead_code)]
-pub fn hide_overlay(app: &AppHandle) {
+/// Hide all visualizer windows if the setting is AutoHidden
+pub fn hide_visualizers(app: &AppHandle, settings: &AppSettings) {
+    if settings.visibility_mode == crate::settings::VisibilityMode::AlwaysOn {
+        return; // Do not hide windows if always on
+    }
+
     if let Some(window) = app.get_webview_window("overlay") {
+        let _ = window.hide();
+    }
+    if let Some(window) = app.get_webview_window("notch") {
+        let _ = window.hide();
+    }
+    if let Some(window) = app.get_webview_window("widget") {
         let _ = window.hide();
     }
 }

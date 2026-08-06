@@ -43,6 +43,42 @@ pub struct AppSettings {
     pub widget_pet_enabled: bool,
     #[serde(default)]
     pub gemma_model: Option<GemmaModel>,
+    #[serde(default = "default_true")]
+    pub auto_update_check: bool,
+    #[serde(default)]
+    pub visibility_mode: VisibilityMode,
+    #[serde(default)]
+    pub notch_style: NotchStyle,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum VisibilityMode {
+    AlwaysOn,
+    AutoHidden,
+}
+
+impl Default for VisibilityMode {
+    fn default() -> Self {
+        Self::AlwaysOn
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum NotchStyle {
+    DynamicIsland,
+    Macbook,
+}
+
+impl Default for NotchStyle {
+    fn default() -> Self {
+        Self::Macbook
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -166,6 +202,9 @@ impl Default for AppSettings {
             widget_notch_enabled: true,
             widget_pet_enabled: false,
             gemma_model: None,
+            auto_update_check: true,
+            visibility_mode: VisibilityMode::AlwaysOn,
+            notch_style: NotchStyle::Macbook,
         }
     }
 }

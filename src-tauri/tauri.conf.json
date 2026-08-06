@@ -73,8 +73,22 @@
         "transparent": true,
         "visible": false,
         "center": true
+      },
+      {
+        "label": "notch",
+        "title": "Murmur Notch",
+        "url": "/notch",
+        "width": 250,
+        "height": 60,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "shadow": false,
+        "focus": false
       }
-
     ]
   },
   "bundle": {
@@ -88,6 +102,7 @@
     ],
     "macOS": {
       "entitlements": "entitlements.plist",
+      "infoPlist": "Info.plist",
       "signingIdentity": null
     }
   },

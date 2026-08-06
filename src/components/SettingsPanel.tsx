@@ -5,7 +5,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot
+  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot, RefreshCw
 } from "lucide-react";
 import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
 import murmurIcon from "../assets/murmur_icon.png";
@@ -202,6 +202,80 @@ export default function SettingsPanel({ state }: Props) {
               >
                 <SectionHeader icon={<Keyboard size={16} />} title="Input & Shortcuts" />
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                  <SettingRow label="Operating Mode" description="Choose how Murmur processes your voice">
+                    <div className="relative w-full sm:w-64">
+                      <select
+                        value={settings.operatingMode}
+                        onChange={(e) => updateSettings({ operatingMode: e.target.value as any })}
+                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                      >
+                        <option value="dictation" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Dictation (Type Anywhere)</option>
+                        <option value="assistant" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Assistant (Chat UI)</option>
+                        <option value="hybrid" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Hybrid (Contextual)</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
+                  </SettingRow>
+
+                  <SettingRow label="Visualizer Style" description="Choose how Murmur appears when recording">
+                    <div className="relative w-full sm:w-64">
+                      <select
+                        value={settings.widgetPetEnabled ? "widget" : settings.widgetNotchEnabled ? "notch" : "overlay"}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          updateSettings({
+                            widgetPetEnabled: val === "widget",
+                            widgetNotchEnabled: val === "notch",
+                          });
+                        }}
+                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                      >
+                        <option value="notch" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Top Notch (Dynamic Island)</option>
+                        <option value="widget" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Floating Widget (Draggable)</option>
+                        <option value="overlay" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Standard Overlay</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
+                  </SettingRow>
+
+                  <SettingRow label="Visibility Mode" description="Choose when the visualizer should be shown">
+                    <div className="relative w-full sm:w-64">
+                      <select
+                        value={settings.visibilityMode}
+                        onChange={(e) => updateSettings({ visibilityMode: e.target.value as any })}
+                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                      >
+                        <option value="alwayson" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Always Show</option>
+                        <option value="autohidden" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Show Only When Active</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
+                  </SettingRow>
+
+                  {settings.widgetNotchEnabled && (
+                    <SettingRow label="Notch Style" description="Choose the appearance of the top notch">
+                      <div className="relative w-full sm:w-64">
+                        <select
+                          value={settings.notchStyle}
+                          onChange={(e) => updateSettings({ notchStyle: e.target.value as any })}
+                          className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                        >
+                          <option value="macbook" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Macbook Style</option>
+                          <option value="dynamicisland" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Dynamic Island</option>
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                      </div>
+                    </SettingRow>
+                  )}
+
                   <SettingRow label="Global Hotkey" description="Shortcut to start/stop recording">
                     <input
                       type="text"
@@ -246,13 +320,27 @@ export default function SettingsPanel({ state }: Props) {
                         onChange={(e) => updateSettings({ trayIconStyle: e.target.value as "color" | "flat" })}
                         className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
                       >
-                        <option value="color" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Color</option>
-                        <option value="flat" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Flat</option>
+                        <option value="color" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Color Icon</option>
+                        <option value="flat" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Monochrome (Flat)</option>
                       </select>
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                       </div>
                     </div>
+                  </SettingRow>
+
+                  <SettingRow label="Automatic Update Checks" description="Check for new Murmur releases on startup">
+                    <Toggle enabled={settings.autoUpdateCheck ?? true} onChange={(v) => updateSettings({ autoUpdateCheck: v })} />
+                  </SettingRow>
+
+                  <SettingRow label="Software Updates" description="Current version: v0.1.0 (Latest)">
+                    <button
+                      onClick={() => alert("Murmur is up to date! (v0.1.0)")}
+                      className="px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] border border-[var(--border-strong)] transition-all shadow-sm flex items-center gap-2"
+                    >
+                      <RefreshCw size={14} className="text-[var(--accent-primary)]" />
+                      Check for Updates
+                    </button>
                   </SettingRow>
                 </div>
 
@@ -505,7 +593,7 @@ export default function SettingsPanel({ state }: Props) {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-semibold text-[var(--text-primary)] uppercase">{model}</span>
+                              <span className="text-sm font-semibold text-[var(--text-primary)]">Gemma 4 {model.toUpperCase()} IT Assistant</span>
                             </div>
                             <p className="text-xs text-[var(--text-secondary)] mb-2">{info.description}</p>
                             <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">

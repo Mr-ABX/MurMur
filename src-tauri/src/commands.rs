@@ -36,20 +36,28 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
         *is_recording = true;
     }
 
-    // Show the overlay
-    overlay::show_overlay(app);
+    let settings = state.settings.lock().unwrap().clone();
+
+    // Show the visualizer
+    overlay::show_visualizer(app, &settings);
 
     // Emit event to frontend
     app.emit("murmur://recording-started", ())?;
 
     // Start audio capture in background
     let app_clone = app.clone();
-    let settings = state.settings.lock().unwrap().clone();
     let transcriber = state.transcriber.clone();
     let is_recording = state.is_recording.clone();
 
     task::spawn_blocking(move || {
-        let mut audio = AudioCapture::new().expect("Failed to create audio capture");
+        let mut audio = match AudioCapture::new() {
+            Ok(a) => a,
+            Err(e) => {
+                log::error!("Failed to create audio capture: {}", e);
+                let _ = app_clone.emit("murmur://error", format!("Audio capture error: {}", e));
+                return;
+            }
+        };
         audio.clear_buffer();
 
         if let Err(e) = audio.start() {
@@ -271,7 +279,7 @@ async fn handle_transcription_result(
     // Auto-paste if enabled
     if settings.auto_paste {
         // Hide overlay immediately so macOS returns focus to the user's text editor
-        overlay::hide_overlay(&app);
+        overlay::hide_visualizers(&app, &settings);
         
         // Small delay to allow macOS to finish switching focus
         std::thread::sleep(std::time::Duration::from_millis(150));
@@ -370,6 +378,19 @@ pub fn save_settings(
         if let Ok(tray_icon) = tauri::image::Image::from_bytes(tray_icon_bytes) {
             let _ = tray.set_icon(Some(tray_icon));
             let _ = tray.set_icon_as_template(settings.tray_icon_style == crate::settings::TrayIconStyle::Flat);
+        }
+    }
+    
+    // Update visualizer visibility
+    if settings.visibility_mode == crate::settings::VisibilityMode::AlwaysOn {
+        overlay::show_visualizer(&app, &settings);
+    } else {
+        // If it's autohidden, we should hide it unless we are currently recording.
+        let is_recording = *state.is_recording.lock().unwrap();
+        if !is_recording {
+            // Since we override the internal check for AlwaysOn, here we can just use the internal logic:
+            // if we pass settings, it will hide it because it's AutoHidden.
+            overlay::hide_visualizers(&app, &settings);
         }
     }
 

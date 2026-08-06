@@ -2870,6 +2870,7 @@ dependencies = [
  "image",
  "log",
  "num_cpus",
+ "objc2 0.6.4",
  "rdev",
  "regex",
  "reqwest 0.12.28",

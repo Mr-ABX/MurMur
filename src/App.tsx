@@ -4,6 +4,7 @@ import OverlayWindow from "./components/OverlayWindow";
 import SettingsPanel from "./components/SettingsPanel";
 import TrayMenu from "./components/TrayMenu";
 import MiniWidget from "./components/MiniWidget";
+import Notch from "./components/Notch";
 import { useAppState } from "./hooks/useAppState";
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -14,10 +15,11 @@ const windowLabel = getCurrentWindow().label;
 
 function App() {
   const appState = useAppState();
-  const [view, setView] = useState<"tray" | "overlay" | "settings" | "widget">(
+  const [view, setView] = useState<"tray" | "overlay" | "settings" | "widget" | "notch">(
     windowLabel === "overlay" ? "overlay" :
     windowLabel === "settings" ? "settings" :
     windowLabel === "widget" ? "widget" :
+    windowLabel === "notch" ? "notch" :
     "tray"
   );
 
@@ -34,6 +36,9 @@ function App() {
       )}
       {view === "widget" && (
         <MiniWidget key="widget" />
+      )}
+      {view === "notch" && (
+        <Notch key="notch" state={appState} />
       )}
     </AnimatePresence>
   );

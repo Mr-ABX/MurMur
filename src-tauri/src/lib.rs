@@ -66,6 +66,10 @@ pub fn run() {
                     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
                 }
             }
+            
+            if settings.visibility_mode == crate::settings::VisibilityMode::AlwaysOn {
+                overlay::show_visualizer(app.handle(), &settings);
+            }
 
             // Build system tray menu
             let settings_item = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
