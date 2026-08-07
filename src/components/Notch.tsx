@@ -60,13 +60,15 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
       >
         <defs>
           <linearGradient id="aiWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#818cf8" />
-            <stop offset="30%" stopColor="#c084fc" />
-            <stop offset="65%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#34d399" />
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0" />
+            <stop offset="15%" stopColor="#818cf8" stopOpacity="1" />
+            <stop offset="35%" stopColor="#c084fc" stopOpacity="1" />
+            <stop offset="65%" stopColor="#38bdf8" stopOpacity="1" />
+            <stop offset="85%" stopColor="#34d399" stopOpacity="1" />
+            <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
           </linearGradient>
           <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="0.8" result="blur" />
+            <feGaussianBlur stdDeviation="0.6" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -79,8 +81,8 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
           d={pathD2}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.75"
-          strokeOpacity="0.4"
+          strokeWidth="0.5"
+          strokeOpacity="0.35"
           strokeLinecap="round"
         />
 
@@ -89,7 +91,7 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
           d={pathD}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="1.35"
+          strokeWidth="0.9"
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
