@@ -3,61 +3,97 @@ import { listen } from "@tauri-apps/api/event";
 import { AppState } from "../hooks/useAppState";
 import { motion } from "framer-motion";
 
-function AiWaveVisualizer({
-  active,
-  level,
-  isTranscribing,
-}: {
-  active: boolean;
-  level: number;
-  isTranscribing: boolean;
-}) {
-  const barsCount = 21;
+function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: boolean }) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    let animId: number;
+    const animate = () => {
+      setPhase((prev) => (prev + 0.07) % (Math.PI * 2));
+      animId = requestAnimationFrame(animate);
+    };
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  const width = 220;
+  const height = 18;
+  const points = 45;
+  const amp = isRecording ? 4 + level * 8 : 2.5;
+
+  // Build primary wave path
+  let pathD = "";
+  for (let i = 0; i <= points; i++) {
+    const x = (i / points) * width;
+    const normX = i / points;
+    const envelope = Math.sin(normX * Math.PI); // Smooth 0 at edges
+    const y = height / 2 + Math.sin(normX * Math.PI * 2.5 + phase) * amp * envelope;
+
+    if (i === 0) {
+      pathD += `M ${x} ${y}`;
+    } else {
+      pathD += ` L ${x} ${y}`;
+    }
+  }
+
+  // Build secondary offset wave path
+  let pathD2 = "";
+  for (let i = 0; i <= points; i++) {
+    const x = (i / points) * width;
+    const normX = i / points;
+    const envelope = Math.sin(normX * Math.PI);
+    const y = height / 2 + Math.cos(normX * Math.PI * 2.0 - phase * 0.9) * (amp * 0.6) * envelope;
+
+    if (i === 0) {
+      pathD2 += `M ${x} ${y}`;
+    } else {
+      pathD2 += ` L ${x} ${y}`;
+    }
+  }
 
   return (
-    <div className="flex items-center justify-center gap-[3px] h-4 w-full px-1 overflow-hidden">
-      {Array.from({ length: barsCount }, (_, i) => {
-        const distFromCenter = Math.abs(i - (barsCount - 1) / 2) / ((barsCount - 1) / 2);
-        const centerWeight = Math.cos(distFromCenter * (Math.PI / 2));
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden px-2">
+      <svg
+        className="w-full h-full overflow-visible"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="aiWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#818cf8" />
+            <stop offset="30%" stopColor="#c084fc" />
+            <stop offset="65%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#34d399" />
+          </linearGradient>
+          <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-        // Always-active ambient wave + voice swell
-        const ambientAmp = 0.25 + centerWeight * 0.4;
-        const voiceSwell = active ? level * 1.8 : 0;
-        const totalAmp = Math.min(1.0, ambientAmp + voiceSwell);
+        {/* Accent background line */}
+        <path
+          d={pathD2}
+          fill="none"
+          stroke="url(#aiWaveGrad)"
+          strokeWidth="1.2"
+          strokeOpacity="0.45"
+          strokeLinecap="round"
+        />
 
-        // Vibrant AI color palette (Indigo, Violet, Fuchsia, Cyan, Emerald)
-        const colors = [
-          "bg-indigo-400 shadow-[0_0_6px_rgba(129,140,248,0.85)]",
-          "bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,0.85)]",
-          "bg-fuchsia-400 shadow-[0_0_6px_rgba(232,121,249,0.85)]",
-          "bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.85)]",
-          "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.85)]",
-        ];
-        const barColor = colors[i % colors.length];
-
-        const h1 = `${Math.max(3, 15 * totalAmp * 0.35)}px`;
-        const h2 = `${Math.min(17, Math.max(5, 16 * totalAmp))}px`;
-        const h3 = `${Math.max(3, 15 * totalAmp * 0.55)}px`;
-
-        return (
-          <motion.div
-            key={i}
-            className={`w-[2.5px] rounded-full ${
-              isTranscribing ? "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.85)]" : barColor
-            }`}
-            animate={{
-              height: [h1, h2, h3, h1],
-              opacity: isTranscribing ? 0.7 : active ? 1 : 0.85,
-            }}
-            transition={{
-              duration: 0.35 + (i % 5) * 0.06,
-              repeat: Infinity,
-              repeatType: "mirror",
-              ease: "easeInOut",
-            }}
-          />
-        );
-      })}
+        {/* Primary glowing single AI wave line */}
+        <path
+          d={pathD}
+          fill="none"
+          stroke="url(#aiWaveGrad)"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          filter="url(#aiGlow)"
+        />
+      </svg>
     </div>
   );
 }
@@ -77,7 +113,6 @@ export default function Notch({ state }: { state: AppState }) {
   }, []);
 
   const isRecording = state.recordingState === "recording";
-  const isTranscribing = state.recordingState === "transcribing";
   const isInteracting = isRecording || audioLevel > 0.03;
   const notchStyle = state.settings.notchStyle ?? "macbook";
 
@@ -91,7 +126,7 @@ export default function Notch({ state }: { state: AppState }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className={`flex items-center justify-center px-3 py-0 pointer-events-auto transition-all duration-300 border-none outline-none ${
+        className={`flex items-center justify-center px-4 py-0 pointer-events-auto transition-all duration-300 border-none outline-none ${
           notchStyle === "macbook"
             ? "rounded-b-[12px] rounded-t-none mt-0 shadow-none"
             : "rounded-full mt-1 shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
@@ -103,11 +138,7 @@ export default function Notch({ state }: { state: AppState }) {
           height: notchStyle === "macbook" ? "25px" : "27px",
         }}
       >
-        <AiWaveVisualizer
-          active={isInteracting}
-          level={audioLevel}
-          isTranscribing={isTranscribing}
-        />
+        <SingleLineAiWave level={audioLevel} isRecording={isInteracting} />
       </motion.div>
     </div>
   );
