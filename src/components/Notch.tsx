@@ -20,9 +20,10 @@ function AiWaveVisualizer({
         const distFromCenter = Math.abs(i - (barsCount - 1) / 2) / ((barsCount - 1) / 2);
         const centerWeight = Math.cos(distFromCenter * (Math.PI / 2));
 
-        // Base active wave height + audio level boost
-        const baseCenter = Math.max(0.35, centerWeight * 0.9);
-        const voiceBoost = level * 1.5;
+        // Always-active ambient wave + voice swell
+        const ambientAmp = 0.25 + centerWeight * 0.4;
+        const voiceSwell = active ? level * 1.8 : 0;
+        const totalAmp = Math.min(1.0, ambientAmp + voiceSwell);
 
         // Vibrant AI color palette (Indigo, Violet, Fuchsia, Cyan, Emerald)
         const colors = [
@@ -34,9 +35,9 @@ function AiWaveVisualizer({
         ];
         const barColor = colors[i % colors.length];
 
-        const h1 = `${Math.min(17, Math.max(4, 16 * (baseCenter * 0.4 + voiceBoost)))}px`;
-        const h2 = `${Math.min(17, Math.max(5, 16 * (baseCenter * 1.0 + voiceBoost)))}px`;
-        const h3 = `${Math.min(17, Math.max(4, 16 * (baseCenter * 0.6 + voiceBoost)))}px`;
+        const h1 = `${Math.max(3, 15 * totalAmp * 0.35)}px`;
+        const h2 = `${Math.min(17, Math.max(5, 16 * totalAmp))}px`;
+        const h3 = `${Math.max(3, 15 * totalAmp * 0.55)}px`;
 
         return (
           <motion.div
@@ -44,29 +45,16 @@ function AiWaveVisualizer({
             className={`w-[2.5px] rounded-full ${
               isTranscribing ? "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.85)]" : barColor
             }`}
-            animate={
-              active
-                ? {
-                    height: [h1, h2, h3, h1],
-                    transition: {
-                      duration: 0.35 + (i % 5) * 0.06,
-                      repeat: Infinity,
-                      repeatType: "mirror",
-                      ease: "easeInOut",
-                    },
-                  }
-                : isTranscribing
-                ? {
-                    height: ["3px", "12px", "3px"],
-                    transition: {
-                      duration: 0.7,
-                      repeat: Infinity,
-                      delay: i * 0.03,
-                      ease: "easeInOut",
-                    },
-                  }
-                : { height: "2px", opacity: 0.2 }
-            }
+            animate={{
+              height: [h1, h2, h3, h1],
+              opacity: isTranscribing ? 0.7 : active ? 1 : 0.85,
+            }}
+            transition={{
+              duration: 0.35 + (i % 5) * 0.06,
+              repeat: Infinity,
+              repeatType: "mirror",
+              ease: "easeInOut",
+            }}
           />
         );
       })}
@@ -103,14 +91,15 @@ export default function Notch({ state }: { state: AppState }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className={`bg-black flex items-center justify-center px-3 py-0 pointer-events-auto transition-all duration-300 border-none outline-none ${
+        className={`flex items-center justify-center px-3 py-0 pointer-events-auto transition-all duration-300 border-none outline-none ${
           notchStyle === "macbook"
             ? "rounded-b-[12px] rounded-t-none mt-0 shadow-none"
-            : "rounded-full mt-1 bg-black shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
+            : "rounded-full mt-1 shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
         }`}
         data-tauri-drag-region
         style={{
-          width: isInteracting ? "280px" : "200px",
+          backgroundColor: "#000000",
+          width: isInteracting ? "280px" : "240px",
           height: notchStyle === "macbook" ? "25px" : "27px",
         }}
       >
