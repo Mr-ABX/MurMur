@@ -187,6 +187,9 @@ export function useAppState(): AppState {
           setDownloadingGemmaModel(null);
           setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
         }),
+        await listen<AppSettings>("murmur://settings-updated", (e) => {
+          setSettings(e.payload);
+        }),
       );
     };
 

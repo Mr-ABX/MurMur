@@ -394,6 +394,8 @@ pub fn save_settings(
         }
     }
 
+    let _ = app.emit("murmur://settings-updated", &settings);
+
     res
 }
 

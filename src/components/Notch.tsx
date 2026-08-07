@@ -63,10 +63,10 @@ export default function Notch({ state }: { state: AppState }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className={`bg-black shadow-[0_8px_30px_rgba(0,0,0,0.8)] flex items-center justify-between px-3.5 py-1.5 pointer-events-auto transition-all duration-300 ${
+        className={`bg-black shadow-[0_8px_30px_rgba(0,0,0,0.85)] flex items-center justify-between px-3.5 py-1.5 pointer-events-auto transition-all duration-300 ${
           notchStyle === "macbook"
-            ? "rounded-b-[20px] rounded-t-none mt-0 border-x border-b border-white/10 border-t-0"
-            : "rounded-full mt-0 border border-white/15 backdrop-blur-2xl bg-black/95"
+            ? "rounded-b-[18px] rounded-t-none mt-0 border-x border-b border-white/10 border-t-0"
+            : "rounded-full mt-2 border border-white/20 backdrop-blur-2xl bg-black/95 shadow-[0_10px_25px_rgba(0,0,0,0.9)]"
         }`}
         data-tauri-drag-region
         style={{
