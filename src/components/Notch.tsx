@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { AppState } from "../hooks/useAppState";
 import { motion } from "framer-motion";
 
 function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: boolean }) {
   const [phase, setPhase] = useState(0);
+  const isRecordingRef = useRef(isRecording);
+  isRecordingRef.current = isRecording;
 
   useEffect(() => {
     let animId: number;
     const animate = () => {
-      setPhase((prev) => (prev + 0.07) % (Math.PI * 2));
+      // Super slow when idle (0.015), fast active speed when dictating (0.085)
+      const step = isRecordingRef.current ? 0.085 : 0.015;
+      setPhase((prev) => (prev + step) % (Math.PI * 2));
       animId = requestAnimationFrame(animate);
     };
     animId = requestAnimationFrame(animate);
@@ -19,7 +23,8 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
   const width = 220;
   const height = 18;
   const points = 45;
-  const amp = isRecording ? 4 + level * 8 : 2.5;
+  // Subtle 1.5px idle wave, dynamic 3px + up to 12px peak voice expansion during dictation!
+  const amp = isRecording ? 3 + Math.min(12, level * 16) : 1.5;
 
   // Build primary wave path
   let pathD = "";
