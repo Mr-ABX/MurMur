@@ -111,7 +111,7 @@ export default function Notch({ state }: { state: AppState }) {
         data-tauri-drag-region
         style={{
           width: isInteracting ? "280px" : "200px",
-          height: notchStyle === "macbook" ? "26px" : "28px",
+          height: notchStyle === "macbook" ? "25px" : "27px",
         }}
       >
         <AiWaveVisualizer
