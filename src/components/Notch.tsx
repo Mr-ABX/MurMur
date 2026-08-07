@@ -66,7 +66,7 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
             <stop offset="100%" stopColor="#34d399" />
           </linearGradient>
           <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feGaussianBlur stdDeviation="0.8" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -79,8 +79,8 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
           d={pathD2}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="1.2"
-          strokeOpacity="0.45"
+          strokeWidth="0.75"
+          strokeOpacity="0.4"
           strokeLinecap="round"
         />
 
@@ -89,7 +89,7 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
           d={pathD}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="2.2"
+          strokeWidth="1.35"
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
