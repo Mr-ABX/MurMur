@@ -79,7 +79,7 @@
         "title": "Murmur Notch",
         "url": "/notch",
         "width": 250,
-        "height": 60,
+        "height": 30,
         "resizable": false,
         "decorations": false,
         "transparent": true,

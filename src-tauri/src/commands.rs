@@ -91,6 +91,17 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
             std::thread::sleep(std::time::Duration::from_millis(50));
             let recording = is_recording.lock().unwrap();
 
+            if let Ok(samples) = audio.get_samples() {
+                if !samples.is_empty() {
+                    let chunk_len = 800.min(samples.len());
+                    let chunk = &samples[samples.len() - chunk_len..];
+                    let sum_sq: f32 = chunk.iter().map(|s| s * s).sum();
+                    let rms = (sum_sq / chunk_len as f32).sqrt();
+                    let level = (rms * 8.0).min(1.0);
+                    let _ = app_clone.emit("audio_level", level);
+                }
+            }
+
             if is_live {
                 if let Ok(samples) = audio.get_samples() {
                     let current_len = samples.len();
