@@ -15,13 +15,14 @@ function AiWaveVisualizer({
   const barsCount = 21;
 
   return (
-    <div className="flex items-center justify-center gap-[3px] h-3.5 w-full px-1 overflow-hidden">
+    <div className="flex items-center justify-center gap-[3px] h-4 w-full px-1 overflow-hidden">
       {Array.from({ length: barsCount }, (_, i) => {
         const distFromCenter = Math.abs(i - (barsCount - 1) / 2) / ((barsCount - 1) / 2);
         const centerWeight = Math.cos(distFromCenter * (Math.PI / 2));
-        
-        // Active base + dynamic voice peak scaling
-        const dynamicAmp = active ? 0.35 + Math.min(0.65, level * 1.8) * centerWeight : 0.05;
+
+        // Base active wave height + audio level boost
+        const baseCenter = Math.max(0.35, centerWeight * 0.9);
+        const voiceBoost = level * 1.5;
 
         // Vibrant AI color palette (Indigo, Violet, Fuchsia, Cyan, Emerald)
         const colors = [
@@ -33,6 +34,10 @@ function AiWaveVisualizer({
         ];
         const barColor = colors[i % colors.length];
 
+        const h1 = `${Math.min(17, Math.max(4, 16 * (baseCenter * 0.4 + voiceBoost)))}px`;
+        const h2 = `${Math.min(17, Math.max(5, 16 * (baseCenter * 1.0 + voiceBoost)))}px`;
+        const h3 = `${Math.min(17, Math.max(4, 16 * (baseCenter * 0.6 + voiceBoost)))}px`;
+
         return (
           <motion.div
             key={i}
@@ -42,13 +47,9 @@ function AiWaveVisualizer({
             animate={
               active
                 ? {
-                    height: [
-                      `${Math.max(3, 14 * dynamicAmp * 0.35)}px`,
-                      `${Math.min(15, Math.max(4, 15 * dynamicAmp))}px`,
-                      `${Math.max(3, 14 * dynamicAmp * 0.35)}px`,
-                    ],
+                    height: [h1, h2, h3, h1],
                     transition: {
-                      duration: 0.2 + (i % 4) * 0.04,
+                      duration: 0.35 + (i % 5) * 0.06,
                       repeat: Infinity,
                       repeatType: "mirror",
                       ease: "easeInOut",
@@ -56,11 +57,11 @@ function AiWaveVisualizer({
                   }
                 : isTranscribing
                 ? {
-                    height: ["3px", "10px", "3px"],
+                    height: ["3px", "12px", "3px"],
                     transition: {
-                      duration: 0.8,
+                      duration: 0.7,
                       repeat: Infinity,
-                      delay: i * 0.04,
+                      delay: i * 0.03,
                       ease: "easeInOut",
                     },
                   }
@@ -104,13 +105,13 @@ export default function Notch({ state }: { state: AppState }) {
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className={`bg-black flex items-center justify-center px-3 py-0 pointer-events-auto transition-all duration-300 border-none outline-none ${
           notchStyle === "macbook"
-            ? "rounded-b-[10px] rounded-t-none mt-0 shadow-none"
+            ? "rounded-b-[12px] rounded-t-none mt-0 shadow-none"
             : "rounded-full mt-1 bg-black shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
         }`}
         data-tauri-drag-region
         style={{
           width: isInteracting ? "280px" : "200px",
-          height: notchStyle === "macbook" ? "24px" : "26px",
+          height: notchStyle === "macbook" ? "26px" : "28px",
         }}
       >
         <AiWaveVisualizer
