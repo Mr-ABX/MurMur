@@ -15,35 +15,40 @@ function AiWaveVisualizer({
   const barsCount = 21;
 
   return (
-    <div className="flex items-center justify-center gap-[3.5px] h-3.5 w-full px-2 overflow-hidden">
+    <div className="flex items-center justify-center gap-[3px] h-3.5 w-full px-1 overflow-hidden">
       {Array.from({ length: barsCount }, (_, i) => {
-        // Bell curve weight for middle bars
         const distFromCenter = Math.abs(i - (barsCount - 1) / 2) / ((barsCount - 1) / 2);
         const centerWeight = Math.cos(distFromCenter * (Math.PI / 2));
-        const heightMultiplier = Math.max(0.15, level * 3.5 * centerWeight);
+        
+        // Active base + dynamic voice peak scaling
+        const dynamicAmp = active ? 0.35 + Math.min(0.65, level * 1.8) * centerWeight : 0.05;
 
-        // Futuristic AI color palette (Indigo, Violet, Fuchsia, Cyan, Emerald)
+        // Vibrant AI color palette (Indigo, Violet, Fuchsia, Cyan, Emerald)
         const colors = [
-          "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.85)]",
-          "bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.85)]",
-          "bg-fuchsia-400 shadow-[0_0_8px_rgba(232,121,249,0.85)]",
-          "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.85)]",
-          "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]",
+          "bg-indigo-400 shadow-[0_0_6px_rgba(129,140,248,0.85)]",
+          "bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,0.85)]",
+          "bg-fuchsia-400 shadow-[0_0_6px_rgba(232,121,249,0.85)]",
+          "bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.85)]",
+          "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.85)]",
         ];
         const barColor = colors[i % colors.length];
 
         return (
           <motion.div
             key={i}
-            className={`w-[3px] rounded-full ${
-              isTranscribing ? "bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.85)]" : barColor
+            className={`w-[2.5px] rounded-full ${
+              isTranscribing ? "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.85)]" : barColor
             }`}
             animate={
               active
                 ? {
-                    height: ["3px", `${Math.min(15, Math.max(3, 15 * heightMultiplier))}px`, "3px"],
+                    height: [
+                      `${Math.max(3, 14 * dynamicAmp * 0.35)}px`,
+                      `${Math.min(15, Math.max(4, 15 * dynamicAmp))}px`,
+                      `${Math.max(3, 14 * dynamicAmp * 0.35)}px`,
+                    ],
                     transition: {
-                      duration: 0.2 + (i % 4) * 0.05,
+                      duration: 0.2 + (i % 4) * 0.04,
                       repeat: Infinity,
                       repeatType: "mirror",
                       ease: "easeInOut",
@@ -59,7 +64,7 @@ function AiWaveVisualizer({
                       ease: "easeInOut",
                     },
                   }
-                : { height: "2px", opacity: 0.3 }
+                : { height: "2px", opacity: 0.2 }
             }
           />
         );
@@ -97,10 +102,10 @@ export default function Notch({ state }: { state: AppState }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className={`bg-black flex items-center justify-center px-4 py-0 pointer-events-auto transition-all duration-300 ${
+        className={`bg-black flex items-center justify-center px-3 py-0 pointer-events-auto transition-all duration-300 border-none outline-none ${
           notchStyle === "macbook"
-            ? "rounded-b-[12px] rounded-t-none mt-0 border-x border-b border-white/10 border-t-0 shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
-            : "rounded-full mt-1 border border-white/15 bg-black shadow-[0_6px_20px_rgba(0,0,0,0.95)]"
+            ? "rounded-b-[10px] rounded-t-none mt-0 shadow-none"
+            : "rounded-full mt-1 bg-black shadow-[0_4px_16px_rgba(0,0,0,0.95)]"
         }`}
         data-tauri-drag-region
         style={{

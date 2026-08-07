@@ -95,9 +95,8 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
                 if !samples.is_empty() {
                     let chunk_len = 800.min(samples.len());
                     let chunk = &samples[samples.len() - chunk_len..];
-                    let sum_sq: f32 = chunk.iter().map(|s| s * s).sum();
-                    let rms = (sum_sq / chunk_len as f32).sqrt();
-                    let level = (rms * 8.0).min(1.0);
+                    let max_amp = chunk.iter().map(|s| s.abs()).fold(0.0f32, |a, b| a.max(b));
+                    let level = (max_amp * 4.0).clamp(0.0, 1.0);
                     let _ = app_clone.emit("audio_level", level);
                 }
             }
