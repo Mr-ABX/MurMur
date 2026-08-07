@@ -119,7 +119,7 @@ export default function SettingsPanel({ state }: Props) {
       {/* Sidebar */}
       <div className="w-64 flex flex-col bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] relative z-10 shadow-xl">
         {/* Header in sidebar */}
-        <div data-tauri-drag-region className="px-6 py-6 flex flex-col gap-2 pb-8">
+        <div className="px-6 py-6 flex flex-col gap-2 pb-8">
           <div className="flex items-center gap-3 pointer-events-none">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden">
               <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />

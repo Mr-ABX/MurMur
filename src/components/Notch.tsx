@@ -269,7 +269,10 @@ export default function Notch({ state }: { state: AppState }) {
             >
               {/* Pages Content Area with Gradient Bottom Fade Mask */}
               <div className="relative flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 flex flex-col overflow-y-auto pr-0.5 no-scrollbar">
+                <div
+                  className="flex-1 flex flex-col overflow-y-auto pr-0.5 no-scrollbar pointer-events-auto"
+                  onWheel={(e) => e.stopPropagation()}
+                >
                   {/* PAGE 0: DASHBOARD CONTROLS */}
                   {pageIndex === 0 && (
                     <motion.div
@@ -493,43 +496,27 @@ export default function Notch({ state }: { state: AppState }) {
               </div>
 
               {/* Paginated Dots Navigation Footer */}
-              <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                <button
-                  onClick={() => setPageIndex((prev) => (prev > 0 ? ((prev - 1) as 0 | 1 | 2) : 2))}
-                  className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
-                  title="Previous Page"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-center pt-2 border-t border-white/5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setPageIndex(0)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      pageIndex === 0 ? "bg-indigo-400 w-5" : "bg-zinc-600 hover:bg-zinc-400"
+                    className={`h-2 rounded-full transition-all ${
+                      pageIndex === 0 ? "bg-indigo-400 w-5" : "bg-zinc-600 hover:bg-zinc-400 w-2"
                     }`}
                   />
                   <button
                     onClick={() => setPageIndex(1)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      pageIndex === 1 ? "bg-purple-400 w-5" : "bg-zinc-600 hover:bg-zinc-400"
+                    className={`h-2 rounded-full transition-all ${
+                      pageIndex === 1 ? "bg-purple-400 w-5" : "bg-zinc-600 hover:bg-zinc-400 w-2"
                     }`}
                   />
                   <button
                     onClick={() => setPageIndex(2)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      pageIndex === 2 ? "bg-emerald-400 w-5" : "bg-zinc-600 hover:bg-zinc-400"
+                    className={`h-2 rounded-full transition-all ${
+                      pageIndex === 2 ? "bg-emerald-400 w-5" : "bg-zinc-600 hover:bg-zinc-400 w-2"
                     }`}
                   />
                 </div>
-
-                <button
-                  onClick={() => setPageIndex((prev) => (prev < 2 ? ((prev + 1) as 0 | 1 | 2) : 0))}
-                  className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
-                  title="Next Page"
-                >
-                  <ChevronRight size={14} />
-                </button>
               </div>
             </motion.div>
           )}

@@ -45,27 +45,51 @@ pub async fn ask_screen_assistant(
 async fn ask_screen_assistant_internal(
     app: &AppHandle,
     prompt: String,
-    image_base64: String,
+    mut image_base64: String,
 ) -> Result<String> {
     let state = app.state::<MurmurState>();
     let settings = state.settings.lock().unwrap().clone();
-    
+
     let api_key = &settings.gemini_api_key;
     if api_key.is_empty() {
-        anyhow::bail!("Gemini API Key is not set in Settings.");
+        anyhow::bail!("Gemini API key is not set. Please add your Gemini API key in Settings → Cloud APIs.");
     }
-    
+
+    // Auto-capture screen if image_base64 is empty
+    if image_base64.is_empty() {
+        if let Ok(cap) = capture_screen_internal().await {
+            image_base64 = cap;
+        }
+    }
+
     let system_prompt = if settings.system_prompt.is_empty() {
         "You are a helpful screen-aware assistant. Be extremely concise. Only answer what is asked. Do not output markdown unless required."
     } else {
         &settings.system_prompt
     };
-    
+
+    let model_name = if settings.local_assistant_model.is_empty() {
+        "gemini-2.0-flash-lite-preview-02-05"
+    } else {
+        &settings.local_assistant_model
+    };
+
     let url = format!(
         "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
-        settings.local_assistant_model, api_key
+        model_name, api_key
     );
-    
+
+    let mut parts = Vec::new();
+    if !image_base64.is_empty() {
+        parts.push(json!({
+            "inline_data": {
+                "mime_type": "image/jpeg",
+                "data": image_base64
+            }
+        }));
+    }
+    parts.push(json!({ "text": prompt }));
+
     let client = Client::new();
     let body = json!({
         "system_instruction": {
@@ -75,33 +99,27 @@ async fn ask_screen_assistant_internal(
         },
         "contents": [
             {
-                "parts": [
-                    {
-                        "inline_data": {
-                            "mime_type": "image/jpeg",
-                            "data": image_base64
-                        }
-                    },
-                    {
-                        "text": prompt
-                    }
-                ]
+                "parts": parts
             }
         ]
     });
-    
+
     let res = client.post(&url)
         .json(&body)
         .send()
-        .await?
-        .error_for_status()?;
-        
+        .await?;
+
+    if !res.status().is_success() {
+        let err_text = res.text().await.unwrap_or_default();
+        anyhow::bail!("Gemini API Error: {}", err_text);
+    }
+
     let response_json: serde_json::Value = res.json().await?;
-    
+
     let answer = response_json["candidates"][0]["content"]["parts"][0]["text"]
         .as_str()
         .unwrap_or("No response text found")
         .to_string();
-        
+
     Ok(answer)
 }
