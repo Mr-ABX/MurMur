@@ -50,11 +50,6 @@ async fn ask_screen_assistant_internal(
     let state = app.state::<MurmurState>();
     let settings = state.settings.lock().unwrap().clone();
 
-    let api_key = &settings.gemini_api_key;
-    if api_key.is_empty() {
-        anyhow::bail!("Gemini API key is not set. Please add your Gemini API key in Settings → Cloud APIs.");
-    }
-
     // Auto-capture screen if image_base64 is empty
     if image_base64.is_empty() {
         if let Ok(cap) = capture_screen_internal().await {
@@ -74,9 +69,56 @@ async fn ask_screen_assistant_internal(
         &settings.local_assistant_model
     };
 
+    let client = Client::new();
+
+    // Route 1: Try Local Gemma / Ollama if selected or cloud provider is local
+    let is_local = model_name.to_lowercase().starts_with("gemma")
+        || settings.cloud_provider == crate::settings::CloudProvider::Local;
+
+    if is_local {
+        let ollama_url = "http://localhost:11434/api/generate";
+        let mut images = Vec::new();
+        if !image_base64.is_empty() {
+            images.push(image_base64.clone());
+        }
+
+        let ollama_body = json!({
+            "model": if model_name.is_empty() { "gemma:2b" } else { model_name },
+            "prompt": format!("System: {}\nUser: {}", system_prompt, prompt),
+            "stream": false,
+            "images": images
+        });
+
+        if let Ok(res) = client.post(ollama_url).json(&ollama_body).send().await {
+            if res.status().is_success() {
+                if let Ok(response_json) = res.json::<serde_json::Value>().await {
+                    if let Some(ans) = response_json["response"].as_str() {
+                        return Ok(ans.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    // Route 2: Cloud Gemini API
+    let api_key = &settings.gemini_api_key;
+    if api_key.is_empty() {
+        if is_local {
+            anyhow::bail!("Local Gemma model (Ollama on port 11434) is not running, and Gemini API key is missing. Please start Ollama or add your Gemini API key in Settings → Cloud APIs.");
+        } else {
+            anyhow::bail!("Gemini API key is not set. Please add your Gemini API key in Settings → Cloud APIs.");
+        }
+    }
+
+    let gemini_model = if model_name.to_lowercase().starts_with("gemma") {
+        "gemini-2.0-flash-lite-preview-02-05"
+    } else {
+        model_name
+    };
+
     let url = format!(
         "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
-        model_name, api_key
+        gemini_model, api_key
     );
 
     let mut parts = Vec::new();
@@ -90,7 +132,6 @@ async fn ask_screen_assistant_internal(
     }
     parts.push(json!({ "text": prompt }));
 
-    let client = Client::new();
     let body = json!({
         "system_instruction": {
             "parts": [

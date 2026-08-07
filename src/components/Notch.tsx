@@ -16,9 +16,7 @@ import {
   Copy,
   Check,
   Lock,
-  Unlock,
-  ChevronLeft,
-  ChevronRight
+  Unlock
 } from "lucide-react";
 
 function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; isRecording: boolean; isExpanded: boolean }) {
@@ -129,6 +127,15 @@ export default function Notch({ state }: { state: AppState }) {
   const [isAsking, setIsAsking] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const lastSwipeRef = useRef(0);
+  const selectedModel = state.settings.localAssistantModel || "gemini-2.0-flash-lite-preview-02-05";
+
+  useEffect(() => {
+    if (isExpanded) {
+      getCurrentWindow().setFocus().catch(() => {});
+    }
+  }, [isExpanded]);
+
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
       const level = Math.min(Math.max(e.payload, 0), 1);
@@ -151,6 +158,36 @@ export default function Notch({ state }: { state: AppState }) {
   const isRecording = state.recordingState === "recording";
   const isInteracting = isRecording || audioLevel > 0.03;
   const notchStyle = state.settings.notchStyle ?? "macbook";
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const now = Date.now();
+    // Vertical scrolling: do e.stopPropagation() to allow smooth up/down content scrolling
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.stopPropagation();
+      return;
+    }
+
+    // Horizontal trackpad swipe: switch pages
+    if (Math.abs(e.deltaX) > 18 && now - lastSwipeRef.current > 400) {
+      e.stopPropagation();
+      lastSwipeRef.current = now;
+      if (e.deltaX > 0) {
+        setPageIndex((prev) => (prev < 2 ? ((prev + 1) as 0 | 1 | 2) : 0));
+      } else {
+        setPageIndex((prev) => (prev > 0 ? ((prev - 1) as 0 | 1 | 2) : 2));
+      }
+    }
+  };
+
+  const handleModelChange = async (newModel: string) => {
+    const updatedSettings = { ...state.settings, localAssistantModel: newModel };
+    state.settings.localAssistantModel = newModel;
+    try {
+      await invoke("save_settings", { settings: updatedSettings });
+    } catch (err) {
+      console.error("Failed to save assistant model:", err);
+    }
+  };
 
   const handleOpenSettings = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -271,7 +308,7 @@ export default function Notch({ state }: { state: AppState }) {
               <div className="relative flex-1 flex flex-col overflow-hidden">
                 <div
                   className="flex-1 flex flex-col overflow-y-auto pr-0.5 no-scrollbar pointer-events-auto"
-                  onWheel={(e) => e.stopPropagation()}
+                  onWheel={handleWheel}
                 >
                   {/* PAGE 0: DASHBOARD CONTROLS */}
                   {pageIndex === 0 && (
@@ -355,12 +392,12 @@ export default function Notch({ state }: { state: AppState }) {
                       <div className="p-2.5 rounded-xl bg-zinc-950 border border-white/5 flex-1 flex flex-col justify-center relative group">
                         <div className="text-[9px] font-bold text-zinc-500 tracking-wider mb-1">LIVE RECENT TRANSCRIPT</div>
                         <p className="text-xs text-zinc-200 line-clamp-2 italic pr-6">
-                          {state.partialTranscript || state.lastProcessedTranscript || "No recent voice dictation recorded..."}
+                          {state.partialTranscript || state.transcript || "No recent voice dictation recorded..."}
                         </p>
-                        {(state.partialTranscript || state.lastProcessedTranscript) && (
+                        {(state.partialTranscript || state.transcript) && (
                           <button
                             onClick={() => {
-                              const text = state.partialTranscript || state.lastProcessedTranscript;
+                              const text = state.partialTranscript || state.transcript;
                               if (text) navigator.clipboard.writeText(text);
                             }}
                             className="absolute right-2 top-2 p-1 text-zinc-400 hover:text-white bg-zinc-900 rounded border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -382,6 +419,25 @@ export default function Notch({ state }: { state: AppState }) {
                       exit={{ opacity: 0, x: -15 }}
                       className="flex-1 flex flex-col gap-2 overflow-hidden"
                     >
+                      {/* Model Selector Bar */}
+                      <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-zinc-950/80 rounded-xl border border-white/5">
+                        <span className="text-[11px] font-medium text-zinc-400 flex items-center gap-1">
+                          <Bot size={12} className="text-indigo-400" />
+                          Model
+                        </span>
+                        <select
+                          value={selectedModel}
+                          onChange={(e) => handleModelChange(e.target.value)}
+                          className="bg-zinc-900 border border-white/10 text-[11px] text-zinc-200 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-indigo-500/50"
+                        >
+                          <option value="gemini-2.0-flash-lite-preview-02-05">⚡ Gemini 2.0 Flash (Cloud API)</option>
+                          <option value="gemini-1.5-flash">⚡ Gemini 1.5 Flash (Cloud API)</option>
+                          <option value="gemma:2b">🧠 Gemma 2B (Local Ollama)</option>
+                          <option value="gemma:7b">🧠 Gemma 7B (Local Ollama)</option>
+                          <option value="gemma4">🧠 Gemma 4 (Local Ollama)</option>
+                        </select>
+                      </div>
+
                       {/* Presets */}
                       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                         <button
@@ -467,12 +523,12 @@ export default function Notch({ state }: { state: AppState }) {
                       </div>
 
                       <div className="flex-1 bg-zinc-950 rounded-xl border border-white/5 p-2.5 overflow-y-auto space-y-2">
-                        {state.lastProcessedTranscript ? (
+                        {state.transcript ? (
                           <div className="p-2 bg-zinc-900/60 rounded-lg border border-white/5 flex items-start justify-between gap-2">
-                            <p className="text-xs text-zinc-200">{state.lastProcessedTranscript}</p>
+                            <p className="text-xs text-zinc-200">{state.transcript}</p>
                             <button
                               onClick={() => {
-                                navigator.clipboard.writeText(state.lastProcessedTranscript);
+                                navigator.clipboard.writeText(state.transcript);
                               }}
                               className="p-1 text-zinc-400 hover:text-white bg-zinc-800 rounded transition-colors"
                               title="Copy transcript"
