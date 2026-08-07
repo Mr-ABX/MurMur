@@ -81,10 +81,11 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                     if let Ok(ns_win) = window_clone.ns_window() {
                         let ns_win = ns_win as *mut AnyObject;
                         unsafe {
-                            // Level 1000 = NSScreenSaverWindowLevel (floats ON TOP of menu bar text, icons, and fullscreen apps)
-                            let _: () = msg_send![ns_win, setLevel: 1000i64];
+                            // Level 2147483647 = CGShieldingWindowLevel (Maximum window level in macOS — floats ON TOP of system menu bar, status items, and all windows)
+                            let _: () = msg_send![ns_win, setLevel: 2147483647i64];
                             // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
                             let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
+                            let _: () = msg_send![ns_win, orderFrontRegardless];
 
                             // Override constrainFrameRect:toScreen: so Cocoa won't clamp Y to visibleFrame (below menu bar)
                             let class: *const AnyClass = msg_send![ns_win, class];
