@@ -81,10 +81,17 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                     if let Ok(ns_win) = window_clone.ns_window() {
                         let ns_win = ns_win as *mut AnyObject;
                         unsafe {
-                            // Level 2147483647 = CGShieldingWindowLevel (Maximum window level in macOS — floats ON TOP of system menu bar, status items, and all windows)
-                            let _: () = msg_send![ns_win, setLevel: 2147483647i64];
+                            // Level 1000 = NSScreenSaverWindowLevel (floats ON TOP of menu bar text, icons, and fullscreen apps)
+                            let _: () = msg_send![ns_win, setLevel: 1000i64];
                             // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
                             let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
+
+                            // Enable FullSizeContentView (1 << 15 = 32768) so content draws over the menu bar layer
+                            let current_style: u64 = msg_send![ns_win, styleMask];
+                            let new_style = current_style | (1u64 << 15);
+                            let _: () = msg_send![ns_win, setStyleMask: new_style];
+                            let _: () = msg_send![ns_win, setTitlebarAppearsTransparent: true];
+                            let _: () = msg_send![ns_win, setTitleVisibility: 1i64]; // NSWindowTitleHidden
                             let _: () = msg_send![ns_win, orderFrontRegardless];
 
                             // Override constrainFrameRect:toScreen: so Cocoa won't clamp Y to visibleFrame (below menu bar)
