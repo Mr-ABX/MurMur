@@ -24,8 +24,9 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
         }
     } else if settings.widget_notch_enabled {
         if let Some(window) = app.get_webview_window("notch") {
-            let _ = window.set_always_on_top(true);
-            let _ = window.set_visible_on_all_workspaces(true);
+            // We manage Z-index and spaces manually via Objective-C below,
+            // so we don't call Tauri's set_always_on_top / set_visible_on_all_workspaces
+            // which would accidentally reset our levels to a lower priority.
 
             // Show window first so window is initialized by Tauri
             let _ = window.show();
@@ -34,7 +35,7 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
             {
                 use objc2::msg_send;
                 use objc2::runtime::{AnyObject, AnyClass, Sel};
-                use objc2::ffi::class_replaceMethod;
+                use objc2::ffi::{class_replaceMethod, object_setClass, objc_getClass};
 
                 #[repr(C)]
                 #[derive(Clone, Copy)]
@@ -81,17 +82,26 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                     if let Ok(ns_win) = window_clone.ns_window() {
                         let ns_win = ns_win as *mut AnyObject;
                         unsafe {
-                            // Level 1000 = NSScreenSaverWindowLevel (floats ON TOP of menu bar text, icons, and fullscreen apps)
-                            let _: () = msg_send![ns_win, setLevel: 1000i64];
+                            // Turn the NSWindow into an NSPanel
+                            let panel_class = objc_getClass(b"NSPanel\0".as_ptr() as *const _);
+                            if !panel_class.is_null() {
+                                object_setClass(ns_win as *mut _, panel_class as *mut _);
+                                
+                                // NSPanel specific behaviors
+                                let _: () = msg_send![ns_win, setFloatingPanel: true];
+                                let _: () = msg_send![ns_win, setWorksWhenModal: true];
+                            }
+
+                            // Level 2147483647 = CGShieldingWindowLevel (maximum possible window level to float ON TOP of everything, including menu bar)
+                            let _: () = msg_send![ns_win, setLevel: 2147483647i64];
+                            
                             // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
                             let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
 
-                            // Enable FullSizeContentView (1 << 15 = 32768) so content draws over the menu bar layer
-                            let current_style: u64 = msg_send![ns_win, styleMask];
-                            let new_style = current_style | (1u64 << 15);
-                            let _: () = msg_send![ns_win, setStyleMask: new_style];
-                            let _: () = msg_send![ns_win, setTitlebarAppearsTransparent: true];
-                            let _: () = msg_send![ns_win, setTitleVisibility: 1i64]; // NSWindowTitleHidden
+                            // 128 = NSWindowStyleMaskNonactivatingPanel (acts like a HUD/Panel)
+                            let _: () = msg_send![ns_win, setStyleMask: 128u64];
+                            
+                            // Bring it to the absolute front
                             let _: () = msg_send![ns_win, orderFrontRegardless];
 
                             // Override constrainFrameRect:toScreen: so Cocoa won't clamp Y to visibleFrame (below menu bar)
