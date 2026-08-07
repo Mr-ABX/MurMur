@@ -23,8 +23,8 @@ function SingleLineAiWave({ level, isRecording }: { level: number; isRecording: 
   const width = 220;
   const height = 18;
   const points = 45;
-  // Subtle 1.5px idle wave, dynamic 3px + up to 12px peak voice expansion during dictation!
-  const amp = isRecording ? 3 + Math.min(12, level * 16) : 1.5;
+  // Subtle 1.2px idle wave vs DRAMATIC 7px base + up to 15px voice peak surge when dictating!
+  const amp = isRecording ? 7 + Math.min(10, level * 14) : 1.2;
 
   // Build primary wave path
   let pathD = "";
