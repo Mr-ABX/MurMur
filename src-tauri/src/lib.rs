@@ -123,6 +123,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::open_settings,
             commands::start_recording,
             commands::stop_recording,
             commands::get_settings,

@@ -358,6 +358,11 @@ pub async fn stop_recording_internal(app: &AppHandle) -> Result<()> {
 // ============================================================
 
 #[tauri::command]
+pub fn open_settings(app: AppHandle) {
+    overlay::show_settings_window(&app);
+}
+
+#[tauri::command]
 pub fn get_settings(state: State<'_, MurmurState>) -> AppSettings {
     state.settings.lock().unwrap().clone()
 }
