@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app-icon.png" alt="MurMur App Icon" width="140" height="140">
+  <img src="app-icon.png" alt="MurMur App Icon" width="130" height="130">
   <h1>MurMur: Ambient AI Voice & Assistant Operating System 🎙️⚡</h1>
   <p><strong>Lightning-fast local Whisper dictation, Dynamic Notch overlay, and screen-aware AI assistant for macOS & Windows.</strong></p>
 
@@ -9,10 +9,12 @@
   [![Tauri v2](https://img.shields.io/badge/Built%20with-Tauri%20v2-f06ba0.svg?style=flat-square)](https://tauri.app/)
   [![Whisper.cpp](https://img.shields.io/badge/Powered%20by-Whisper.cpp-c4b5fd.svg?style=flat-square)](https://github.com/ggerganov/whisper.cpp)
   [![Latest Release](https://img.shields.io/github/v/release/Mr-ABX/MurMur?style=flat-square&color=indigo)](https://github.com/Mr-ABX/MurMur/releases/latest)
+</div>
 
-  <br><br>
+<br>
 
-  <img src="assets/demo.gif" alt="MurMur Demo Preview" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+<div align="center">
+  <img src="assets/demo.gif" alt="MurMur Dynamic Notch Demo Preview" width="100%" style="border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,0.6);">
 </div>
 
 ---
