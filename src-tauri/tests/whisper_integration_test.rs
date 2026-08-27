@@ -6,10 +6,16 @@ fn test_whisper_context_loads() {
     let mut model_path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
     model_path.push("Murmur");
     model_path.push("models");
-    model_path.push("ggml-base.en.bin");
+    model_path.push("ggml-base.bin");
 
-    if !model_path.exists() {
-        println!("Model not downloaded, skipping test.");
+    // Only test loading if the actual model file exists and is not empty (> 1MB)
+    let is_valid = match std::fs::metadata(&model_path) {
+        Ok(meta) => meta.len() > 1_000_000,
+        Err(_) => false,
+    };
+
+    if !is_valid {
+        println!("Base whisper model not downloaded yet, skipping test.");
         return;
     }
 
