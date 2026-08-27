@@ -134,26 +134,36 @@ export function useAppState(): AppState {
           setPartialTranscript("");
           setRecordingState("done");
 
-          // Voice note trigger detection ("hey murmur, take note..." or "take note...")
-          const lower = text.toLowerCase();
-          if (lower.includes("take note") || lower.includes("take a note")) {
-            const noteContent = text
-              .replace(/hey murmur,?\s*/i, "")
-              .replace(/take a note:?\s*/i, "")
-              .replace(/take note:?\s*/i, "")
-              .trim();
-            if (noteContent) {
-              try {
-                const existingNotes = JSON.parse(localStorage.getItem("murmur_notes") || "[]");
-                existingNotes.unshift({
-                  id: Date.now(),
-                  text: noteContent,
-                  timestamp: new Date().toISOString(),
-                });
-                localStorage.setItem("murmur_notes", JSON.stringify(existingNotes));
-              } catch (err) {
-                console.error("Failed to save voice note:", err);
-              }
+          // Natural Language Voice Intent Router
+          const noteMatch = text.match(/(?:hey murmur,?\s*)?(?:take (?:a )?note|note down|add (?:a )?note|create (?:a )?note|remember (?:that )?):?\s*(.+)/i);
+          const taskMatch = text.match(/(?:hey murmur,?\s*)?(?:add task|new task|create task|remind me to|todo):?\s*(.+)/i);
+
+          if (noteMatch && noteMatch[1]?.trim()) {
+            const noteContent = noteMatch[1].trim();
+            try {
+              const existingNotes = JSON.parse(localStorage.getItem("murmur_notes") || "[]");
+              existingNotes.unshift({
+                id: Date.now(),
+                text: noteContent,
+                timestamp: new Date().toISOString(),
+              });
+              localStorage.setItem("murmur_notes", JSON.stringify(existingNotes));
+            } catch (err) {
+              console.error("Failed to auto-save voice note:", err);
+            }
+          } else if (taskMatch && taskMatch[1]?.trim()) {
+            const taskContent = taskMatch[1].trim();
+            try {
+              const existingTasks = JSON.parse(localStorage.getItem("murmur_tasks") || "[]");
+              existingTasks.unshift({
+                id: Date.now(),
+                text: taskContent,
+                done: false,
+                timestamp: new Date().toISOString(),
+              });
+              localStorage.setItem("murmur_tasks", JSON.stringify(existingTasks));
+            } catch (err) {
+              console.error("Failed to auto-save task:", err);
             }
           }
 

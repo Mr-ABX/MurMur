@@ -1,4 +1,4 @@
-name: 'Publish'
+name: Release Murmur (macOS & Windows)
 
 on:
   push:
@@ -6,8 +6,11 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  publish-tauri:
+  release:
     permissions:
       contents: write
     strategy:
@@ -15,57 +18,35 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--target universal-apple-darwin'
+            args: ''
           - platform: 'windows-latest'
             args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20
+          cache: 'npm'
 
-      - name: install Rust stable
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: install LLVM (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: brew install llvm cmake
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
+      - name: Install frontend dependencies
+        run: npm ci || npm install
 
-      - name: install LLVM + cmake (windows)
-        if: matrix.platform == 'windows-latest'
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install llvm -y
-
-      - name: set LIBCLANG_PATH (windows)
-        if: matrix.platform == 'windows-latest'
-        run: echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
-
-      - name: set LIBCLANG_PATH (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: |
-          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> $GITHUB_ENV
-          echo "PATH=$(brew --prefix llvm)/bin:$PATH" >> $GITHUB_ENV
-
-      - name: install frontend dependencies
-        run: npm install
-
-      - name: build and release
+      - name: Build Tauri App & Publish Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: murmur-v__VERSION__
-          releaseName: 'MurMur v__VERSION__'
-          releaseBody: 'See the assets below to download and install this version.'
-          releaseDraft: true
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Murmur ${{ github.ref_name }} (macOS & Windows)'
+          releaseBody: 'Download the official release of Murmur for macOS (.dmg) or Windows (.exe / .msi) below.'
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
