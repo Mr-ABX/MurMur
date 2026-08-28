@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
 import { ModernSelect } from "./ModernSelect";
+import { checkForAppUpdates, openReleasePage, notifyUpdateAvailable, UpdateInfo, APP_VERSION } from "../services/updaterService";
 import murmurIcon from "../assets/murmur_icon.png";
 import NotesTab from "./tabs/NotesTab";
 import SkillsTab from "./tabs/SkillsTab";
@@ -101,6 +102,29 @@ export default function SettingsPanel({ state }: Props) {
     downloadGemmaModel, deleteGemmaModel
   } = state;
   const [activeTab, setActiveTab] = useState<Tab>("notes");
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [lastCheckedTime, setLastCheckedTime] = useState<string | null>(null);
+
+  const handleCheckUpdates = async (isManual = true) => {
+    setIsCheckingUpdates(true);
+    try {
+      const info = await checkForAppUpdates();
+      setUpdateInfo(info);
+      setLastCheckedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      if (info.hasUpdate && !isManual) {
+        notifyUpdateAvailable(info);
+      }
+    } finally {
+      setIsCheckingUpdates(false);
+    }
+  };
+
+  useEffect(() => {
+    if (settings.autoUpdateCheck ?? true) {
+      handleCheckUpdates(false);
+    }
+  }, []);
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "notes", label: "Notes", icon: <FileText size={16} /> },
@@ -314,14 +338,53 @@ export default function SettingsPanel({ state }: Props) {
                     <Toggle enabled={settings.autoUpdateCheck ?? true} onChange={(v) => updateSettings({ autoUpdateCheck: v })} />
                   </SettingRow>
 
-                  <SettingRow label="Software Updates" description="Current version: v0.2.0 (Latest)">
-                    <button
-                      onClick={() => alert("Murmur is up to date! (v0.2.0)")}
-                      className="px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] border border-[var(--border-strong)] transition-all shadow-sm flex items-center gap-2"
-                    >
-                      <RefreshCw size={14} className="text-[var(--accent-primary)]" />
-                      Check for Updates
-                    </button>
+                  <SettingRow 
+                    label="Software Updates" 
+                    description={`Installed version: v${APP_VERSION}${lastCheckedTime ? ` • Checked at ${lastCheckedTime}` : ""}`}
+                  >
+                    <div className="flex flex-col items-end gap-2.5">
+                      <div className="flex items-center gap-3">
+                        {updateInfo && !updateInfo.hasUpdate && !isCheckingUpdates && (
+                          <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                            <CheckCircle2 size={13} />
+                            Up to date
+                          </span>
+                        )}
+                        <button
+                          disabled={isCheckingUpdates}
+                          onClick={() => handleCheckUpdates(true)}
+                          className="px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] border border-[var(--border-strong)] transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw size={13} className={`text-[var(--accent-primary)] ${isCheckingUpdates ? "animate-spin" : ""}`} />
+                          {isCheckingUpdates ? "Checking..." : "Check for Updates"}
+                        </button>
+                      </div>
+
+                      {updateInfo?.hasUpdate && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col gap-2 max-w-sm"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-indigo-300 flex items-center gap-1">
+                              🚀 New Release: v{updateInfo.latestVersion}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 font-medium">Available Now</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-300 line-clamp-2">
+                            {updateInfo.releaseName || "New features, bug fixes and performance improvements."}
+                          </p>
+                          <button
+                            onClick={() => openReleasePage(updateInfo.releaseUrl)}
+                            className="mt-1 w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Download size={13} />
+                            Download & Install Update
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
                   </SettingRow>
                 </div>
 
