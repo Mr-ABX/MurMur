@@ -37,6 +37,33 @@
 
 ---
 
+## 💡 The 100% Free, Private & Ultra-Lightweight Wispr Flow Alternative
+
+Tired of expensive **\$15–\$20/month subscriptions**, cloud audio logging, and heavy background apps that hog your CPU and RAM?
+
+**MurMur** is built from the ground up as a **100% free, forever open-source, and hardware-accelerated alternative** to proprietary tools like Wispr Flow, Superwhisper, and MacWhisper Pro.
+
+| Feature | 🎙️ **MurMur** | ☁️ **Wispr Flow** | 🏷️ **Superwhisper** | 🍎 **MacWhisper Pro** |
+| :--- | :---: | :---: | :---: | :---: |
+| **Pricing** | **100% Free & Open Source** | \$15 / month | \$8.99 / mo or \$199 | €29 – €49 (Pro) |
+| **Audio Privacy** | **100% Local (Never leaves device)** | Sent to Cloud | Hybrid / Local | Local |
+| **Disk Footprint** | **~150 MB (Base model)** | 500 MB+ | 1.2 GB+ | 1.5 GB+ |
+| **RAM Usage** | **~35 MB Idle (~120MB Peak)** | ~250 MB+ | ~400 MB+ | ~500 MB+ |
+| **Universal Auto-Paste** | **Instant (Zero popups)** | Yes | Yes | Manual / Dictation |
+| **Dynamic Notch & Island** | **Interactive 3-Page Workspace** | None | None | None |
+| **Screen-Aware AI Assistant** | **Multi-Monitor Vision AI** | None | None | None |
+| **Platform Support** | **macOS & Windows** | macOS only | macOS only | macOS only |
+
+### 🚀 Why Creators & Developers Choose MurMur:
+
+- 💸 **100% Free Forever**: No subscriptions, no hidden token limits, no paywalls, and no credit card required.
+- 🪶 **Ultra-Lightweight (~150 MB Disk & ~35 MB Idle RAM)**: Unlike heavy Electron or Python apps, MurMur is compiled natively with **Rust & Tauri v2**, consuming negligible system memory so your computer stays blazing fast.
+- ⚡ **Seamless "Type Anywhere" Dictation**: Hold your hotkey (`Cmd+Shift+Space` or `Ctrl+Shift+Space`), speak naturally at 150+ words per minute, and release. MurMur instantly types your words directly into Cursor, VS Code, Slack, Notion, Claude, or ChatGPT without intrusive windows getting in your way.
+- 🧠 **Smart AI Voice Prompting & Notes**: Formats raw speech into clean code identifiers, structured LLM prompts, or automatically saves voice notes to your local workspace tab whenever you say *"Hey MurMur, take a note: ..."*.
+- 🖥️ **Screen-Aware Vision Assistant**: Press one button to take a multi-monitor screen snapshot and ask Gemini 2.0 Flash or local Gemma to explain errors, summarize text, or draft responses.
+
+---
+
 ## 🌟 Overview
 
 **MurMur** is the ultimate ambient voice intelligence and AI prompting assistant designed for developers, writers, and power users. Instead of typing out massive prompts for ChatGPT, Claude, or Cursor, simply hold your hotkey, speak naturally, and let MurMur transcribe, format, and auto-paste text directly into your active window.

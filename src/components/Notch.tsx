@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AppState } from "../hooks/useAppState";
+import { ModernSelect } from "./ModernSelect";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings,
@@ -425,17 +426,20 @@ export default function Notch({ state }: { state: AppState }) {
                           <Bot size={12} className="text-indigo-400" />
                           Model
                         </span>
-                        <select
-                          value={selectedModel}
-                          onChange={(e) => handleModelChange(e.target.value)}
-                          className="bg-zinc-900 border border-white/10 text-[11px] text-zinc-200 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-indigo-500/50"
-                        >
-                          <option value="gemini-2.0-flash-lite-preview-02-05">⚡ Gemini 2.0 Flash (Cloud API)</option>
-                          <option value="gemini-1.5-flash">⚡ Gemini 1.5 Flash (Cloud API)</option>
-                          <option value="gemma:2b">🧠 Gemma 2B (Local Ollama)</option>
-                          <option value="gemma:7b">🧠 Gemma 7B (Local Ollama)</option>
-                          <option value="gemma4">🧠 Gemma 4 (Local Ollama)</option>
-                        </select>
+                        <div className="w-56">
+                          <ModernSelect
+                            size="sm"
+                            value={selectedModel}
+                            onChange={(val) => handleModelChange(val)}
+                            options={[
+                              { value: "gemini-2.0-flash-lite-preview-02-05", label: "⚡ Gemini 2.0 Flash (Cloud API)" },
+                              { value: "gemini-1.5-flash", label: "⚡ Gemini 1.5 Flash (Cloud API)" },
+                              { value: "gemma:2b", label: "🧠 Gemma 2B (Local Ollama)" },
+                              { value: "gemma:7b", label: "🧠 Gemma 7B (Local Ollama)" },
+                              { value: "gemma4", label: "🧠 Gemma 4 (Local Ollama)" },
+                            ]}
+                          />
+                        </div>
                       </div>
 
                       {/* Presets */}

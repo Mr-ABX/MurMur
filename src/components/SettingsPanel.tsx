@@ -8,6 +8,7 @@ import {
   Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot, RefreshCw
 } from "lucide-react";
 import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
+import { ModernSelect } from "./ModernSelect";
 import murmurIcon from "../assets/murmur_icon.png";
 import NotesTab from "./tabs/NotesTab";
 import SkillsTab from "./tabs/SkillsTab";
@@ -203,75 +204,62 @@ export default function SettingsPanel({ state }: Props) {
                 <SectionHeader icon={<Keyboard size={16} />} title="Input & Shortcuts" />
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
                   <SettingRow label="Operating Mode" description="Choose how Murmur processes your voice">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.operatingMode}
-                        onChange={(e) => updateSettings({ operatingMode: e.target.value as any })}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        <option value="dictation" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Dictation (Type Anywhere)</option>
-                        <option value="assistant" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Assistant (Chat UI)</option>
-                        <option value="hybrid" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Hybrid (Contextual)</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        onChange={(val) => updateSettings({ operatingMode: val as any })}
+                        options={[
+                          { value: "dictation", label: "Dictation (Type Anywhere)", description: "Auto-pastes transcribed speech directly into your active window" },
+                          { value: "assistant", label: "Assistant (Chat UI)", description: "Opens interactive AI workspace" },
+                          { value: "hybrid", label: "Hybrid (Contextual)", description: "Intelligently routes based on spoken intent" },
+                        ]}
+                      />
                     </div>
                   </SettingRow>
 
                   <SettingRow label="Visualizer Style" description="Choose how Murmur appears when recording">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.widgetPetEnabled ? "widget" : settings.widgetNotchEnabled ? "notch" : "overlay"}
-                        onChange={(e) => {
-                          const val = e.target.value;
+                        onChange={(val) => {
                           updateSettings({
                             widgetPetEnabled: val === "widget",
                             widgetNotchEnabled: val === "notch",
                           });
                         }}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        <option value="notch" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Top Notch (Dynamic Island)</option>
-                        <option value="widget" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Floating Widget (Draggable)</option>
-                        <option value="overlay" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Standard Overlay</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        options={[
+                          { value: "notch", label: "Top Notch (Dynamic Island)", description: "Ambient top-screen island with wave visuals" },
+                          { value: "widget", label: "Floating Widget (Draggable)", description: "Compact desktop widget that can be placed anywhere" },
+                          { value: "overlay", label: "Standard Overlay", description: "Minimal center-screen voice indicator" },
+                        ]}
+                      />
                     </div>
                   </SettingRow>
 
                   <SettingRow label="Visibility Mode" description="Choose when the visualizer should be shown">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.visibilityMode}
-                        onChange={(e) => updateSettings({ visibilityMode: e.target.value as any })}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        <option value="alwayson" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Always Show</option>
-                        <option value="autohidden" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Show Only When Active</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        onChange={(val) => updateSettings({ visibilityMode: val as any })}
+                        options={[
+                          { value: "alwayson", label: "Always Show", description: "Keep notch visible on screen" },
+                          { value: "autohidden", label: "Show Only When Active", description: "Auto-hide when idle" },
+                        ]}
+                      />
                     </div>
                   </SettingRow>
 
                   {settings.widgetNotchEnabled && (
                     <SettingRow label="Notch Style" description="Choose the appearance of the top notch">
-                      <div className="relative w-full sm:w-64">
-                        <select
+                      <div className="w-full sm:w-64">
+                        <ModernSelect
                           value={settings.notchStyle}
-                          onChange={(e) => updateSettings({ notchStyle: e.target.value as any })}
-                          className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                        >
-                          <option value="macbook" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Macbook Style</option>
-                          <option value="dynamicisland" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Dynamic Island</option>
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                        </div>
+                          onChange={(val) => updateSettings({ notchStyle: val as any })}
+                          options={[
+                            { value: "macbook", label: "MacBook Style", description: "Classic MacBook top bezel attachment" },
+                            { value: "dynamicisland", label: "Dynamic Island", description: "Floating pill with smooth fluid animations" },
+                          ]}
+                        />
                       </div>
                     </SettingRow>
                   )}
@@ -286,18 +274,14 @@ export default function SettingsPanel({ state }: Props) {
                   </SettingRow>
 
                   <SettingRow label="Microphone Device" description="Select which microphone to use">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.inputDevice}
-                        onChange={(e) => updateSettings({ inputDevice: e.target.value })}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        <option value="default" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">System Default</option>
-                        {/* More devices would be populated here dynamically */}
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        onChange={(val) => updateSettings({ inputDevice: val })}
+                        options={[
+                          { value: "default", label: "System Default Microphone", description: "Use macOS/Windows default input device" },
+                        ]}
+                      />
                     </div>
                   </SettingRow>
 
@@ -314,18 +298,15 @@ export default function SettingsPanel({ state }: Props) {
                   </SettingRow>
 
                   <SettingRow label="Tray Icon Style" description="Choose the style of the menu bar icon">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.trayIconStyle || "color"}
-                        onChange={(e) => updateSettings({ trayIconStyle: e.target.value as "color" | "flat" })}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        <option value="color" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Color Icon</option>
-                        <option value="flat" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Monochrome (Flat)</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        onChange={(val) => updateSettings({ trayIconStyle: val as "color" | "flat" })}
+                        options={[
+                          { value: "color", label: "Color Icon", description: "Vibrant gradient microphone icon" },
+                          { value: "flat", label: "Monochrome (Flat)", description: "Minimal monochrome menu bar icon" },
+                        ]}
+                      />
                     </div>
                   </SettingRow>
 
@@ -333,9 +314,9 @@ export default function SettingsPanel({ state }: Props) {
                     <Toggle enabled={settings.autoUpdateCheck ?? true} onChange={(v) => updateSettings({ autoUpdateCheck: v })} />
                   </SettingRow>
 
-                  <SettingRow label="Software Updates" description="Current version: v0.1.0 (Latest)">
+                  <SettingRow label="Software Updates" description="Current version: v0.2.0 (Latest)">
                     <button
-                      onClick={() => alert("Murmur is up to date! (v0.1.0)")}
+                      onClick={() => alert("Murmur is up to date! (v0.2.0)")}
                       className="px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] border border-[var(--border-strong)] transition-all shadow-sm flex items-center gap-2"
                     >
                       <RefreshCw size={14} className="text-[var(--accent-primary)]" />
@@ -347,21 +328,15 @@ export default function SettingsPanel({ state }: Props) {
                 <SectionHeader icon={<Globe size={16} />} title="Language & Vocabulary" />
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
                   <SettingRow label="Transcription Language" description="Language spoken during recording">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.language}
-                        onChange={(e) => updateSettings({ language: e.target.value })}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        {LANGUAGES.map((lang) => (
-                          <option key={lang.code} value={lang.code} className="bg-[var(--bg-surface)] text-[var(--text-primary)]">
-                            {lang.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        onChange={(val) => updateSettings({ language: val })}
+                        options={LANGUAGES.map((lang) => ({
+                          value: lang.code,
+                          label: lang.name,
+                        }))}
+                      />
                     </div>
                   </SettingRow>
 
@@ -685,20 +660,17 @@ export default function SettingsPanel({ state }: Props) {
                 
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
                   <SettingRow label="Primary Engine" description="Choose which engine handles transcription first">
-                    <div className="relative w-full sm:w-64">
-                      <select
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
                         value={settings.cloudProvider}
-                        onChange={(e) => updateSettings({ cloudProvider: e.target.value as any })}
-                        className="w-full text-sm rounded-xl pl-4 pr-10 py-2.5 outline-none cursor-pointer appearance-none transition-all shadow-sm focus:ring-2 focus:ring-[var(--accent-primary)]/50 border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      >
-                        <option value="local" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Local (Whisper.cpp)</option>
-                        <option value="gemini" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Google Gemini (Free Tier)</option>
-                        <option value="groq" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Groq Whisper (Free Tier)</option>
-                        <option value="deepgram" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Deepgram (Live & Fast)</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
+                        onChange={(val) => updateSettings({ cloudProvider: val as any })}
+                        options={[
+                          { value: "local", label: "Local (Whisper.cpp)", description: "100% offline, zero cloud latency & private" },
+                          { value: "gemini", label: "Google Gemini (Free Tier)", description: "Gemini 2.0 Flash cloud transcription" },
+                          { value: "groq", label: "Groq Whisper (Free Tier)", description: "Ultra-fast LPU cloud inference" },
+                          { value: "deepgram", label: "Deepgram (Live & Fast)", description: "Live real-time streaming audio transcription" },
+                        ]}
+                      />
                     </div>
                   </SettingRow>
                 </div>
