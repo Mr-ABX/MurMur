@@ -122,10 +122,10 @@ impl AudioCapture {
         let slice = &buffer[buffer.len() - take_len..];
         let sum_sq: f32 = slice.iter().map(|s| s * s).sum();
         let rms = (sum_sq / take_len as f32).sqrt();
-        let db = if rms > 0.000005 { 20.0 * rms.log10() } else { -60.0 };
-        // Sensitive dynamic normalization between 0.0 and 1.0
-        let level = ((db + 50.0) / 42.0).clamp(0.0, 1.0);
-        level.powf(0.75)
+        let db = if rms > 0.000001 { 20.0 * rms.log10() } else { -60.0 };
+        // Sensitive dynamic range: floor at -46dB, ceiling at -10dB
+        let level = ((db + 46.0) / 36.0).clamp(0.0, 1.0);
+        level.powf(0.6)
     }
 
     pub fn clear_buffer(&self) {

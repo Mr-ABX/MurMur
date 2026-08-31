@@ -45,15 +45,15 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       const exp = isExpandedRef.current;
 
       const width = exp ? 360 : 210;
-      const height = 18;
+      const height = 24;
 
-      // Target amplitude: when recording, dynamically scales up with voice level (up to 16px)
-      const targetAmp = rec ? (3.5 + Math.min(13.0, lvl * 18.0)) : (exp ? 2.0 : 1.0);
+      // Target amplitude: when recording, dynamically scales up with voice level (up to 8.5px within 24px height)
+      const targetAmp = rec ? (2.2 + Math.min(6.5, lvl * 8.5)) : (exp ? 1.8 : 1.0);
       // Smooth lerp easing
-      currentAmp += (targetAmp - currentAmp) * 0.28;
+      currentAmp += (targetAmp - currentAmp) * 0.30;
 
-      // Phase step
-      const step = rec ? (0.04 + lvl * 0.16) : 0.015;
+      // Phase step: accelerates dynamically with voice intensity
+      const step = rec ? (0.04 + lvl * 0.14) : 0.015;
       phase = (phase + step) % (Math.PI * 2);
 
       // 1. Primary voice wave
@@ -64,8 +64,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
         const envelope = Math.sin(normX * Math.PI);
         const y =
           height / 2 +
-          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.7 +
-            Math.sin(normX * Math.PI * 5.2 - phase * 1.6) * 0.3) *
+          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.75 +
+            Math.sin(normX * Math.PI * 5.2 - phase * 1.5) * 0.25) *
             currentAmp *
             envelope;
         d1 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
@@ -73,8 +73,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (1.0 + Math.min(1.2, lvl * 1.5)).toFixed(2));
-          path1Ref.current.setAttribute("stroke-opacity", (0.8 + lvl * 0.2).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (1.0 + Math.min(1.4, lvl * 1.6)).toFixed(2));
+          path1Ref.current.setAttribute("stroke-opacity", (0.85 + lvl * 0.15).toFixed(2));
         } else {
           path1Ref.current.setAttribute("stroke-width", "0.8");
           path1Ref.current.setAttribute("stroke-opacity", "0.55");
@@ -113,7 +113,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
             d3 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
           }
           path3Ref.current.setAttribute("d", d3);
-          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.9, 0.4 + lvl * 0.8).toFixed(2));
+          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.95, 0.45 + lvl * 0.8).toFixed(2));
         } else {
           path3Ref.current.setAttribute("d", "");
         }
@@ -127,10 +127,10 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
   }, []);
 
   const width = isExpanded ? 360 : 210;
-  const height = 18;
+  const height = 24;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden px-2">
+    <div className="relative w-full h-full flex items-center justify-center overflow-visible px-2">
       <svg
         className="w-full h-full overflow-visible"
         viewBox={`0 0 ${width} ${height}`}
