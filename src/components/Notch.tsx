@@ -21,74 +21,113 @@ import {
 } from "lucide-react";
 
 function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; isRecording: boolean; isExpanded: boolean }) {
-  const [phase, setPhase] = useState(0);
+  const path1Ref = useRef<SVGPathElement>(null);
+  const path2Ref = useRef<SVGPathElement>(null);
+  const path3Ref = useRef<SVGPathElement>(null);
+
+  const levelRef = useRef(level);
+  const isRecordingRef = useRef(isRecording);
+  const isExpandedRef = useRef(isExpanded);
+
+  levelRef.current = level;
+  isRecordingRef.current = isRecording;
+  isExpandedRef.current = isExpanded;
 
   useEffect(() => {
     let animId: number;
+    let phase = 0;
+    let currentAmp = 1.0;
+    const points = 50;
+
     const animate = () => {
-      const step = isRecording ? (0.04 + level * 0.16) : 0.015;
-      setPhase((prev) => (prev + step) % (Math.PI * 2));
+      const rec = isRecordingRef.current;
+      const lvl = levelRef.current;
+      const exp = isExpandedRef.current;
+
+      const width = exp ? 360 : 210;
+      const height = 18;
+
+      // Target amplitude: when recording, dynamically scales up with voice level (up to 16px)
+      const targetAmp = rec ? (3.5 + Math.min(13.0, lvl * 18.0)) : (exp ? 2.0 : 1.0);
+      // Smooth lerp easing
+      currentAmp += (targetAmp - currentAmp) * 0.28;
+
+      // Phase step
+      const step = rec ? (0.04 + lvl * 0.16) : 0.015;
+      phase = (phase + step) % (Math.PI * 2);
+
+      // 1. Primary voice wave
+      let d1 = "";
+      for (let i = 0; i <= points; i++) {
+        const x = (i / points) * width;
+        const normX = i / points;
+        const envelope = Math.sin(normX * Math.PI);
+        const y =
+          height / 2 +
+          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.7 +
+            Math.sin(normX * Math.PI * 5.2 - phase * 1.6) * 0.3) *
+            currentAmp *
+            envelope;
+        d1 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
+      }
+      if (path1Ref.current) {
+        path1Ref.current.setAttribute("d", d1);
+        if (rec) {
+          path1Ref.current.setAttribute("stroke-width", (1.0 + Math.min(1.2, lvl * 1.5)).toFixed(2));
+          path1Ref.current.setAttribute("stroke-opacity", (0.8 + lvl * 0.2).toFixed(2));
+        } else {
+          path1Ref.current.setAttribute("stroke-width", "0.8");
+          path1Ref.current.setAttribute("stroke-opacity", "0.55");
+        }
+      }
+
+      // 2. Harmonic secondary wave
+      let d2 = "";
+      for (let i = 0; i <= points; i++) {
+        const x = (i / points) * width;
+        const normX = i / points;
+        const envelope = Math.sin(normX * Math.PI);
+        const y =
+          height / 2 +
+          (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
+            Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
+            (currentAmp * 0.65) *
+            envelope;
+        d2 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
+      }
+      if (path2Ref.current) {
+        path2Ref.current.setAttribute("d", d2);
+      }
+
+      // 3. Core sharp white voice beam
+      if (path3Ref.current) {
+        if (rec && lvl > 0.02) {
+          let d3 = "";
+          for (let i = 0; i <= points; i++) {
+            const x = (i / points) * width;
+            const normX = i / points;
+            const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
+            const y =
+              height / 2 +
+              Math.sin(normX * Math.PI * 7.0 + phase * 2.2) * (currentAmp * 0.45) * envelope;
+            d3 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
+          }
+          path3Ref.current.setAttribute("d", d3);
+          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.9, 0.4 + lvl * 0.8).toFixed(2));
+        } else {
+          path3Ref.current.setAttribute("d", "");
+        }
+      }
+
       animId = requestAnimationFrame(animate);
     };
+
     animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, [isRecording, level]);
+  }, []);
 
   const width = isExpanded ? 360 : 210;
   const height = 18;
-  const points = 50;
-  // High dynamic range voice reactivity strictly when recording
-  const amp = isRecording ? (3.5 + Math.min(14, level * 20)) : (isExpanded ? 2.0 : 1.0);
-
-  // Primary dynamic wave
-  let pathD = "";
-  for (let i = 0; i <= points; i++) {
-    const x = (i / points) * width;
-    const normX = i / points;
-    const envelope = Math.sin(normX * Math.PI);
-    const y =
-      height / 2 +
-      (Math.sin(normX * Math.PI * 2.8 + phase) * 0.7 +
-        Math.sin(normX * Math.PI * 5.2 - phase * 1.6) * 0.3) *
-        amp *
-        envelope;
-
-    if (i === 0) pathD += `M ${x} ${y}`;
-    else pathD += ` L ${x} ${y}`;
-  }
-
-  // Harmonic secondary wave
-  let pathD2 = "";
-  for (let i = 0; i <= points; i++) {
-    const x = (i / points) * width;
-    const normX = i / points;
-    const envelope = Math.sin(normX * Math.PI);
-    const y =
-      height / 2 +
-      (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
-        Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
-        (amp * 0.65) *
-        envelope;
-
-    if (i === 0) pathD2 += `M ${x} ${y}`;
-    else pathD2 += ` L ${x} ${y}`;
-  }
-
-  // Core sharp voice beam (appears when user is talking during recording)
-  let pathD3 = "";
-  if (isRecording && level > 0.02) {
-    for (let i = 0; i <= points; i++) {
-      const x = (i / points) * width;
-      const normX = i / points;
-      const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
-      const y =
-        height / 2 +
-        Math.sin(normX * Math.PI * 7.0 + phase * 2.2) * (amp * 0.45) * envelope;
-
-      if (i === 0) pathD3 += `M ${x} ${y}`;
-      else pathD3 += ` L ${x} ${y}`;
-    }
-  }
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden px-2">
@@ -100,16 +139,16 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
         <defs>
           <linearGradient id="aiWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#818cf8" stopOpacity="0" />
-            <stop offset="15%" stopColor="#818cf8" stopOpacity={isRecording ? "0.9" : "0.7"} />
+            <stop offset="15%" stopColor="#818cf8" stopOpacity="0.85" />
             <stop offset="35%" stopColor="#c084fc" stopOpacity="1" />
-            <stop offset="50%" stopColor="#f472b6" stopOpacity={isRecording ? "1" : "0.8"} />
+            <stop offset="50%" stopColor="#f472b6" stopOpacity="1" />
             <stop offset="65%" stopColor="#38bdf8" stopOpacity="1" />
-            <stop offset="85%" stopColor="#34d399" stopOpacity={isRecording ? "0.9" : "0.7"} />
+            <stop offset="85%" stopColor="#34d399" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
           </linearGradient>
 
           <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation={isRecording ? "0.9" : "0.5"} result="blur" />
+            <feGaussianBlur stdDeviation="0.7" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -117,38 +156,33 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           </filter>
         </defs>
 
-        {/* Secondary wave layer */}
         <path
-          d={pathD2}
+          ref={path2Ref}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth={isRecording ? "0.7" : "0.4"}
-          strokeOpacity={isRecording ? (0.4 + level * 0.4) : "0.25"}
+          strokeWidth="0.5"
+          strokeOpacity="0.35"
           strokeLinecap="round"
         />
 
-        {/* Primary voice wave */}
         <path
-          d={pathD}
+          ref={path1Ref}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth={isRecording ? (1.0 + Math.min(1.2, level * 1.5)) : "0.8"}
-          strokeOpacity={isRecording ? (0.8 + level * 0.2) : "0.55"}
+          strokeWidth="0.8"
+          strokeOpacity="0.6"
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
 
-        {/* Core dynamic voice beam */}
-        {pathD3 && (
-          <path
-            d={pathD3}
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth="0.8"
-            strokeOpacity={Math.min(0.9, 0.4 + level * 0.8)}
-            strokeLinecap="round"
-          />
-        )}
+        <path
+          ref={path3Ref}
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="0.8"
+          strokeOpacity="0"
+          strokeLinecap="round"
+        />
       </svg>
     </div>
   );
@@ -188,13 +222,11 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Listen to Tauri backend audio level events (only emitted while actively recording)
+  // Listen to Tauri backend audio level events
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
-      if (isRecording) {
-        const level = Math.min(Math.max(e.payload, 0), 1);
-        setAudioLevel(level);
-      }
+      const level = Math.min(Math.max(e.payload, 0), 1);
+      setAudioLevel(level);
     });
 
     // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)
@@ -208,7 +240,7 @@ export default function Notch({ state }: { state: AppState }) {
       unlistenAudio.then((fn) => fn());
       unlistenBlur.then((fn) => fn());
     };
-  }, [isRecording, isLocked]);
+  }, [isLocked]);
 
   const handleWheel = (e: React.WheelEvent) => {
     const now = Date.now();

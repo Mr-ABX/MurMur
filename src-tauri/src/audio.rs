@@ -113,6 +113,21 @@ impl AudioCapture {
         Ok(resampled)
     }
 
+    pub fn get_recent_rms(&self, count: usize) -> f32 {
+        let buffer = self.buffer.lock().unwrap();
+        if buffer.is_empty() {
+            return 0.0;
+        }
+        let take_len = count.min(buffer.len());
+        let slice = &buffer[buffer.len() - take_len..];
+        let sum_sq: f32 = slice.iter().map(|s| s * s).sum();
+        let rms = (sum_sq / take_len as f32).sqrt();
+        let db = if rms > 0.000005 { 20.0 * rms.log10() } else { -60.0 };
+        // Sensitive dynamic normalization between 0.0 and 1.0
+        let level = ((db + 50.0) / 42.0).clamp(0.0, 1.0);
+        level.powf(0.75)
+    }
+
     pub fn clear_buffer(&self) {
         self.buffer.lock().unwrap().clear();
     }
