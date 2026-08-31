@@ -22,23 +22,23 @@ import {
 
 function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; isRecording: boolean; isExpanded: boolean }) {
   const [phase, setPhase] = useState(0);
-  const isInteracting = isRecording || level > 0.02;
 
   useEffect(() => {
     let animId: number;
     const animate = () => {
-      const step = isInteracting ? (0.04 + level * 0.16) : 0.015;
+      const step = isRecording ? (0.04 + level * 0.16) : 0.015;
       setPhase((prev) => (prev + step) % (Math.PI * 2));
       animId = requestAnimationFrame(animate);
     };
     animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, [isInteracting, level]);
+  }, [isRecording, level]);
 
   const width = isExpanded ? 360 : 210;
   const height = 18;
   const points = 50;
-  const amp = isInteracting ? (3.5 + Math.min(14, level * 20)) : (isExpanded ? 2.0 : 1.0);
+  // High dynamic range voice reactivity strictly when recording
+  const amp = isRecording ? (3.5 + Math.min(14, level * 20)) : (isExpanded ? 2.0 : 1.0);
 
   // Primary dynamic wave
   let pathD = "";
@@ -74,9 +74,9 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
     else pathD2 += ` L ${x} ${y}`;
   }
 
-  // Core sharp voice beam (appears when user is talking)
+  // Core sharp voice beam (appears when user is talking during recording)
   let pathD3 = "";
-  if (isInteracting && level > 0.02) {
+  if (isRecording && level > 0.02) {
     for (let i = 0; i <= points; i++) {
       const x = (i / points) * width;
       const normX = i / points;
@@ -100,16 +100,16 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
         <defs>
           <linearGradient id="aiWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#818cf8" stopOpacity="0" />
-            <stop offset="15%" stopColor="#818cf8" stopOpacity={isInteracting ? "0.9" : "0.7"} />
+            <stop offset="15%" stopColor="#818cf8" stopOpacity={isRecording ? "0.9" : "0.7"} />
             <stop offset="35%" stopColor="#c084fc" stopOpacity="1" />
-            <stop offset="50%" stopColor="#f472b6" stopOpacity={isInteracting ? "1" : "0.8"} />
+            <stop offset="50%" stopColor="#f472b6" stopOpacity={isRecording ? "1" : "0.8"} />
             <stop offset="65%" stopColor="#38bdf8" stopOpacity="1" />
-            <stop offset="85%" stopColor="#34d399" stopOpacity={isInteracting ? "0.9" : "0.7"} />
+            <stop offset="85%" stopColor="#34d399" stopOpacity={isRecording ? "0.9" : "0.7"} />
             <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
           </linearGradient>
 
           <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation={isInteracting ? "0.9" : "0.5"} result="blur" />
+            <feGaussianBlur stdDeviation={isRecording ? "0.9" : "0.5"} result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -122,8 +122,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           d={pathD2}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth={isInteracting ? "0.7" : "0.4"}
-          strokeOpacity={isInteracting ? (0.4 + level * 0.4) : "0.25"}
+          strokeWidth={isRecording ? "0.7" : "0.4"}
+          strokeOpacity={isRecording ? (0.4 + level * 0.4) : "0.25"}
           strokeLinecap="round"
         />
 
@@ -132,8 +132,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           d={pathD}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth={isInteracting ? (1.0 + Math.min(1.2, level * 1.5)) : "0.8"}
-          strokeOpacity={isInteracting ? (0.8 + level * 0.2) : "0.55"}
+          strokeWidth={isRecording ? (1.0 + Math.min(1.2, level * 1.5)) : "0.8"}
+          strokeOpacity={isRecording ? (0.8 + level * 0.2) : "0.55"}
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
@@ -172,6 +172,13 @@ export default function Notch({ state }: { state: AppState }) {
   const isInteracting = isRecording || audioLevel > 0.02;
   const notchStyle = state.settings.notchStyle ?? "macbook";
 
+  // Reset audio level when recording ends
+  useEffect(() => {
+    if (!isRecording) {
+      setAudioLevel(0);
+    }
+  }, [isRecording]);
+
   useEffect(() => {
     invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
       console.warn("set_notch_expanded IPC warning:", err);
@@ -181,11 +188,13 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Listen to Tauri backend audio level events
+  // Listen to Tauri backend audio level events (only emitted while actively recording)
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
-      const level = Math.min(Math.max(e.payload, 0), 1);
-      setAudioLevel(level);
+      if (isRecording) {
+        const level = Math.min(Math.max(e.payload, 0), 1);
+        setAudioLevel(level);
+      }
     });
 
     // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)
@@ -199,59 +208,7 @@ export default function Notch({ state }: { state: AppState }) {
       unlistenAudio.then((fn) => fn());
       unlistenBlur.then((fn) => fn());
     };
-  }, [isLocked]);
-
-  // Live Microphone Audio Analyzer for real-time voice reactivity
-  useEffect(() => {
-    let audioCtx: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let stream: MediaStream | null = null;
-    let rafId: number;
-
-    const startMic = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        });
-        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.3;
-        source.connect(analyser);
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        const checkVolume = () => {
-          if (!analyser) return;
-          analyser.getByteFrequencyData(dataArray);
-          let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
-          }
-          const avg = sum / dataArray.length;
-          // Normalize volume level: quiet noise threshold around 12, loud speech around 70+
-          const normalized = Math.min(1, Math.max(0, (avg - 12) / 65));
-          if (normalized > 0.02) {
-            setAudioLevel(normalized);
-          } else {
-            setAudioLevel((prev) => (prev > 0.01 ? prev * 0.82 : 0));
-          }
-          rafId = requestAnimationFrame(checkVolume);
-        };
-        rafId = requestAnimationFrame(checkVolume);
-      } catch (err) {
-        console.log("Mic live visualizer note:", err);
-      }
-    };
-
-    startMic();
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      if (stream) stream.getTracks().forEach((t) => t.stop());
-      if (audioCtx && audioCtx.state !== "closed") audioCtx.close();
-    };
-  }, []);
+  }, [isRecording, isLocked]);
 
   const handleWheel = (e: React.WheelEvent) => {
     const now = Date.now();
