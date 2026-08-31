@@ -97,8 +97,8 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
                     let chunk = &samples[samples.len() - chunk_len..];
                     let sum_sq: f32 = chunk.iter().map(|s| s * s).sum();
                     let rms = (sum_sq / chunk.len() as f32).sqrt();
-                    let db = if rms > 0.00001 { 20.0 * rms.log10() } else { -60.0 };
-                    let level = ((db + 45.0) / 45.0).clamp(0.0, 1.0);
+                    let db = if rms > 0.000005 { 20.0 * rms.log10() } else { -60.0 };
+                    let level = (((db + 52.0) / 45.0).clamp(0.0, 1.0)).powf(0.8);
                     let _ = app_clone.emit("audio_level", level);
                 }
             }
