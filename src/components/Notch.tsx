@@ -36,27 +36,27 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
   useEffect(() => {
     let animId: number;
     let phase = 0;
-    let currentAmp = 1.0;
-    const points = 50;
+    let currentAmp = 1.5;
+    const points = 60;
 
     const animate = () => {
       const rec = isRecordingRef.current;
       const lvl = levelRef.current;
       const exp = isExpandedRef.current;
 
-      const width = exp ? 360 : 210;
-      const height = 24;
+      const width = exp ? 380 : 220;
+      const height = 28;
 
-      // Dynamic target amplitude based on speech energy
-      const targetAmp = rec ? (2.2 + lvl * 10.5) : (exp ? 1.8 : 1.0);
-      // Lerp easing: fast attack on voice energy spike, smooth decay between words
-      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.45 : 0.25);
+      // Ultra-dynamic vocal surge: swells up boldly with speech intensity
+      const targetAmp = rec ? (3.0 + lvl * 14.0) : (exp ? 2.2 : (lvl > 0.04 ? 1.5 + lvl * 8.0 : 1.2));
+      // Rapid attack, smooth decay
+      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.45 : 0.22);
 
       // Phase step: accelerates dynamically with voice intensity
-      const step = rec ? (0.04 + lvl * 0.25) : 0.015;
+      const step = rec ? (0.04 + lvl * 0.28) : 0.015;
       phase = (phase + step) % (Math.PI * 2);
 
-      // 1. Primary voice wave
+      // 1. Primary glowing multi-color ribbon
       let d1 = "";
       for (let i = 0; i <= points; i++) {
         const x = (i / points) * width;
@@ -64,8 +64,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
         const envelope = Math.sin(normX * Math.PI);
         const y =
           height / 2 +
-          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.75 +
-            Math.sin(normX * Math.PI * 5.2 - phase * 1.5) * 0.25) *
+          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.72 +
+            Math.sin(normX * Math.PI * 5.2 - phase * 1.5) * 0.28) *
             currentAmp *
             envelope;
         d1 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
@@ -73,15 +73,15 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (0.9 + lvl * 1.8).toFixed(2));
-          path1Ref.current.setAttribute("stroke-opacity", (0.8 + lvl * 0.2).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (1.0 + lvl * 2.0).toFixed(2));
+          path1Ref.current.setAttribute("stroke-opacity", (0.85 + lvl * 0.15).toFixed(2));
         } else {
-          path1Ref.current.setAttribute("stroke-width", "0.8");
-          path1Ref.current.setAttribute("stroke-opacity", "0.55");
+          path1Ref.current.setAttribute("stroke-width", "0.85");
+          path1Ref.current.setAttribute("stroke-opacity", "0.6");
         }
       }
 
-      // 2. Harmonic secondary wave
+      // 2. Harmonic secondary ribbon
       let d2 = "";
       for (let i = 0; i <= points; i++) {
         const x = (i / points) * width;
@@ -91,7 +91,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           height / 2 +
           (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
             Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
-            (currentAmp * 0.7) *
+            (currentAmp * 0.75) *
             envelope;
         d2 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
       }
@@ -99,9 +99,9 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
         path2Ref.current.setAttribute("d", d2);
       }
 
-      // 3. Core sharp white voice beam
+      // 3. Core sharp white laser beam
       if (path3Ref.current) {
-        if (rec && lvl > 0.01) {
+        if (rec || lvl > 0.05) {
           let d3 = "";
           for (let i = 0; i <= points; i++) {
             const x = (i / points) * width;
@@ -109,11 +109,11 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
             const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
             const y =
               height / 2 +
-              Math.sin(normX * Math.PI * 7.0 + phase * 2.2) * (currentAmp * 0.5) * envelope;
+              Math.sin(normX * Math.PI * 6.5 + phase * 2.0) * (currentAmp * 0.55) * envelope;
             d3 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
           }
           path3Ref.current.setAttribute("d", d3);
-          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.95, 0.35 + lvl * 0.85).toFixed(2));
+          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.98, 0.4 + lvl * 0.8).toFixed(2));
         } else {
           path3Ref.current.setAttribute("d", "");
         }
@@ -126,11 +126,11 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  const width = isExpanded ? 360 : 210;
-  const height = 24;
+  const width = isExpanded ? 380 : 220;
+  const height = 28;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-visible px-2">
+    <div className="relative w-full h-full flex items-center justify-center overflow-visible px-1">
       <svg
         className="w-full h-full overflow-visible"
         viewBox={`0 0 ${width} ${height}`}
@@ -148,7 +148,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           </linearGradient>
 
           <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="0.7" result="blur" />
+            <feGaussianBlur stdDeviation="0.8" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -160,8 +160,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           ref={path2Ref}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.5"
-          strokeOpacity="0.35"
+          strokeWidth="0.6"
+          strokeOpacity="0.4"
           strokeLinecap="round"
         />
 
@@ -169,8 +169,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           ref={path1Ref}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.8"
-          strokeOpacity="0.6"
+          strokeWidth="0.85"
+          strokeOpacity="0.7"
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
@@ -179,7 +179,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           ref={path3Ref}
           fill="none"
           stroke="#ffffff"
-          strokeWidth="0.8"
+          strokeWidth="0.9"
           strokeOpacity="0"
           strokeLinecap="round"
         />
@@ -206,12 +206,75 @@ export default function Notch({ state }: { state: AppState }) {
   const isInteracting = isRecording || audioLevel > 0.02;
   const notchStyle = state.settings.notchStyle ?? "macbook";
 
-  // Reset audio level when recording ends
+  // Continuous Web Audio Analyzer (stays active for instantaneous 0ms audio reaction)
   useEffect(() => {
-    if (!isRecording) {
-      setAudioLevel(0);
-    }
-  }, [isRecording]);
+    let audioCtx: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let stream: MediaStream | null = null;
+    let animId: number;
+    let isCancelled = false;
+
+    const startContinuousMic = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: true,
+          },
+        });
+
+        if (isCancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        audioCtx = new AudioContextClass();
+        const source = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.3;
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        const update = () => {
+          if (!analyser || isCancelled) return;
+          analyser.getByteFrequencyData(dataArray);
+
+          let sum = 0;
+          let maxVal = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+            if (dataArray[i] > maxVal) maxVal = dataArray[i];
+          }
+          const avg = sum / dataArray.length;
+          const normalized = Math.min(1, Math.max(0, (avg * 0.6 + maxVal * 0.4) / 90));
+          setAudioLevel(normalized);
+
+          animId = requestAnimationFrame(update);
+        };
+
+        update();
+      } catch {
+        // Fallback gracefully to Tauri IPC audio level if browser mic access isn't permitted
+      }
+    };
+
+    startContinuousMic();
+
+    return () => {
+      isCancelled = true;
+      cancelAnimationFrame(animId);
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
+      if (audioCtx && audioCtx.state !== "closed") {
+        audioCtx.close().catch(() => {});
+      }
+    };
+  }, []);
 
   useEffect(() => {
     invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
@@ -222,13 +285,11 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Listen to Tauri backend audio level events directly from native audio capture
+  // Listen to Tauri backend audio level events as native fallback
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
-      if (isRecording) {
-        const level = Math.min(Math.max(e.payload, 0), 1);
-        setAudioLevel(level);
-      }
+      const level = Math.min(Math.max(e.payload, 0), 1);
+      setAudioLevel((prev) => (prev > level ? prev * 0.9 : level));
     });
 
     // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)

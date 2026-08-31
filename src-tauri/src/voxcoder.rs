@@ -34,29 +34,57 @@ fn get_replacements() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
 
     // Brackets & braces
+    m.insert("left curly brace", "{");
+    m.insert("right curly brace", "}");
     m.insert("open curly brace", "{");
     m.insert("close curly brace", "}");
+    m.insert("left curly", "{");
+    m.insert("right curly", "}");
     m.insert("open curly", "{");
     m.insert("close curly", "}");
+    m.insert("left brace", "{");
+    m.insert("right brace", "}");
     m.insert("open brace", "{");
     m.insert("close brace", "}");
-    m.insert("open bracket", "[");
-    m.insert("close bracket", "]");
+    m.insert("left square bracket", "[");
+    m.insert("right square bracket", "]");
     m.insert("open square bracket", "[");
     m.insert("close square bracket", "]");
-    m.insert("open paren", "(");
-    m.insert("close paren", ")");
+    m.insert("left bracket", "[");
+    m.insert("right bracket", "]");
+    m.insert("open bracket", "[");
+    m.insert("close bracket", "]");
+    m.insert("left parenthesis", "(");
+    m.insert("right parenthesis", ")");
     m.insert("open parenthesis", "(");
     m.insert("close parenthesis", ")");
+    m.insert("left paren", "(");
+    m.insert("right paren", ")");
+    m.insert("open paren", "(");
+    m.insert("close paren", ")");
+    m.insert("left angle bracket", "<");
+    m.insert("right angle bracket", ">");
     m.insert("open angle bracket", "<");
     m.insert("close angle bracket", ">");
+
+    // Dollar templates
+    m.insert("dollar open curly", "${");
+    m.insert("dollar open brace", "${");
+    m.insert("dollar curly", "${");
+    m.insert("dollar brace", "${");
 
     // Operators
     m.insert("arrow function", "=>");
     m.insert("fat arrow", "=>");
+    m.insert("thin arrow", "->");
+    m.insert("skinny arrow", "->");
     m.insert("triple equals", "===");
+    m.insert("triple equal", "===");
     m.insert("double equals", "==");
+    m.insert("double equal", "==");
     m.insert("not equals", "!==");
+    m.insert("not equal to", "!==");
+    m.insert("is equal to", "===");
     m.insert("greater than or equal", ">=");
     m.insert("less than or equal", "<=");
     m.insert("greater than", ">");
@@ -77,13 +105,15 @@ fn get_replacements() -> HashMap<&'static str, &'static str> {
     m.insert("spread operator", "...");
     m.insert("rest operator", "...");
 
-    // Punctuation
+    // Punctuation & Equals
+    m.insert("equals", "=");
+    m.insert("equal", "=");
+    m.insert("equals sign", "=");
+    m.insert("equal sign", "=");
     m.insert("semicolon", ";");
     m.insert("colon", ":");
     m.insert("dot", ".");
     m.insert("comma", ",");
-    m.insert("equals sign", "=");
-    m.insert("equal sign", "=");
     m.insert("plus sign", "+");
     m.insert("minus sign", "-");
     m.insert("asterisk", "*");

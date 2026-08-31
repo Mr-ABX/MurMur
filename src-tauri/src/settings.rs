@@ -49,6 +49,21 @@ pub struct AppSettings {
     pub visibility_mode: VisibilityMode,
     #[serde(default)]
     pub notch_style: NotchStyle,
+    #[serde(default)]
+    pub activation_mode: ActivationMode,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum ActivationMode {
+    Toggle,
+    Hold,
+}
+
+impl Default for ActivationMode {
+    fn default() -> Self {
+        Self::Toggle
+    }
 }
 
 fn default_true() -> bool {
@@ -205,6 +220,7 @@ impl Default for AppSettings {
             auto_update_check: true,
             visibility_mode: VisibilityMode::AlwaysOn,
             notch_style: NotchStyle::Macbook,
+            activation_mode: ActivationMode::Toggle,
         }
     }
 }

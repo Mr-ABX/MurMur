@@ -35,6 +35,7 @@ export interface AppSettings {
   autoUpdateCheck: boolean;
   visibilityMode: "alwayson" | "autohidden";
   notchStyle: "dynamicisland" | "macbook";
+  activationMode: "toggle" | "hold";
 }
 
 export interface AppState {
@@ -88,6 +89,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoUpdateCheck: true,
   visibilityMode: "alwayson",
   notchStyle: "macbook",
+  activationMode: "toggle",
 };
 
 export function useAppState(): AppState {

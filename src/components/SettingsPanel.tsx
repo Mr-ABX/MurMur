@@ -93,6 +93,167 @@ function SettingRow({
   );
 }
 
+interface ShortcutBuilderProps {
+  hotkey: string;
+  onChange: (newHotkey: string) => void;
+}
+
+function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
+  const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+
+  // Parse existing hotkey into components
+  const parseHotkey = (keyStr: string) => {
+    const parts = (keyStr || "").split("+").map((s) => s.trim()).filter(Boolean);
+    let mod1 = isMac ? "Command" : "Control";
+    let mod2 = "Shift";
+    let key3 = "Space";
+
+    if (parts.length === 1) {
+      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Control") : parts[0];
+      mod2 = "none";
+      key3 = "none";
+    } else if (parts.length === 2) {
+      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Control") : parts[0];
+      mod2 = parts[1];
+      key3 = "none";
+    } else if (parts.length >= 3) {
+      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Control") : parts[0];
+      mod2 = parts[1];
+      key3 = parts[2];
+    }
+    return { mod1, mod2, key3 };
+  };
+
+  const { mod1, mod2, key3 } = parseHotkey(hotkey);
+
+  const handleUpdate = (newMod1: string, newMod2: string, newKey3: string) => {
+    let result = newMod1;
+    if (newMod2 && newMod2 !== "none") {
+      result += `+${newMod2}`;
+    }
+    if (newKey3 && newKey3 !== "none") {
+      result += `+${newKey3}`;
+    }
+    onChange(result);
+  };
+
+  const mod1Options = isMac
+    ? [
+        { value: "Command", label: "⌘ Command (Cmd)" },
+        { value: "Option", label: "⌥ Option (Alt)" },
+        { value: "Control", label: "⌃ Control (Ctrl)" },
+        { value: "Shift", label: "⇧ Shift" },
+      ]
+    : [
+        { value: "Control", label: "Ctrl (Control)" },
+        { value: "Alt", label: "Alt" },
+        { value: "Shift", label: "Shift" },
+      ];
+
+  const mod2Options = [
+    { value: "Shift", label: isMac ? "⇧ Shift" : "Shift" },
+    { value: isMac ? "Option" : "Alt", label: isMac ? "⌥ Option" : "Alt" },
+    { value: isMac ? "Control" : "Control", label: isMac ? "⌃ Control" : "Ctrl" },
+    { value: "Space", label: "Spacebar" },
+    { value: "D", label: "D (Dictate)" },
+    { value: "K", label: "K" },
+    { value: "A", label: "A" },
+    { value: "V", label: "V" },
+    { value: "P", label: "P" },
+    { value: "Slash", label: "/ (Slash)" },
+    { value: "F8", label: "F8" },
+    { value: "F12", label: "F12" },
+  ];
+
+  const key3Options = [
+    { value: "none", label: "— None (2-Key Combo) —" },
+    { value: "Space", label: "Spacebar" },
+    { value: "D", label: "D (Dictate)" },
+    { value: "K", label: "K" },
+    { value: "A", label: "A" },
+    { value: "V", label: "V" },
+    { value: "P", label: "P" },
+    { value: "E", label: "E" },
+    { value: "J", label: "J" },
+    { value: "Enter", label: "Enter / Return" },
+    { value: "Tab", label: "Tab" },
+    { value: "Slash", label: "/ (Slash)" },
+    { value: "Backquote", label: "` (Backquote)" },
+    { value: "F8", label: "F8" },
+    { value: "F12", label: "F12" },
+  ];
+
+  const getBadgeLabel = (key: string) => {
+    if (key === "Command") return "⌘ Cmd";
+    if (key === "Option") return "⌥ Opt";
+    if (key === "Control") return "⌃ Ctrl";
+    if (key === "Shift") return "⇧ Shift";
+    if (key === "Space") return "␣ Space";
+    return key;
+  };
+
+  return (
+    <div className="flex flex-col gap-2.5 w-full max-w-[340px]">
+      <div className="grid grid-cols-3 gap-1.5">
+        <div>
+          <label className="text-[10px] font-semibold text-zinc-400 mb-1 block">Key 1 (Modifier)</label>
+          <ModernSelect
+            value={mod1}
+            onChange={(val) => handleUpdate(val, mod2, key3)}
+            options={mod1Options}
+          />
+        </div>
+
+        <div>
+          <label className="text-[10px] font-semibold text-zinc-400 mb-1 block">Key 2</label>
+          <ModernSelect
+            value={mod2}
+            onChange={(val) => handleUpdate(mod1, val, key3)}
+            options={mod2Options}
+          />
+        </div>
+
+        <div>
+          <label className="text-[10px] font-semibold text-zinc-400 mb-1 block">Key 3 (Optional)</label>
+          <ModernSelect
+            value={key3}
+            onChange={(val) => handleUpdate(mod1, mod2, val)}
+            options={key3Options}
+          />
+        </div>
+      </div>
+
+      {/* Live Badge Preview */}
+      <div className="flex items-center justify-between pt-1 px-1">
+        <div className="flex items-center gap-1.5">
+          <kbd className="px-2 py-0.5 text-xs font-mono font-semibold bg-zinc-800 border border-zinc-700/80 rounded-md text-zinc-200 shadow-sm">
+            {getBadgeLabel(mod1)}
+          </kbd>
+          {mod2 && mod2 !== "none" && (
+            <>
+              <span className="text-zinc-500 text-xs font-bold">+</span>
+              <kbd className="px-2 py-0.5 text-xs font-mono font-semibold bg-zinc-800 border border-zinc-700/80 rounded-md text-zinc-200 shadow-sm">
+                {getBadgeLabel(mod2)}
+              </kbd>
+            </>
+          )}
+          {key3 && key3 !== "none" && (
+            <>
+              <span className="text-zinc-500 text-xs font-bold">+</span>
+              <kbd className="px-2 py-0.5 text-xs font-mono font-semibold bg-indigo-600/40 border border-indigo-500/50 rounded-md text-indigo-200 shadow-sm">
+                {getBadgeLabel(key3)}
+              </kbd>
+            </>
+          )}
+        </div>
+        <span className="text-[11px] text-zinc-500 font-medium">
+          {key3 && key3 !== "none" ? "3-Key Combo" : "2-Key Combo"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPanel({ state }: Props) {
   const { 
     settings, updateSettings, 
@@ -338,12 +499,23 @@ export default function SettingsPanel({ state }: Props) {
                     </SettingRow>
                   )}
 
-                  <SettingRow label="Global Hotkey" description="Shortcut to start/stop recording">
-                    <input
-                      type="text"
-                      value={settings.hotkey}
-                      onChange={(e) => updateSettings({ hotkey: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                  <SettingRow label="Activation Mode" description="Choose how your shortcut key triggers dictation">
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
+                        value={settings.activationMode ?? "toggle"}
+                        onChange={(val) => updateSettings({ activationMode: val as any })}
+                        options={[
+                          { value: "toggle", label: "Toggle Mode", description: "Press shortcut once to start, press again to stop & paste (Recommended)" },
+                          { value: "hold", label: "Push-to-Talk (Hold)", description: "Hold shortcut down while speaking, release to transcribe & paste" },
+                        ]}
+                      />
+                    </div>
+                  </SettingRow>
+
+                  <SettingRow label="Global Hotkey" description="Custom 2-key or 3-key shortcut dropdown picker">
+                    <ShortcutBuilder
+                      hotkey={settings.hotkey}
+                      onChange={(val) => updateSettings({ hotkey: val })}
                     />
                   </SettingRow>
 
