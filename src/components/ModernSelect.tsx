@@ -7,6 +7,7 @@ export interface SelectOption {
   label: string;
   description?: string;
   icon?: React.ReactNode;
+  disabled?: boolean;
 }
 
 interface ModernSelectProps {
@@ -97,19 +98,28 @@ export const ModernSelect: React.FC<ModernSelectProps> = ({
           >
             {options.map((option) => {
               const isSelected = option.value === value;
+              const isDisabled = option.disabled;
               return (
                 <button
                   key={option.value}
                   type="button"
+                  disabled={isDisabled}
                   onClick={() => {
+                    if (isDisabled) return;
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left transition-all duration-150 cursor-pointer ${
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left transition-all duration-150 ${
+                    isDisabled
+                      ? "opacity-40 cursor-not-allowed text-[var(--text-secondary)]"
+                      : "cursor-pointer"
+                  } ${
                     isSmall ? "text-xs py-1.5" : "text-sm"
                   } ${
                     isSelected
                       ? "bg-indigo-500/15 text-indigo-400 font-semibold"
+                      : isDisabled
+                      ? ""
                       : "text-[var(--text-primary)] hover:bg-white/5 hover:text-white"
                   }`}
                 >

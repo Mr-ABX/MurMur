@@ -294,17 +294,17 @@ export default function SettingsPanel({ state }: Props) {
                   <SettingRow label="Visualizer Style" description="Choose how Murmur appears when recording">
                     <div className="w-full sm:w-64">
                       <ModernSelect
-                        value={settings.widgetPetEnabled ? "widget" : settings.widgetNotchEnabled ? "notch" : "overlay"}
+                        value={settings.widgetNotchEnabled ? "notch" : "overlay"}
                         onChange={(val) => {
                           updateSettings({
-                            widgetPetEnabled: val === "widget",
+                            widgetPetEnabled: false,
                             widgetNotchEnabled: val === "notch",
                           });
                         }}
                         options={[
-                          { value: "notch", label: "Top Notch (Dynamic Island)", description: "Ambient top-screen island with wave visuals" },
-                          { value: "widget", label: "Floating Widget (Draggable)", description: "Compact desktop widget that can be placed anywhere" },
-                          { value: "overlay", label: "Standard Overlay", description: "Minimal center-screen voice indicator" },
+                          { value: "notch", label: "Top Notch (Dynamic Island)", description: "Ambient top-screen island with live voice visuals (Recommended)" },
+                          { value: "overlay", label: "Minimal Overlay", description: "Subtle center-screen voice indicator" },
+                          { value: "widget", label: "Desktop Widget / Pet (Coming Soon)", description: "Interactive draggable companion widget (In development)", disabled: true },
                         ]}
                       />
                     </div>
