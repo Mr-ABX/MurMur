@@ -90,43 +90,41 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
         loop {
             std::thread::sleep(std::time::Duration::from_millis(30));
             let recording = is_recording.lock().unwrap();
-            if !*recording {
-                break;
-            }
 
-            let level = audio.get_recent_rms(960);
-            let _ = app_clone.emit("audio_level", level);
+            if *recording {
+                let level = audio.get_recent_rms(960);
+                let _ = app_clone.emit("audio_level", level);
 
-            if is_live {
-                if let Ok(samples) = audio.get_samples() {
-                    let current_len = samples.len();
-                    if is_deepgram {
-                        if current_len > last_processed_len {
-                            let new_samples = &samples[last_processed_len..];
-                            let _ = tx_audio.send(new_samples.to_vec());
-                            last_processed_len = current_len;
-                        }
-                    } else {
-                        // Local streaming hack
-                        if last_processed_time.elapsed().as_millis() > 1000 {
-                            if current_len > 0 {
-                                let samples_clone = samples.clone();
-                                let app_cl = app_clone.clone();
-                                let set_cl = settings.clone();
-                                let tr_cl = transcriber.clone();
-                                tauri::async_runtime::spawn(async move {
-                                    if let Ok(text) = transcriber::transcribe_hybrid(&samples_clone, &set_cl, &tr_cl).await {
-                                        let _ = app_cl.emit("murmur://transcript-partial", text);
-                                    }
-                                });
+                if is_live {
+                    if let Ok(samples) = audio.get_samples() {
+                        let current_len = samples.len();
+                        if is_deepgram {
+                            if current_len > last_processed_len {
+                                let new_samples = &samples[last_processed_len..];
+                                let _ = tx_audio.send(new_samples.to_vec());
+                                last_processed_len = current_len;
                             }
-                            last_processed_time = std::time::Instant::now();
+                        } else {
+                            // Local streaming partials
+                            if last_processed_time.elapsed().as_millis() > 1000 {
+                                if current_len > 0 {
+                                    let samples_clone = samples.clone();
+                                    let app_cl = app_clone.clone();
+                                    let set_cl = settings.clone();
+                                    let tr_cl = transcriber.clone();
+                                    tauri::async_runtime::spawn(async move {
+                                        if let Ok(text) = transcriber::transcribe_hybrid(&samples_clone, &set_cl, &tr_cl).await {
+                                            let _ = app_cl.emit("murmur://transcript-partial", text);
+                                        }
+                                    });
+                                }
+                                last_processed_time = std::time::Instant::now();
+                            }
                         }
                     }
                 }
-            }
-
-            if !*recording {
+            } else {
+                // Recording stopped! Drop lock, stop audio capture, and trigger transcription
                 drop(recording);
 
                 // Stop audio and get samples
