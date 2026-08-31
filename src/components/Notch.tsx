@@ -222,27 +222,32 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Listen to Tauri backend audio level events strictly from native CoreAudio during dictation
+  // Keep audio_level listener continuously active from native CoreAudio
   useEffect(() => {
-    const unlistenAudio = listen<number>("audio_level", (e) => {
-      if (isRecording) {
-        const level = Math.min(Math.max(e.payload, 0), 1);
-        setAudioLevel(level);
-      }
+    let unlistenAudioFn: (() => void) | null = null;
+    let unlistenBlurFn: (() => void) | null = null;
+
+    listen<number>("audio_level", (e) => {
+      const level = Math.min(Math.max(e.payload, 0), 1);
+      setAudioLevel(level);
+    }).then((fn) => {
+      unlistenAudioFn = fn;
     });
 
     // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)
-    const unlistenBlur = getCurrentWindow().listen("tauri://blur", () => {
+    getCurrentWindow().listen("tauri://blur", () => {
       if (!isLocked) {
         setIsExpanded(false);
       }
+    }).then((fn) => {
+      unlistenBlurFn = fn;
     });
 
     return () => {
-      unlistenAudio.then((fn) => fn());
-      unlistenBlur.then((fn) => fn());
+      if (unlistenAudioFn) unlistenAudioFn();
+      if (unlistenBlurFn) unlistenBlurFn();
     };
-  }, [isRecording, isLocked]);
+  }, [isLocked]);
 
   const handleWheel = (e: React.WheelEvent) => {
     const now = Date.now();
