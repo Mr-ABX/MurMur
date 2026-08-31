@@ -23,12 +23,15 @@ import {
 function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; isRecording: boolean; isExpanded: boolean }) {
   const [phase, setPhase] = useState(0);
   const isRecordingRef = useRef(isRecording);
+  const levelRef = useRef(level);
   isRecordingRef.current = isRecording;
+  levelRef.current = level;
 
   useEffect(() => {
     let animId: number;
     const animate = () => {
-      const step = isRecordingRef.current ? 0.085 : 0.015;
+      const currentLevel = levelRef.current;
+      const step = isRecordingRef.current ? (0.04 + currentLevel * 0.14) : 0.015;
       setPhase((prev) => (prev + step) % (Math.PI * 2));
       animId = requestAnimationFrame(animate);
     };
@@ -36,36 +39,58 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  const width = isExpanded ? 340 : 220;
+  const width = isExpanded ? 360 : 210;
   const height = 18;
-  const points = 45;
-  const amp = isRecording ? 7 + Math.min(10, level * 14) : (isExpanded ? 2.5 : 1.2);
+  const points = 50;
+  const amp = isRecording ? (3.5 + Math.min(12, level * 16)) : (isExpanded ? 2.0 : 1.0);
 
+  // Primary dynamic wave
   let pathD = "";
   for (let i = 0; i <= points; i++) {
     const x = (i / points) * width;
     const normX = i / points;
     const envelope = Math.sin(normX * Math.PI);
-    const y = height / 2 + Math.sin(normX * Math.PI * 2.5 + phase) * amp * envelope;
+    const y =
+      height / 2 +
+      (Math.sin(normX * Math.PI * 2.8 + phase) * 0.7 +
+        Math.sin(normX * Math.PI * 5.2 - phase * 1.6) * 0.3) *
+        amp *
+        envelope;
 
-    if (i === 0) {
-      pathD += `M ${x} ${y}`;
-    } else {
-      pathD += ` L ${x} ${y}`;
-    }
+    if (i === 0) pathD += `M ${x} ${y}`;
+    else pathD += ` L ${x} ${y}`;
   }
 
+  // Harmonic secondary wave
   let pathD2 = "";
   for (let i = 0; i <= points; i++) {
     const x = (i / points) * width;
     const normX = i / points;
     const envelope = Math.sin(normX * Math.PI);
-    const y = height / 2 + Math.cos(normX * Math.PI * 2.0 - phase * 0.9) * (amp * 0.6) * envelope;
+    const y =
+      height / 2 +
+      (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
+        Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
+        (amp * 0.65) *
+        envelope;
 
-    if (i === 0) {
-      pathD2 += `M ${x} ${y}`;
-    } else {
-      pathD2 += ` L ${x} ${y}`;
+    if (i === 0) pathD2 += `M ${x} ${y}`;
+    else pathD2 += ` L ${x} ${y}`;
+  }
+
+  // Core sharp voice beam (appears when user is talking)
+  let pathD3 = "";
+  if (isRecording && level > 0.02) {
+    for (let i = 0; i <= points; i++) {
+      const x = (i / points) * width;
+      const normX = i / points;
+      const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
+      const y =
+        height / 2 +
+        Math.sin(normX * Math.PI * 7.0 + phase * 2.2) * (amp * 0.45) * envelope;
+
+      if (i === 0) pathD3 += `M ${x} ${y}`;
+      else pathD3 += ` L ${x} ${y}`;
     }
   }
 
@@ -79,14 +104,16 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
         <defs>
           <linearGradient id="aiWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#818cf8" stopOpacity="0" />
-            <stop offset="15%" stopColor="#818cf8" stopOpacity="1" />
+            <stop offset="15%" stopColor="#818cf8" stopOpacity={isRecording ? "0.9" : "0.7"} />
             <stop offset="35%" stopColor="#c084fc" stopOpacity="1" />
+            <stop offset="50%" stopColor="#f472b6" stopOpacity={isRecording ? "1" : "0.8"} />
             <stop offset="65%" stopColor="#38bdf8" stopOpacity="1" />
-            <stop offset="85%" stopColor="#34d399" stopOpacity="1" />
+            <stop offset="85%" stopColor="#34d399" stopOpacity={isRecording ? "0.9" : "0.7"} />
             <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
           </linearGradient>
+
           <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="0.6" result="blur" />
+            <feGaussianBlur stdDeviation={isRecording ? "0.9" : "0.5"} result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -94,23 +121,38 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           </filter>
         </defs>
 
+        {/* Secondary wave layer */}
         <path
           d={pathD2}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.5"
-          strokeOpacity="0.35"
+          strokeWidth={isRecording ? "0.7" : "0.4"}
+          strokeOpacity={isRecording ? (0.4 + level * 0.4) : "0.25"}
           strokeLinecap="round"
         />
 
+        {/* Primary voice wave */}
         <path
           d={pathD}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.9"
+          strokeWidth={isRecording ? (1.0 + Math.min(1.2, level * 1.5)) : "0.8"}
+          strokeOpacity={isRecording ? (0.8 + level * 0.2) : "0.55"}
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
+
+        {/* Core dynamic voice beam */}
+        {pathD3 && (
+          <path
+            d={pathD3}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="0.8"
+            strokeOpacity={Math.min(0.9, 0.4 + level * 0.8)}
+            strokeLinecap="round"
+          />
+        )}
       </svg>
     </div>
   );
@@ -249,13 +291,23 @@ export default function Notch({ state }: { state: AppState }) {
       <motion.div
         layout
         initial={false}
+        animate={{
+          width: isExpanded ? 440 : isInteracting ? 280 : 240,
+          height: isExpanded ? 270 : notchStyle === "macbook" ? 26 : 28,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 450,
+          damping: 32,
+          mass: 0.8,
+        }}
         onClick={() => {
           if (!isExpanded) setIsExpanded(true);
         }}
-        className={`relative w-full h-full flex flex-col items-center border-none outline-none overflow-hidden transition-colors ${
+        className={`relative mx-auto flex flex-col items-center border-none outline-none overflow-hidden transition-colors ${
           notchStyle === "macbook"
-            ? "rounded-b-[18px] rounded-t-none shadow-[0_8px_32px_rgba(0,0,0,0.8)] border-x border-b border-white/10"
-            : "rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.85)] border border-white/10"
+            ? "rounded-b-[20px] rounded-t-none border-x border-b border-white/[0.14] ring-1 ring-white/5 ring-inset"
+            : "rounded-[22px] border border-white/[0.14] ring-1 ring-white/5 ring-inset"
         } ${!isExpanded ? "cursor-pointer hover:bg-zinc-950" : ""}`}
         style={{
           backgroundColor: "#000000",

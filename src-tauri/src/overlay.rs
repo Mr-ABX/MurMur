@@ -226,11 +226,8 @@ pub fn toggle_tray_popover(app: &AppHandle) {
 /// Resize the notch window dynamically between idle and expanded modes
 pub fn resize_notch(app: &AppHandle, expanded: bool) {
     if let Some(window) = app.get_webview_window("notch") {
-        let (target_w, target_h) = if expanded {
-            (440.0, 270.0)
-        } else {
-            (240.0, 28.0)
-        };
+        let target_w = 460.0_f64;
+        let target_h = if expanded { 280.0_f64 } else { 30.0_f64 };
 
         #[cfg(target_os = "macos")]
         {
@@ -286,7 +283,7 @@ pub fn resize_notch(app: &AppHandle, expanded: bool) {
                                     height: target_h,
                                 },
                             };
-                            let _: () = msg_send![ns_win, setFrame: target_frame, display: true, animate: true];
+                            let _: () = msg_send![ns_win, setFrame: target_frame, display: true, animate: false];
                         }
                     }
                 }
