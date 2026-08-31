@@ -147,44 +147,55 @@ pub fn run() {
 
 fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
     let app_clone = app.clone();
-    let press_time = std::sync::Arc::new(std::sync::Mutex::new(Option::<std::time::Instant>::None));
 
     if let Err(e) = app.global_shortcut().on_shortcut(hotkey, move |_app, _shortcut, event| {
         let state = app_clone.state::<MurmurState>();
+        let settings = state.settings.lock().unwrap().clone();
+        let is_hold_mode = settings.activation_mode == crate::settings::ActivationMode::Hold;
+
         match event.state() {
             ShortcutState::Pressed => {
                 let is_rec = *state.is_recording.lock().unwrap();
-                {
-                    let mut ptime = press_time.lock().unwrap();
-                    *ptime = Some(std::time::Instant::now());
-                }
-
                 let app_c = app_clone.clone();
-                tauri::async_runtime::spawn(async move {
-                    if is_rec {
-                        if let Err(e) = commands::stop_recording_internal(&app_c).await {
-                            log::error!("Failed to stop recording: {}", e);
-                        }
-                    } else {
-                        if let Err(e) = commands::start_recording_internal(&app_c).await {
-                            log::error!("Failed to start recording: {}", e);
-                        }
+
+                if is_hold_mode {
+                    // Push-to-Talk (Hold): Start recording when key is pressed down
+                    if !is_rec {
+                        tauri::async_runtime::spawn(async move {
+                            if let Err(e) = commands::start_recording_internal(&app_c).await {
+                                log::error!("Failed to start recording: {}", e);
+                            }
+                        });
                     }
-                });
+                } else {
+                    // Toggle Mode: Press once to Start, Press again to Stop & Paste
+                    tauri::async_runtime::spawn(async move {
+                        if is_rec {
+                            if let Err(e) = commands::stop_recording_internal(&app_c).await {
+                                log::error!("Failed to stop recording: {}", e);
+                            }
+                        } else {
+                            if let Err(e) = commands::start_recording_internal(&app_c).await {
+                                log::error!("Failed to start recording: {}", e);
+                            }
+                        }
+                    });
+                }
             }
             ShortcutState::Released => {
-                let ptime = press_time.lock().unwrap().take();
-                if let Some(t) = ptime {
-                    // Only stop on release if held down for more than 300ms (Hold-To-Talk)
-                    if t.elapsed().as_millis() > 300 {
+                if is_hold_mode {
+                    // Push-to-Talk (Hold): Stop and paste when key is released
+                    let is_rec = *state.is_recording.lock().unwrap();
+                    if is_rec {
                         let app_c = app_clone.clone();
                         tauri::async_runtime::spawn(async move {
                             if let Err(e) = commands::stop_recording_internal(&app_c).await {
-                                log::error!("Failed to stop recording: {}", e);
+                                log::error!("Failed to stop recording on release: {}", e);
                             }
                         });
                     }
                 }
+                // In Toggle mode: do nothing on key release!
             }
         }
     }) {
