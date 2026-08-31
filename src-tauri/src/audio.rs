@@ -120,12 +120,23 @@ impl AudioCapture {
         }
         let take_len = count.min(buffer.len());
         let slice = &buffer[buffer.len() - take_len..];
-        let sum_sq: f32 = slice.iter().map(|s| s * s).sum();
+        
+        let mut max_peak = 0.0f32;
+        let mut sum_sq = 0.0f32;
+        for &s in slice {
+            let abs_s = s.abs();
+            if abs_s > max_peak {
+                max_peak = abs_s;
+            }
+            sum_sq += s * s;
+        }
         let rms = (sum_sq / take_len as f32).sqrt();
-        let db = if rms > 0.000001 { 20.0 * rms.log10() } else { -60.0 };
-        // Sensitive dynamic range: floor at -46dB, ceiling at -10dB
-        let level = ((db + 46.0) / 36.0).clamp(0.0, 1.0);
-        level.powf(0.6)
+        
+        // Dynamic hybrid Peak + RMS with instant linear sensitivity
+        let peak_comp = (max_peak * 4.5).min(1.0);
+        let rms_comp = (rms * 14.0).min(1.0);
+        let raw_level = (peak_comp * 0.6 + rms_comp * 0.4).clamp(0.0, 1.0);
+        raw_level.powf(0.65)
     }
 
     pub fn clear_buffer(&self) {

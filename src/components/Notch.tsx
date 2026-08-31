@@ -47,13 +47,13 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       const width = exp ? 360 : 210;
       const height = 24;
 
-      // Target amplitude: when recording, dynamically scales up with voice level (up to 8.5px within 24px height)
-      const targetAmp = rec ? (2.2 + Math.min(6.5, lvl * 8.5)) : (exp ? 1.8 : 1.0);
+      // Target amplitude: when recording, dynamically scales up with voice level
+      const targetAmp = rec ? (2.6 + lvl * 9.5) : (exp ? 1.8 : 1.1);
       // Smooth lerp easing
-      currentAmp += (targetAmp - currentAmp) * 0.30;
+      currentAmp += (targetAmp - currentAmp) * 0.32;
 
       // Phase step: accelerates dynamically with voice intensity
-      const step = rec ? (0.04 + lvl * 0.14) : 0.015;
+      const step = rec ? (0.05 + lvl * 0.22) : 0.018;
       phase = (phase + step) % (Math.PI * 2);
 
       // 1. Primary voice wave
@@ -73,7 +73,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (1.0 + Math.min(1.4, lvl * 1.6)).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (1.0 + Math.min(1.5, lvl * 1.8)).toFixed(2));
           path1Ref.current.setAttribute("stroke-opacity", (0.85 + lvl * 0.15).toFixed(2));
         } else {
           path1Ref.current.setAttribute("stroke-width", "0.8");
@@ -344,8 +344,8 @@ export default function Notch({ state }: { state: AppState }) {
         }}
         className={`relative mx-auto flex flex-col items-center border-none outline-none overflow-hidden transition-colors ${
           notchStyle === "macbook"
-            ? "rounded-b-[20px] rounded-t-none border-x border-b border-white/[0.14] ring-1 ring-white/5 ring-inset"
-            : "rounded-[22px] border border-white/[0.14] ring-1 ring-white/5 ring-inset"
+            ? `${isExpanded ? "rounded-b-[12px]" : "rounded-b-[10px]"} rounded-t-none border-x border-b border-white/[0.14] ring-1 ring-white/5 ring-inset`
+            : `${isExpanded ? "rounded-[12px]" : "rounded-[11px]"} border border-white/[0.14] ring-1 ring-white/5 ring-inset`
         } ${!isExpanded ? "cursor-pointer hover:bg-zinc-950" : ""}`}
         style={{
           backgroundColor: "#000000",
