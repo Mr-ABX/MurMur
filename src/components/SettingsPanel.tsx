@@ -145,33 +145,33 @@ export default function SettingsPanel({ state }: Props) {
     <div className="flex h-full bg-[var(--bg-base)] text-[var(--text-primary)] overflow-hidden font-sans">
       {/* Collapsible Sidebar */}
       <div
-        className={`flex flex-col bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] relative z-10 shadow-xl transition-all duration-300 ease-in-out select-none flex-shrink-0 ${
-          isSidebarCollapsed ? "w-[70px]" : "w-60"
+        className={`flex flex-col bg-zinc-950/90 border-r border-white/5 relative z-10 shadow-2xl transition-all duration-300 ease-in-out select-none flex-shrink-0 ${
+          isSidebarCollapsed ? "w-[72px]" : "w-60"
         }`}
       >
         {/* Header in sidebar */}
-        <div className={`py-4 flex items-center border-b border-[var(--border-subtle)]/50 mb-2 ${
+        <div className={`py-4 flex items-center mb-1 ${
           isSidebarCollapsed ? "flex-col gap-3 px-2" : "justify-between px-4"
         }`}>
           {!isSidebarCollapsed ? (
             <div className="flex items-center gap-3 min-w-0 pointer-events-none">
-              <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden">
+              <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center bg-zinc-900 border border-white/10 shadow-sm overflow-hidden">
                 <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm font-bold tracking-wide text-[var(--text-primary)] leading-tight truncate">Murmur</h1>
-                <p className="text-[10px] font-medium text-[var(--text-secondary)] uppercase tracking-wider">Preferences</p>
+                <h1 className="text-sm font-bold tracking-wide text-white leading-tight truncate">Murmur</h1>
+                <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Preferences</p>
               </div>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden pointer-events-none">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-sm overflow-hidden pointer-events-none">
               <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
             </div>
           )}
 
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] border border-transparent hover:border-[var(--border-subtle)] transition-all cursor-pointer"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
@@ -179,21 +179,21 @@ export default function SettingsPanel({ state }: Props) {
         </div>
         
         {/* Navigation */}
-        <div className="flex-1 px-2.5 py-1 flex flex-col gap-1.5 overflow-y-auto no-scrollbar">
+        <div className="flex-1 px-2.5 py-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <div key={tab.id} className="relative group flex items-center">
                 <button
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center rounded-xl text-[13px] font-medium transition-all cursor-pointer w-full ${
+                  className={`flex items-center rounded-xl text-[13px] font-medium transition-all duration-150 cursor-pointer w-full ${
                     isSidebarCollapsed
                       ? "justify-center h-10 w-10 mx-auto"
                       : "gap-3 px-3.5 py-2.5"
                   } ${
                     isActive
-                      ? "bg-[var(--accent-primary)] text-white shadow-md shadow-indigo-500/20"
-                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)]"
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/25 font-semibold"
+                      : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
                   }`}
                 >
                   <span className="flex-shrink-0">{tab.icon}</span>
@@ -213,10 +213,10 @@ export default function SettingsPanel({ state }: Props) {
 
         {/* Bottom Expand Hint when Collapsed */}
         {isSidebarCollapsed && (
-          <div className="p-2 border-t border-[var(--border-subtle)]/40 flex justify-center">
+          <div className="p-2 flex justify-center">
             <button
               onClick={() => setIsSidebarCollapsed(false)}
-              className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors cursor-pointer"
               title="Expand Sidebar"
             >
               <ChevronRight size={14} />
