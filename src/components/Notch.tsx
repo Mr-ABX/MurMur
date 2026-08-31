@@ -47,13 +47,13 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       const width = exp ? 360 : 210;
       const height = 24;
 
-      // Target amplitude: when recording, dynamically scales up with voice level
-      const targetAmp = rec ? (2.6 + lvl * 9.5) : (exp ? 1.8 : 1.1);
-      // Smooth lerp easing
-      currentAmp += (targetAmp - currentAmp) * 0.32;
+      // Dynamic target amplitude based on speech energy
+      const targetAmp = rec ? (2.2 + lvl * 10.5) : (exp ? 1.8 : 1.0);
+      // Lerp easing: fast attack on voice energy spike, smooth decay between words
+      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.45 : 0.25);
 
       // Phase step: accelerates dynamically with voice intensity
-      const step = rec ? (0.05 + lvl * 0.22) : 0.018;
+      const step = rec ? (0.04 + lvl * 0.25) : 0.015;
       phase = (phase + step) % (Math.PI * 2);
 
       // 1. Primary voice wave
@@ -73,8 +73,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (1.0 + Math.min(1.5, lvl * 1.8)).toFixed(2));
-          path1Ref.current.setAttribute("stroke-opacity", (0.85 + lvl * 0.15).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (0.9 + lvl * 1.8).toFixed(2));
+          path1Ref.current.setAttribute("stroke-opacity", (0.8 + lvl * 0.2).toFixed(2));
         } else {
           path1Ref.current.setAttribute("stroke-width", "0.8");
           path1Ref.current.setAttribute("stroke-opacity", "0.55");
@@ -91,7 +91,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           height / 2 +
           (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
             Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
-            (currentAmp * 0.65) *
+            (currentAmp * 0.7) *
             envelope;
         d2 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
       }
@@ -101,7 +101,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
 
       // 3. Core sharp white voice beam
       if (path3Ref.current) {
-        if (rec && lvl > 0.02) {
+        if (rec && lvl > 0.01) {
           let d3 = "";
           for (let i = 0; i <= points; i++) {
             const x = (i / points) * width;
@@ -109,11 +109,11 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
             const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
             const y =
               height / 2 +
-              Math.sin(normX * Math.PI * 7.0 + phase * 2.2) * (currentAmp * 0.45) * envelope;
+              Math.sin(normX * Math.PI * 7.0 + phase * 2.2) * (currentAmp * 0.5) * envelope;
             d3 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
           }
           path3Ref.current.setAttribute("d", d3);
-          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.95, 0.45 + lvl * 0.8).toFixed(2));
+          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.95, 0.35 + lvl * 0.85).toFixed(2));
         } else {
           path3Ref.current.setAttribute("d", "");
         }
@@ -206,81 +206,11 @@ export default function Notch({ state }: { state: AppState }) {
   const isInteracting = isRecording || audioLevel > 0.02;
   const notchStyle = state.settings.notchStyle ?? "macbook";
 
-  // Web Audio API analyzer active STRICTLY while isRecording is true (released immediately on stop)
+  // Reset audio level when recording ends
   useEffect(() => {
     if (!isRecording) {
       setAudioLevel(0);
-      return;
     }
-
-    let audioCtx: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let stream: MediaStream | null = null;
-    let animId: number;
-    let isCancelled = false;
-
-    const startMic = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-        });
-
-        if (isCancelled) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
-
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        audioCtx = new AudioContextClass();
-        const source = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.35;
-        source.connect(analyser);
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        const update = () => {
-          if (!analyser || isCancelled) return;
-          analyser.getByteFrequencyData(dataArray);
-
-          let sum = 0;
-          let maxVal = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
-            if (dataArray[i] > maxVal) maxVal = dataArray[i];
-          }
-          const avg = sum / dataArray.length;
-          // Highly dynamic vocal reactivity
-          const normalized = Math.min(1, Math.max(0, (avg * 0.55 + maxVal * 0.45) / 100));
-          setAudioLevel(normalized);
-
-          animId = requestAnimationFrame(update);
-        };
-
-        update();
-      } catch (err) {
-        console.warn("Could not start Web Audio analyzer:", err);
-      }
-    };
-
-    startMic();
-
-    return () => {
-      isCancelled = true;
-      cancelAnimationFrame(animId);
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-      if (audioCtx && audioCtx.state !== "closed") {
-        audioCtx.close().catch(() => {});
-      }
-      setAudioLevel(0);
-    };
   }, [isRecording]);
 
   useEffect(() => {
@@ -292,12 +222,12 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Listen to Tauri backend audio level events as secondary backup
+  // Listen to Tauri backend audio level events directly from native audio capture
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
       if (isRecording) {
         const level = Math.min(Math.max(e.payload, 0), 1);
-        setAudioLevel((prev) => Math.max(prev, level));
+        setAudioLevel(level);
       }
     });
 
