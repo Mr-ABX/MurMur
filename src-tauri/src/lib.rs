@@ -139,6 +139,7 @@ pub fn run() {
             commands::quit_app,
             screen_assistant::capture_screen_base64,
             screen_assistant::ask_screen_assistant,
+            commands::set_notch_expanded,
         ])
         .run(tauri::generate_context!())
         .expect("error while running murmur");

@@ -533,3 +533,8 @@ pub async fn clear_all_app_data(app: tauri::AppHandle) -> Result<(), String> {
     app.exit(0);
     Ok(())
 }
+
+#[tauri::command]
+pub fn set_notch_expanded(app: tauri::AppHandle, expanded: bool) {
+    overlay::resize_notch(&app, expanded);
+}

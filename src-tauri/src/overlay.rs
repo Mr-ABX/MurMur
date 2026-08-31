@@ -222,3 +222,86 @@ pub fn toggle_tray_popover(app: &AppHandle) {
         }
     }
 }
+
+/// Resize the notch window dynamically between idle and expanded modes
+pub fn resize_notch(app: &AppHandle, expanded: bool) {
+    if let Some(window) = app.get_webview_window("notch") {
+        let (target_w, target_h) = if expanded {
+            (440.0, 270.0)
+        } else {
+            (240.0, 28.0)
+        };
+
+        #[cfg(target_os = "macos")]
+        {
+            use objc2::msg_send;
+            use objc2::runtime::AnyObject;
+
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            struct NSPoint { x: f64, y: f64 }
+
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            struct NSSize { width: f64, height: f64 }
+
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            struct NSRect { origin: NSPoint, size: NSSize }
+
+            unsafe impl objc2::Encode for NSPoint {
+                const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                    "CGPoint",
+                    &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
+                );
+            }
+            unsafe impl objc2::Encode for NSSize {
+                const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                    "CGSize",
+                    &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
+                );
+            }
+            unsafe impl objc2::Encode for NSRect {
+                const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                    "CGRect",
+                    &[<NSPoint as objc2::Encode>::ENCODING, <NSSize as objc2::Encode>::ENCODING],
+                );
+            }
+
+            let window_clone = window.clone();
+            let _ = app.run_on_main_thread(move || {
+                if let Ok(ns_win) = window_clone.ns_window() {
+                    let ns_win = ns_win as *mut AnyObject;
+                    unsafe {
+                        let screen: *mut AnyObject = msg_send![ns_win, screen];
+                        if !screen.is_null() {
+                            let screen_frame: NSRect = msg_send![screen, frame];
+                            let target_frame = NSRect {
+                                origin: NSPoint {
+                                    x: screen_frame.origin.x + (screen_frame.size.width - target_w) / 2.0,
+                                    y: screen_frame.origin.y + screen_frame.size.height - target_h,
+                                },
+                                size: NSSize {
+                                    width: target_w,
+                                    height: target_h,
+                                },
+                            };
+                            let _: () = msg_send![ns_win, setFrame: target_frame, display: true, animate: true];
+                        }
+                    }
+                }
+            });
+        }
+
+        #[cfg(not(target_os = "macos"))]
+        {
+            if let Ok(Some(monitor)) = window.primary_monitor() {
+                let screen_size = monitor.size();
+                let scale = monitor.scale_factor();
+                let x = ((screen_size.width as f64 / scale) - target_w) / 2.0;
+                let _ = window.set_size(tauri::LogicalSize::new(target_w, target_h));
+                let _ = window.set_position(tauri::LogicalPosition::new(x, 0.0));
+            }
+        }
+    }
+}

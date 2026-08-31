@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize } from "@tauri-apps/api/dpi";
 import { AppState } from "../hooks/useAppState";
 import { ModernSelect } from "./ModernSelect";
 import { motion, AnimatePresence } from "framer-motion";
@@ -136,16 +135,13 @@ export default function Notch({ state }: { state: AppState }) {
   const notchStyle = state.settings.notchStyle ?? "macbook";
 
   useEffect(() => {
-    const win = getCurrentWindow();
+    invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
+      console.warn("set_notch_expanded IPC warning:", err);
+    });
     if (isExpanded) {
-      win.setSize(new LogicalSize(460, 290)).catch(() => {});
-      win.setFocus().catch(() => {});
-    } else {
-      const h = notchStyle === "macbook" ? 30 : 36;
-      const w = isInteracting ? 290 : 250;
-      win.setSize(new LogicalSize(w, h)).catch(() => {});
+      getCurrentWindow().setFocus().catch(() => {});
     }
-  }, [isExpanded, isInteracting, notchStyle]);
+  }, [isExpanded]);
 
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
@@ -153,7 +149,7 @@ export default function Notch({ state }: { state: AppState }) {
       setAudioLevel(level);
     });
 
-    // Auto-collapse on window blur when un-locked
+    // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)
     const unlistenBlur = getCurrentWindow().listen("tauri://blur", () => {
       if (!isLocked) {
         setIsExpanded(false);
@@ -248,25 +244,21 @@ export default function Notch({ state }: { state: AppState }) {
 
   return (
     <div
-      className="flex items-start justify-center w-full h-full bg-transparent overflow-hidden select-none pointer-events-none"
+      className="flex items-start justify-center w-full h-full bg-transparent overflow-hidden select-none"
     >
       <motion.div
         layout
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+        initial={false}
         onClick={() => {
           if (!isExpanded) setIsExpanded(true);
         }}
-        className={`relative pointer-events-auto flex flex-col items-center border-none outline-none overflow-hidden transition-colors ${
+        className={`relative w-full h-full flex flex-col items-center border-none outline-none overflow-hidden transition-colors ${
           notchStyle === "macbook"
-            ? "rounded-b-[20px] rounded-t-none mt-0 shadow-[0_8px_32px_rgba(0,0,0,0.8)] border-x border-b border-white/10"
-            : "rounded-[24px] mt-2 shadow-[0_8px_32px_rgba(0,0,0,0.85)] border border-white/10"
+            ? "rounded-b-[18px] rounded-t-none shadow-[0_8px_32px_rgba(0,0,0,0.8)] border-x border-b border-white/10"
+            : "rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.85)] border border-white/10"
         } ${!isExpanded ? "cursor-pointer hover:bg-zinc-950" : ""}`}
         style={{
           backgroundColor: "#000000",
-          width: isExpanded ? "440px" : isInteracting ? "280px" : "240px",
-          height: isExpanded ? "270px" : notchStyle === "macbook" ? "25px" : "27px",
         }}
       >
         {/* Top Header AI Wave Bar + Lock Toggle */}
