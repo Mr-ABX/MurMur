@@ -5,7 +5,8 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
-  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot, RefreshCw
+  Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot, RefreshCw,
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
 import { ModernSelect } from "./ModernSelect";
@@ -102,6 +103,7 @@ export default function SettingsPanel({ state }: Props) {
     downloadGemmaModel, deleteGemmaModel
   } = state;
   const [activeTab, setActiveTab] = useState<Tab>("notes");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [lastCheckedTime, setLastCheckedTime] = useState<string | null>(null);
@@ -141,38 +143,86 @@ export default function SettingsPanel({ state }: Props) {
 
   return (
     <div className="flex h-full bg-[var(--bg-base)] text-[var(--text-primary)] overflow-hidden font-sans">
-      {/* Sidebar */}
-      <div className="w-64 flex flex-col bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] relative z-10 shadow-xl">
+      {/* Collapsible Sidebar */}
+      <div
+        className={`flex flex-col bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] relative z-10 shadow-xl transition-all duration-300 ease-in-out select-none flex-shrink-0 ${
+          isSidebarCollapsed ? "w-[70px]" : "w-60"
+        }`}
+      >
         {/* Header in sidebar */}
-        <div className="px-6 py-6 flex flex-col gap-2 pb-8">
-          <div className="flex items-center gap-3 pointer-events-none">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden">
+        <div className={`py-4 flex items-center border-b border-[var(--border-subtle)]/50 mb-2 ${
+          isSidebarCollapsed ? "flex-col gap-3 px-2" : "justify-between px-4"
+        }`}>
+          {!isSidebarCollapsed ? (
+            <div className="flex items-center gap-3 min-w-0 pointer-events-none">
+              <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden">
+                <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-sm font-bold tracking-wide text-[var(--text-primary)] leading-tight truncate">Murmur</h1>
+                <p className="text-[10px] font-medium text-[var(--text-secondary)] uppercase tracking-wider">Preferences</p>
+              </div>
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--bg-base)] border border-[var(--border-strong)] shadow-sm overflow-hidden pointer-events-none">
               <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
             </div>
-            <div>
-              <h1 className="text-base font-bold tracking-wide text-[var(--text-primary)] leading-tight">Murmur</h1>
-              <p className="text-[11px] font-medium text-[var(--text-secondary)] uppercase tracking-wider">Preferences</p>
-            </div>
-          </div>
+          )}
+
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] border border-transparent hover:border-[var(--border-subtle)] transition-all cursor-pointer"
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
         </div>
         
         {/* Navigation */}
-        <div className="flex-1 px-4 py-2 flex flex-col gap-1 overflow-y-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium transition-all ${
-                activeTab === tab.id
-                  ? "bg-[var(--accent-primary)] text-white shadow-md shadow-indigo-500/20"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex-1 px-2.5 py-1 flex flex-col gap-1.5 overflow-y-auto no-scrollbar">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <div key={tab.id} className="relative group flex items-center">
+                <button
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center rounded-xl text-[13px] font-medium transition-all cursor-pointer w-full ${
+                    isSidebarCollapsed
+                      ? "justify-center h-10 w-10 mx-auto"
+                      : "gap-3 px-3.5 py-2.5"
+                  } ${
+                    isActive
+                      ? "bg-[var(--accent-primary)] text-white shadow-md shadow-indigo-500/20"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <span className="flex-shrink-0">{tab.icon}</span>
+                  {!isSidebarCollapsed && <span className="truncate">{tab.label}</span>}
+                </button>
+
+                {/* Floating Hover Tooltip in Collapsed Mode */}
+                {isSidebarCollapsed && (
+                  <div className="absolute left-full ml-3 px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-700/80 text-white shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 pointer-events-none transition-all duration-150 z-50">
+                    {tab.label}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+
+        {/* Bottom Expand Hint when Collapsed */}
+        {isSidebarCollapsed && (
+          <div className="p-2 border-t border-[var(--border-subtle)]/40 flex justify-center">
+            <button
+              onClick={() => setIsSidebarCollapsed(false)}
+              className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
+              title="Expand Sidebar"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 import { AppState } from "../hooks/useAppState";
 import { ModernSelect } from "./ModernSelect";
 import { motion, AnimatePresence } from "framer-motion";
@@ -130,12 +131,21 @@ export default function Notch({ state }: { state: AppState }) {
 
   const lastSwipeRef = useRef(0);
   const selectedModel = state.settings.localAssistantModel || "gemini-2.0-flash-lite-preview-02-05";
+  const isRecording = state.recordingState === "recording";
+  const isInteracting = isRecording || audioLevel > 0.03;
+  const notchStyle = state.settings.notchStyle ?? "macbook";
 
   useEffect(() => {
+    const win = getCurrentWindow();
     if (isExpanded) {
-      getCurrentWindow().setFocus().catch(() => {});
+      win.setSize(new LogicalSize(460, 290)).catch(() => {});
+      win.setFocus().catch(() => {});
+    } else {
+      const h = notchStyle === "macbook" ? 30 : 36;
+      const w = isInteracting ? 290 : 250;
+      win.setSize(new LogicalSize(w, h)).catch(() => {});
     }
-  }, [isExpanded]);
+  }, [isExpanded, isInteracting, notchStyle]);
 
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
@@ -155,10 +165,6 @@ export default function Notch({ state }: { state: AppState }) {
       unlistenBlur.then((fn) => fn());
     };
   }, [isLocked]);
-
-  const isRecording = state.recordingState === "recording";
-  const isInteracting = isRecording || audioLevel > 0.03;
-  const notchStyle = state.settings.notchStyle ?? "macbook";
 
   const handleWheel = (e: React.WheelEvent) => {
     const now = Date.now();
@@ -242,8 +248,7 @@ export default function Notch({ state }: { state: AppState }) {
 
   return (
     <div
-      className="flex items-start justify-center w-screen h-screen bg-transparent overflow-hidden select-none"
-      data-tauri-drag-region
+      className="flex items-start justify-center w-full h-full bg-transparent overflow-hidden select-none pointer-events-none"
     >
       <motion.div
         layout
@@ -466,19 +471,24 @@ export default function Notch({ state }: { state: AppState }) {
                           e.preventDefault();
                           handleAskAssistant();
                         }}
-                        className="flex items-center gap-1.5 bg-zinc-900/90 rounded-xl border border-white/10 p-1.5"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 bg-zinc-900/90 rounded-xl border border-white/10 p-1.5 relative z-20 cursor-text"
                       >
                         <input
                           type="text"
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value)}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
                           placeholder="Ask Screen AI Assistant..."
-                          className="flex-1 bg-transparent text-xs text-white placeholder-zinc-500 px-2 outline-none"
+                          className="flex-1 bg-transparent text-xs text-white placeholder-zinc-500 px-2 outline-none cursor-text select-text"
                         />
                         <button
                           type="submit"
                           disabled={isAsking || !prompt.trim()}
-                          className="p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white transition-colors"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          className="p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white transition-colors cursor-pointer"
                         >
                           {isAsking ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                         </button>
