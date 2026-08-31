@@ -92,7 +92,7 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
             let recording = is_recording.lock().unwrap();
 
             if *recording {
-                let level = audio.get_recent_rms(640);
+                let level = audio.get_recent_rms(3200);
                 let _ = app_clone.emit("audio_level", level);
 
                 if is_live {

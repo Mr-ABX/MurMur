@@ -206,75 +206,12 @@ export default function Notch({ state }: { state: AppState }) {
   const isInteracting = isRecording || audioLevel > 0.02;
   const notchStyle = state.settings.notchStyle ?? "macbook";
 
-  // Continuous Web Audio Analyzer (stays active for instantaneous 0ms audio reaction)
+  // Reset audio level when recording ends
   useEffect(() => {
-    let audioCtx: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let stream: MediaStream | null = null;
-    let animId: number;
-    let isCancelled = false;
-
-    const startContinuousMic = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: false,
-            autoGainControl: true,
-          },
-        });
-
-        if (isCancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        audioCtx = new AudioContextClass();
-        const source = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.3;
-        source.connect(analyser);
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        const update = () => {
-          if (!analyser || isCancelled) return;
-          analyser.getByteFrequencyData(dataArray);
-
-          let sum = 0;
-          let maxVal = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
-            if (dataArray[i] > maxVal) maxVal = dataArray[i];
-          }
-          const avg = sum / dataArray.length;
-          const normalized = Math.min(1, Math.max(0, (avg * 0.6 + maxVal * 0.4) / 90));
-          setAudioLevel(normalized);
-
-          animId = requestAnimationFrame(update);
-        };
-
-        update();
-      } catch {
-        // Fallback gracefully to Tauri IPC audio level if browser mic access isn't permitted
-      }
-    };
-
-    startContinuousMic();
-
-    return () => {
-      isCancelled = true;
-      cancelAnimationFrame(animId);
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-      }
-      if (audioCtx && audioCtx.state !== "closed") {
-        audioCtx.close().catch(() => {});
-      }
-    };
-  }, []);
+    if (!isRecording) {
+      setAudioLevel(0);
+    }
+  }, [isRecording]);
 
   useEffect(() => {
     invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
@@ -285,11 +222,13 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Listen to Tauri backend audio level events as native fallback
+  // Listen to Tauri backend audio level events strictly from native CoreAudio during dictation
   useEffect(() => {
     const unlistenAudio = listen<number>("audio_level", (e) => {
-      const level = Math.min(Math.max(e.payload, 0), 1);
-      setAudioLevel((prev) => (prev > level ? prev * 0.9 : level));
+      if (isRecording) {
+        const level = Math.min(Math.max(e.payload, 0), 1);
+        setAudioLevel(level);
+      }
     });
 
     // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)
