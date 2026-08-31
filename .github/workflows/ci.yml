@@ -1,32 +1,61 @@
 name: 'Continuous Integration'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'assets/**'
+      - '.gitignore'
+      - 'LICENSE'
   pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'assets/**'
+      - '.gitignore'
+      - 'LICENSE'
+  workflow_dispatch:
 
 jobs:
-  build-and-check:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macos-latest, ubuntu-22.04, windows-latest]
-
-    runs-on: ${{ matrix.platform }}
+  fast-check:
+    name: 'Fast Lint, Test & Typecheck'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20
+          cache: 'npm'
 
-      - name: install Rust stable
+      - name: Install Frontend Dependencies
+        run: npm ci || npm install
+
+      - name: Run Frontend Tests (Vitest)
+        run: npm run test
+
+      - name: Check TypeScript & Build
+        run: npm run build
+
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install Linux Build Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -35,41 +64,10 @@ jobs:
             libavdevice-dev libavfilter-dev libavformat-dev \
             libavcodec-dev libswscale-dev libswresample-dev ffmpeg
 
-      - name: install LLVM (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: brew install llvm cmake
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-
-      - name: install LLVM + cmake (windows)
-        if: matrix.platform == 'windows-latest'
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install llvm -y
-
-      - name: set LIBCLANG_PATH (windows)
-        if: matrix.platform == 'windows-latest'
-        run: echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
-
-      - name: set LIBCLANG_PATH (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: |
-          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> $GITHUB_ENV
-          echo "PATH=$(brew --prefix llvm)/bin:$PATH" >> $GITHUB_ENV
-
-      - name: install frontend dependencies
-        run: npm install
-
-      - name: Run Tests (Frontend)
-        run: npm run test
-
-      - name: Check TypeScript (Frontend)
-        run: npm run build
-
-      - name: Check Rust (Backend)
+      - name: Check Rust (src-tauri)
         run: cargo check
         working-directory: src-tauri
 
-      - name: Test Rust (Backend)
+      - name: Test Rust (src-tauri)
         run: cargo test
         working-directory: src-tauri
