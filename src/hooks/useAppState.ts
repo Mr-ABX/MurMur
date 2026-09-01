@@ -136,6 +136,26 @@ export function useAppState(): AppState {
           setPartialTranscript("");
           setRecordingState("done");
 
+          // Save directly to persistent history in localStorage across all windows
+          if (text && text.trim()) {
+            try {
+              const existingHistory = JSON.parse(localStorage.getItem("murmur_voice_history") || "[]");
+              const now = new Date();
+              const newItem = {
+                id: Date.now().toString(),
+                text: text.trim(),
+                timestamp: Date.now(),
+                dateStr: now.toLocaleDateString([], { month: "short", day: "numeric" }) + " • " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                model: "Whisper",
+              };
+              const updated = [newItem, ...existingHistory.filter((i: any) => i.text !== text.trim())].slice(0, 100);
+              localStorage.setItem("murmur_voice_history", JSON.stringify(updated));
+              window.dispatchEvent(new Event("murmur-history-updated"));
+            } catch (err) {
+              console.error("Failed to auto-save voice history:", err);
+            }
+          }
+
           // Natural Language Voice Intent Router
           const noteMatch = text.match(/(?:hey murmur,?\s*)?(?:take (?:a )?note|note down|add (?:a )?note|create (?:a )?note|remember (?:that )?):?\s*(.+)/i);
           const taskMatch = text.match(/(?:hey murmur,?\s*)?(?:add task|new task|create task|remind me to|todo):?\s*(.+)/i);

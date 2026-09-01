@@ -94,6 +94,7 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
             if *recording {
                 let level = audio.get_recent_rms(3200);
                 let _ = app_clone.emit("audio_level", level);
+                let _ = app_clone.emit_to("notch", "audio_level", level);
 
                 if is_live {
                     if let Ok(samples) = audio.get_samples() {

@@ -292,6 +292,35 @@ export default function SettingsPanel({ state }: Props) {
   const [searchHistory, setSearchHistory] = useState("");
   const [copiedHistoryId, setCopiedHistoryId] = useState<string | null>(null);
 
+  const refreshHistory = () => {
+    try {
+      const saved = localStorage.getItem("murmur_voice_history");
+      if (saved) {
+        setHistoryItems(JSON.parse(saved));
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    refreshHistory();
+    const handleUpdate = () => refreshHistory();
+    window.addEventListener("murmur-history-updated", handleUpdate);
+    window.addEventListener("focus", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    return () => {
+      window.removeEventListener("murmur-history-updated", handleUpdate);
+      window.removeEventListener("focus", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "history") {
+      refreshHistory();
+    }
+  }, [activeTab]);
+
   // Automatically save every completed transcription to history
   useEffect(() => {
     if (state.transcript && state.transcript.trim()) {
