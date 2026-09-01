@@ -200,6 +200,11 @@ fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
         }
     }) {
         log::error!("Failed to register global shortcut '{}': {}", hotkey, e);
+        let fallback = "CommandOrControl+Shift+Space";
+        if hotkey != fallback {
+            log::info!("Falling back to default global shortcut '{}'", fallback);
+            setup_global_shortcut(app, fallback);
+        }
     } else {
         log::info!("Registered global shortcut: {}", hotkey);
     }

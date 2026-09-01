@@ -135,15 +135,24 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
     return { mod1, mod2, key3 };
   };
 
+  const isModifier = (k: string) => ["Shift", "Option", "Alt", "Control", "Command"].includes(k);
   const { mod1, mod2, key3 } = parseHotkey(hotkey);
 
   const handleUpdate = (newMod1: string, newMod2: string, newKey3: string) => {
-    let result = newMod1;
-    if (newMod2 && newMod2 !== "none") {
-      result += `+${newMod2}`;
+    let finalMod2 = newMod2;
+    let finalKey3 = newKey3;
+
+    // If Key 2 is a modifier and Key 3 is 'none', default Key 3 to 'Space' to ensure a valid OS hotkey
+    if (isModifier(finalMod2) && (!finalKey3 || finalKey3 === "none")) {
+      finalKey3 = "Space";
     }
-    if (newKey3 && newKey3 !== "none") {
-      result += `+${newKey3}`;
+
+    let result = newMod1;
+    if (finalMod2 && finalMod2 !== "none") {
+      result += `+${finalMod2}`;
+    }
+    if (finalKey3 && finalKey3 !== "none") {
+      result += `+${finalKey3}`;
     }
     onChange(result);
   };
