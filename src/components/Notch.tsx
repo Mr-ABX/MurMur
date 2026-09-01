@@ -202,6 +202,84 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
   );
 }
 
+function EqualizerBars({ isRecording }: { isRecording: boolean }) {
+  const barsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const isRecordingRef = useRef(isRecording);
+  const levelRef = useRef(0);
+  isRecordingRef.current = isRecording;
+
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen<number>("audio_level", (e) => {
+      levelRef.current = Math.min(Math.max(e.payload, 0), 1);
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  useEffect(() => {
+    let animId: number;
+    let phase = 0;
+    const multipliers = [0.65, 0.95, 1.35, 1.6, 1.35, 0.95, 0.65];
+    const currentHeights = [4, 4, 4, 4, 4, 4, 4];
+
+    const animate = () => {
+      const rec = isRecordingRef.current;
+      const lvl = levelRef.current;
+      phase += rec ? (0.08 + lvl * 0.25) : 0.03;
+
+      for (let i = 0; i < 7; i++) {
+        const mult = multipliers[i];
+        const sineWave = Math.sin(phase + i * 0.7) * 0.5 + 0.5;
+        const targetHeight = rec
+          ? Math.min(20, Math.max(3.5, 4.0 + (lvl * 14.0 * mult) + (sineWave * 3.5 * mult)))
+          : (3.0 + sineWave * 1.5);
+
+        // Fast attack, smooth decay
+        currentHeights[i] += (targetHeight - currentHeights[i]) * 0.45;
+
+        const el = barsRef.current[i];
+        if (el) {
+          el.style.height = `${currentHeights[i].toFixed(1)}px`;
+          el.style.opacity = rec ? `${Math.min(1.0, 0.75 + lvl * 0.25).toFixed(2)}` : "0.45";
+        }
+      }
+
+      animId = requestAnimationFrame(animate);
+    };
+
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  const barGradients = [
+    "from-indigo-500 to-purple-500",
+    "from-purple-500 to-pink-500",
+    "from-pink-500 to-rose-400",
+    "from-indigo-400 via-cyan-400 to-emerald-400",
+    "from-pink-500 to-rose-400",
+    "from-purple-500 to-pink-500",
+    "from-indigo-500 to-purple-500",
+  ];
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 h-full px-4 select-none">
+      {barGradients.map((grad, idx) => (
+        <div
+          key={idx}
+          ref={(el) => (barsRef.current[idx] = el)}
+          style={{ height: "4px" }}
+          className={`w-[3.5px] rounded-full bg-gradient-to-t ${grad} shadow-sm shadow-indigo-500/20`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function Notch({ state }: { state: AppState }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
@@ -217,6 +295,8 @@ export default function Notch({ state }: { state: AppState }) {
   const selectedModel = state.settings.localAssistantModel || "gemini-2.0-flash-lite-preview-02-05";
   const isRecording = state.recordingState === "recording";
   const notchStyle = state.settings.notchStyle ?? "macbook";
+
+  const visualizerStyle = state.settings.visualizerStyle ?? "bars";
 
   useEffect(() => {
     invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
@@ -253,12 +333,14 @@ export default function Notch({ state }: { state: AppState }) {
     // Horizontal trackpad swipe: switch pages
     if (Math.abs(e.deltaX) > 18 && now - lastSwipeRef.current > 400) {
       e.stopPropagation();
-      lastSwipeRef.current = now;
       if (e.deltaX > 0) {
-        setPageIndex((prev) => (prev < 2 ? ((prev + 1) as 0 | 1 | 2) : 0));
+        // swipe left -> next page
+        setPageIndex((prev) => (prev < 2 ? (prev + 1) as 0 | 1 | 2 : 2));
       } else {
-        setPageIndex((prev) => (prev > 0 ? ((prev - 1) as 0 | 1 | 2) : 2));
+        // swipe right -> prev page
+        setPageIndex((prev) => (prev > 0 ? (prev - 1) as 0 | 1 | 2 : 0));
       }
+      lastSwipeRef.current = now;
     }
   };
 
@@ -362,7 +444,11 @@ export default function Notch({ state }: { state: AppState }) {
           }}
         >
           <div className="flex-1 h-full flex items-center justify-center">
-            <SingleLineAiWave isRecording={isRecording} isExpanded={isExpanded} />
+            {visualizerStyle === "bars" ? (
+              <EqualizerBars isRecording={isRecording} />
+            ) : (
+              <SingleLineAiWave isRecording={isRecording} isExpanded={isExpanded} />
+            )}
           </div>
 
           {isExpanded && (
@@ -468,12 +554,35 @@ export default function Notch({ state }: { state: AppState }) {
                         </button>
                       </div>
 
-                      {/* Mode Badge */}
+                      {/* Mode Badge & Visualizer Style Switch */}
                       <div className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-white/5 flex items-center justify-between">
-                        <span className="text-[11px] text-zinc-400 font-medium">Operating Mode</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full text-indigo-300 bg-indigo-500/20 font-semibold border border-indigo-500/30">
-                          {state.settings.operatingMode.toUpperCase()}
-                        </span>
+                        <span className="text-[11px] text-zinc-400 font-medium">Visualizer Style</span>
+                        <div className="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-white/5">
+                          <button
+                            onClick={() => {
+                              state.updateSettings({ visualizerStyle: "bars" });
+                            }}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${
+                              visualizerStyle === "bars"
+                                ? "bg-indigo-600 text-white shadow-sm"
+                                : "text-zinc-400 hover:text-zinc-200"
+                            }`}
+                          >
+                            Bars (Handy)
+                          </button>
+                          <button
+                            onClick={() => {
+                              state.updateSettings({ visualizerStyle: "wave" });
+                            }}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${
+                              visualizerStyle === "wave"
+                                ? "bg-indigo-600 text-white shadow-sm"
+                                : "text-zinc-400 hover:text-zinc-200"
+                            }`}
+                          >
+                            AI Wave
+                          </button>
+                        </div>
                       </div>
 
                       {/* Recent Live Transcript Card */}

@@ -611,6 +611,19 @@ export default function SettingsPanel({ state }: Props) {
                     </div>
                   </SettingRow>
 
+                  <SettingRow label="Visualizer Style" description="Choose the animated visualizer shown in the Notch">
+                    <div className="w-full sm:w-64">
+                      <ModernSelect
+                        value={settings.visualizerStyle ?? "bars"}
+                        onChange={(val) => updateSettings({ visualizerStyle: val as any })}
+                        options={[
+                          { value: "bars", label: "📊 Equalizer Bars (Handy / Freeflow)", description: "Dynamic dancing multi-bar equalizer (Recommended)" },
+                          { value: "wave", label: "🌊 Fluid AI Wave (Apple Intelligence)", description: "Glowing sinusoidal ribbon wave" },
+                        ]}
+                      />
+                    </div>
+                  </SettingRow>
+
                   <SettingRow label="Global Hotkey" description="Custom 2-key or 3-key shortcut dropdown picker">
                     <ShortcutBuilder
                       hotkey={settings.hotkey}

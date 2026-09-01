@@ -281,29 +281,28 @@ fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
     use tauri_plugin_clipboard_manager::ClipboardExt;
     
     // Copy the text to the system clipboard
-    app.clipboard().write_text(text.to_string()).map_err(|e| anyhow::anyhow!(e))?;
+    let _ = app.clipboard().write_text(text.to_string());
 
     // Wait a tiny bit for the clipboard to register
-    std::thread::sleep(std::time::Duration::from_millis(50));
-
-    use enigo::{Enigo, Keyboard, Key, Settings, Direction};
-    let mut enigo = Enigo::new(&Settings::default())
-        .map_err(|e| anyhow::anyhow!("Failed to initialize enigo: {}", e))?;
+    std::thread::sleep(std::time::Duration::from_millis(60));
 
     #[cfg(target_os = "macos")]
     {
-        // Explicitly press Meta (Command), click 'v', and release Meta
-        // This ensures the virtual modifier is immediately released in the macOS event queue
-        enigo.key(Key::Meta, Direction::Press).map_err(|e| anyhow::anyhow!("Enigo meta press error: {}", e))?;
-        enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| anyhow::anyhow!("Enigo v click error: {}", e))?;
-        enigo.key(Key::Meta, Direction::Release).map_err(|e| anyhow::anyhow!("Enigo meta release error: {}", e))?;
+        // Safe, non-panicking AppleScript keystroke
+        let _ = std::process::Command::new("osascript")
+            .arg("-e")
+            .arg("tell application \"System Events\" to keystroke \"v\" using command down")
+            .output();
     }
 
     #[cfg(not(target_os = "macos"))]
     {
-        enigo.key(Key::Control, Direction::Press).map_err(|e| anyhow::anyhow!("Enigo ctrl press error: {}", e))?;
-        enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| anyhow::anyhow!("Enigo v click error: {}", e))?;
-        enigo.key(Key::Control, Direction::Release).map_err(|e| anyhow::anyhow!("Enigo ctrl release error: {}", e))?;
+        use enigo::{Enigo, Keyboard, Key, Settings, Direction};
+        if let Ok(mut enigo) = Enigo::new(&Settings::default()) {
+            let _ = enigo.key(Key::Control, Direction::Press);
+            let _ = enigo.key(Key::Unicode('v'), Direction::Click);
+            let _ = enigo.key(Key::Control, Direction::Release);
+        }
     }
 
     Ok(())

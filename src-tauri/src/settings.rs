@@ -51,6 +51,21 @@ pub struct AppSettings {
     pub notch_style: NotchStyle,
     #[serde(default)]
     pub activation_mode: ActivationMode,
+    #[serde(default)]
+    pub visualizer_style: VisualizerStyle,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum VisualizerStyle {
+    Wave,
+    Bars,
+}
+
+impl Default for VisualizerStyle {
+    fn default() -> Self {
+        Self::Bars
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]

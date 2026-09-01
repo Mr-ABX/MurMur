@@ -36,6 +36,7 @@ export interface AppSettings {
   visibilityMode: "alwayson" | "autohidden";
   notchStyle: "dynamicisland" | "macbook";
   activationMode: "toggle" | "hold";
+  visualizerStyle?: "wave" | "bars";
 }
 
 export interface AppState {
@@ -90,6 +91,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   visibilityMode: "alwayson",
   notchStyle: "macbook",
   activationMode: "toggle",
+  visualizerStyle: "bars",
 };
 
 export function useAppState(): AppState {
