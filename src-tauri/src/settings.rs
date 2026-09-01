@@ -236,6 +236,7 @@ impl Default for AppSettings {
             visibility_mode: VisibilityMode::AlwaysOn,
             notch_style: NotchStyle::Macbook,
             activation_mode: ActivationMode::Toggle,
+            visualizer_style: VisualizerStyle::Bars,
         }
     }
 }
