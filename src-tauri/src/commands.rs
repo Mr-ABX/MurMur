@@ -84,43 +84,24 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
         }
 
         let mut last_processed_len = 0;
-        let mut last_processed_time = std::time::Instant::now();
 
         // Wait until recording is stopped
         loop {
-            std::thread::sleep(std::time::Duration::from_millis(20));
+            std::thread::sleep(std::time::Duration::from_millis(25));
             let recording = is_recording.lock().unwrap();
 
             if *recording {
-                let level = audio.get_recent_rms(3200);
+                let level = audio.get_recent_rms(2400);
                 let _ = app_clone.emit("audio_level", level);
                 let _ = app_clone.emit_to("notch", "audio_level", level);
 
-                if is_live {
+                if is_live && is_deepgram {
                     if let Ok(samples) = audio.get_samples() {
                         let current_len = samples.len();
-                        if is_deepgram {
-                            if current_len > last_processed_len {
-                                let new_samples = &samples[last_processed_len..];
-                                let _ = tx_audio.send(new_samples.to_vec());
-                                last_processed_len = current_len;
-                            }
-                        } else {
-                            // Local streaming partials
-                            if last_processed_time.elapsed().as_millis() > 1000 {
-                                if current_len > 0 {
-                                    let samples_clone = samples.clone();
-                                    let app_cl = app_clone.clone();
-                                    let set_cl = settings.clone();
-                                    let tr_cl = transcriber.clone();
-                                    tauri::async_runtime::spawn(async move {
-                                        if let Ok(text) = transcriber::transcribe_hybrid(&samples_clone, &set_cl, &tr_cl).await {
-                                            let _ = app_cl.emit("murmur://transcript-partial", text);
-                                        }
-                                    });
-                                }
-                                last_processed_time = std::time::Instant::now();
-                            }
+                        if current_len > last_processed_len {
+                            let new_samples = &samples[last_processed_len..];
+                            let _ = tx_audio.send(new_samples.to_vec());
+                            last_processed_len = current_len;
                         }
                     }
                 }

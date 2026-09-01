@@ -20,24 +20,37 @@ import {
   Unlock
 } from "lucide-react";
 
-function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; isRecording: boolean; isExpanded: boolean }) {
+function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; isExpanded: boolean }) {
   const path1Ref = useRef<SVGPathElement>(null);
   const path2Ref = useRef<SVGPathElement>(null);
   const path3Ref = useRef<SVGPathElement>(null);
 
-  const levelRef = useRef(level);
+  const levelRef = useRef(0);
   const isRecordingRef = useRef(isRecording);
   const isExpandedRef = useRef(isExpanded);
 
-  levelRef.current = level;
   isRecordingRef.current = isRecording;
   isExpandedRef.current = isExpanded;
+
+  // Listen directly to audio_level IPC without triggering React root re-renders
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen<number>("audio_level", (e) => {
+      levelRef.current = Math.min(Math.max(e.payload, 0), 1);
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
 
   useEffect(() => {
     let animId: number;
     let phase = 0;
     let currentAmp = 1.5;
-    const points = 60;
+    const points = 64;
 
     const animate = () => {
       const rec = isRecordingRef.current;
@@ -45,27 +58,28 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       const exp = isExpandedRef.current;
 
       const width = exp ? 380 : 220;
-      const height = 28;
+      const height = 24;
+      const midY = height / 2;
 
-      // Ultra-dynamic vocal surge: swells up boldly with speech intensity
-      const targetAmp = rec ? (3.0 + lvl * 14.0) : (exp ? 2.2 : (lvl > 0.04 ? 1.5 + lvl * 8.0 : 1.2));
-      // Rapid attack, smooth decay
-      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.45 : 0.22);
+      // Vocal surge dynamics: immediate energetic jump on recording + bold scaling on speech
+      const targetAmp = rec ? (3.5 + lvl * 8.5) : (exp ? 2.0 : (lvl > 0.04 ? 1.8 + lvl * 6.0 : 1.2));
+      // Fast attack, smooth decay
+      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.5 : 0.2);
 
       // Phase step: accelerates dynamically with voice intensity
-      const step = rec ? (0.04 + lvl * 0.28) : 0.015;
+      const step = rec ? (0.045 + lvl * 0.22) : 0.018;
       phase = (phase + step) % (Math.PI * 2);
 
       // 1. Primary glowing multi-color ribbon
       let d1 = "";
       for (let i = 0; i <= points; i++) {
-        const x = (i / points) * width;
         const normX = i / points;
+        const x = normX * width;
         const envelope = Math.sin(normX * Math.PI);
         const y =
-          height / 2 +
-          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.72 +
-            Math.sin(normX * Math.PI * 5.2 - phase * 1.5) * 0.28) *
+          midY +
+          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.7 +
+            Math.sin(normX * Math.PI * 5.2 - phase * 1.5) * 0.3) *
             currentAmp *
             envelope;
         d1 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
@@ -73,25 +87,25 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (1.0 + lvl * 2.0).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (1.2 + lvl * 1.8).toFixed(2));
           path1Ref.current.setAttribute("stroke-opacity", (0.85 + lvl * 0.15).toFixed(2));
         } else {
-          path1Ref.current.setAttribute("stroke-width", "0.85");
-          path1Ref.current.setAttribute("stroke-opacity", "0.6");
+          path1Ref.current.setAttribute("stroke-width", "0.9");
+          path1Ref.current.setAttribute("stroke-opacity", "0.65");
         }
       }
 
       // 2. Harmonic secondary ribbon
       let d2 = "";
       for (let i = 0; i <= points; i++) {
-        const x = (i / points) * width;
         const normX = i / points;
+        const x = normX * width;
         const envelope = Math.sin(normX * Math.PI);
         const y =
-          height / 2 +
+          midY +
           (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
             Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
-            (currentAmp * 0.75) *
+            (currentAmp * 0.72) *
             envelope;
         d2 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
       }
@@ -101,15 +115,15 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
 
       // 3. Core sharp white laser beam
       if (path3Ref.current) {
-        if (rec || lvl > 0.05) {
+        if (rec || lvl > 0.04) {
           let d3 = "";
           for (let i = 0; i <= points; i++) {
-            const x = (i / points) * width;
             const normX = i / points;
+            const x = normX * width;
             const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
             const y =
-              height / 2 +
-              Math.sin(normX * Math.PI * 6.5 + phase * 2.0) * (currentAmp * 0.55) * envelope;
+              midY +
+              Math.sin(normX * Math.PI * 6.5 + phase * 2.0) * (currentAmp * 0.48) * envelope;
             d3 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
           }
           path3Ref.current.setAttribute("d", d3);
@@ -127,7 +141,7 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
   }, []);
 
   const width = isExpanded ? 380 : 220;
-  const height = 28;
+  const height = 24;
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-visible px-1">
@@ -160,8 +174,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           ref={path2Ref}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.6"
-          strokeOpacity="0.4"
+          strokeWidth="0.65"
+          strokeOpacity="0.45"
           strokeLinecap="round"
         />
 
@@ -169,8 +183,8 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
           ref={path1Ref}
           fill="none"
           stroke="url(#aiWaveGrad)"
-          strokeWidth="0.85"
-          strokeOpacity="0.7"
+          strokeWidth="0.9"
+          strokeOpacity="0.75"
           strokeLinecap="round"
           filter="url(#aiGlow)"
         />
@@ -189,7 +203,6 @@ function SingleLineAiWave({ level, isRecording, isExpanded }: { level: number; i
 }
 
 export default function Notch({ state }: { state: AppState }) {
-  const [audioLevel, setAudioLevel] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [pageIndex, setPageIndex] = useState<0 | 1 | 2>(0);
@@ -203,15 +216,7 @@ export default function Notch({ state }: { state: AppState }) {
   const lastSwipeRef = useRef(0);
   const selectedModel = state.settings.localAssistantModel || "gemini-2.0-flash-lite-preview-02-05";
   const isRecording = state.recordingState === "recording";
-  const isInteracting = isRecording || audioLevel > 0.02;
   const notchStyle = state.settings.notchStyle ?? "macbook";
-
-  // Reset audio level when recording ends
-  useEffect(() => {
-    if (!isRecording) {
-      setAudioLevel(0);
-    }
-  }, [isRecording]);
 
   useEffect(() => {
     invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
@@ -222,19 +227,8 @@ export default function Notch({ state }: { state: AppState }) {
     }
   }, [isExpanded]);
 
-  // Keep audio_level listener continuously active from native CoreAudio
   useEffect(() => {
-    let unlistenAudioFn: (() => void) | null = null;
     let unlistenBlurFn: (() => void) | null = null;
-
-    listen<number>("audio_level", (e) => {
-      const level = Math.min(Math.max(e.payload, 0), 1);
-      setAudioLevel(level);
-    }).then((fn) => {
-      unlistenAudioFn = fn;
-    });
-
-    // Auto-collapse whenever the user clicks outside the notch (window loses focus/blur)
     getCurrentWindow().listen("tauri://blur", () => {
       if (!isLocked) {
         setIsExpanded(false);
@@ -244,7 +238,6 @@ export default function Notch({ state }: { state: AppState }) {
     });
 
     return () => {
-      if (unlistenAudioFn) unlistenAudioFn();
       if (unlistenBlurFn) unlistenBlurFn();
     };
   }, [isLocked]);
@@ -337,7 +330,7 @@ export default function Notch({ state }: { state: AppState }) {
         layout
         initial={false}
         animate={{
-          width: isExpanded ? 440 : isInteracting ? 280 : 240,
+          width: isExpanded ? 440 : isRecording ? 280 : 240,
           height: isExpanded ? 270 : notchStyle === "macbook" ? 26 : 28,
         }}
         transition={{
@@ -369,7 +362,7 @@ export default function Notch({ state }: { state: AppState }) {
           }}
         >
           <div className="flex-1 h-full flex items-center justify-center">
-            <SingleLineAiWave level={audioLevel} isRecording={isInteracting} isExpanded={isExpanded} />
+            <SingleLineAiWave isRecording={isRecording} isExpanded={isExpanded} />
           </div>
 
           {isExpanded && (
