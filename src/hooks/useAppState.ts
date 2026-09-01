@@ -258,14 +258,14 @@ export function useAppState(): AppState {
   }, []);
 
   const updateSettings = useCallback(async (newSettings: Partial<AppSettings>) => {
-    const merged = { ...settings, ...newSettings };
-    setSettings(merged);
-    try {
-      await invoke("save_settings", { settings: merged });
-    } catch (err) {
-      console.error("Failed to save settings:", err);
-    }
-  }, [settings]);
+    setSettings((prev) => {
+      const merged = { ...prev, ...newSettings };
+      invoke("save_settings", { settings: merged }).catch((err) => {
+        console.error("Failed to save settings:", err);
+      });
+      return merged;
+    });
+  }, []);
 
   const downloadModel = useCallback(async (model: WhisperModel) => {
     setIsDownloading(true);

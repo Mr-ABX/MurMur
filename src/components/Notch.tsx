@@ -62,12 +62,16 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
       const midY = height / 2;
 
       // Vocal surge dynamics: immediate energetic jump on recording + bold scaling on speech
-      const targetAmp = rec ? (3.5 + lvl * 8.5) : (exp ? 2.0 : (lvl > 0.04 ? 1.8 + lvl * 6.0 : 1.2));
-      // Fast attack, smooth decay
-      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.5 : 0.2);
+      const targetAmp = rec
+        ? (4.5 + lvl * 14.0)
+        : (exp ? 2.5 : (lvl > 0.04 ? 2.0 + lvl * 8.0 : 1.0));
+      // Fast attack (0.60), smooth decay (0.20)
+      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.60 : 0.20);
 
       // Phase step: accelerates dynamically with voice intensity
-      const step = rec ? (0.045 + lvl * 0.22) : 0.018;
+      // In idle: 0.015 (calm, slow)
+      // When recording: 0.08 + lvl * 0.35 (high speed, lively!)
+      const step = rec ? (0.08 + lvl * 0.35) : 0.015;
       phase = (phase + step) % (Math.PI * 2);
 
       // 1. Primary glowing multi-color ribbon
@@ -87,11 +91,11 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (1.2 + lvl * 1.8).toFixed(2));
-          path1Ref.current.setAttribute("stroke-opacity", (0.85 + lvl * 0.15).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (1.4 + lvl * 2.2).toFixed(2));
+          path1Ref.current.setAttribute("stroke-opacity", (0.90 + lvl * 0.10).toFixed(2));
         } else {
           path1Ref.current.setAttribute("stroke-width", "0.9");
-          path1Ref.current.setAttribute("stroke-opacity", "0.65");
+          path1Ref.current.setAttribute("stroke-opacity", "0.55");
         }
       }
 
@@ -224,28 +228,40 @@ function EqualizerBars({ isRecording }: { isRecording: boolean }) {
   useEffect(() => {
     let animId: number;
     let phase = 0;
-    const multipliers = [0.65, 0.95, 1.35, 1.6, 1.35, 0.95, 0.65];
-    const currentHeights = [4, 4, 4, 4, 4, 4, 4];
+    const multipliers = [0.65, 0.95, 1.45, 1.85, 1.45, 0.95, 0.65];
+    const currentHeights = [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5];
 
     const animate = () => {
       const rec = isRecordingRef.current;
       const lvl = levelRef.current;
-      phase += rec ? (0.08 + lvl * 0.25) : 0.03;
+
+      // When speaking/recording: high-speed energetic phase step
+      // When idle: very slow, calm breathing phase
+      phase += rec ? (0.14 + lvl * 0.45) : 0.015;
 
       for (let i = 0; i < 7; i++) {
         const mult = multipliers[i];
-        const sineWave = Math.sin(phase + i * 0.7) * 0.5 + 0.5;
+        const sineWave = Math.sin(phase + i * 0.75) * 0.5 + 0.5;
+
+        // When recording: vigorous dynamic height from 4px up to 23.5px with vocal amplitude
+        // When idle: calm breathing 3.0px to 4.5px
         const targetHeight = rec
-          ? Math.min(20, Math.max(3.5, 4.0 + (lvl * 14.0 * mult) + (sineWave * 3.5 * mult)))
+          ? Math.min(23.5, Math.max(3.8, 4.0 + (lvl * 24.0 * mult) + (sineWave * 5.5 * mult)))
           : (3.0 + sineWave * 1.5);
 
-        // Fast attack, smooth decay
-        currentHeights[i] += (targetHeight - currentHeights[i]) * 0.45;
+        // Fast attack (0.65) for instant voice reaction, smooth release (0.25)
+        const speed = targetHeight > currentHeights[i] ? 0.65 : 0.25;
+        currentHeights[i] += (targetHeight - currentHeights[i]) * speed;
 
         const el = barsRef.current[i];
         if (el) {
           el.style.height = `${currentHeights[i].toFixed(1)}px`;
-          el.style.opacity = rec ? `${Math.min(1.0, 0.75 + lvl * 0.25).toFixed(2)}` : "0.45";
+          el.style.opacity = rec
+            ? `${Math.min(1.0, 0.80 + lvl * 0.20).toFixed(2)}`
+            : `${(0.35 + sineWave * 0.15).toFixed(2)}`;
+          el.style.filter = rec && lvl > 0.05
+            ? `drop-shadow(0 0 6px rgba(192, 132, 252, ${Math.min(0.9, lvl * 1.2).toFixed(2)}))`
+            : "none";
         }
       }
 
@@ -272,7 +288,7 @@ function EqualizerBars({ isRecording }: { isRecording: boolean }) {
         <div
           key={idx}
           ref={(el) => (barsRef.current[idx] = el)}
-          style={{ height: "4px" }}
+          style={{ height: "3.5px" }}
           className={`w-[3.5px] rounded-full bg-gradient-to-t ${grad} shadow-sm shadow-indigo-500/20`}
         />
       ))}

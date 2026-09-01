@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
   Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot, RefreshCw,
-  PanelLeftClose, PanelLeftOpen, Copy, Check, Search
+  PanelLeftClose, PanelLeftOpen, Copy, Check, Search, Save
 } from "lucide-react";
 import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
 import { ModernSelect } from "./ModernSelect";
@@ -395,6 +395,22 @@ export default function SettingsPanel({ state }: Props) {
     }
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
+
+  const handleSaveAndApply = async () => {
+    setIsSaving(true);
+    try {
+      await invoke("save_settings", { settings: state.settings });
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 2500);
+    } catch (err) {
+      console.error("Failed to save settings:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (settings.autoUpdateCheck ?? true) {
       handleCheckUpdates(false);
@@ -487,14 +503,49 @@ export default function SettingsPanel({ state }: Props) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative z-0">
-        {/* Top Right Close Button & Drag Region */}
-        <div data-tauri-drag-region className="h-14 flex items-center justify-end px-4 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/80 backdrop-blur-md absolute top-0 left-0 right-0 z-20">
-          <button 
-            onClick={() => getCurrentWindow().hide()}
-            className="p-1.5 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] transition-all focus:outline-none"
-          >
-            <X size={18} />
-          </button>
+        {/* Top Header with Tab Label, Save & Apply Button, and Close Button */}
+        <div data-tauri-drag-region className="h-14 flex items-center justify-between px-6 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/90 backdrop-blur-md absolute top-0 left-0 right-0 z-20">
+          <div className="flex items-center gap-2 pointer-events-none">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              {tabs.find((t) => t.id === activeTab)?.label}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSaveAndApply}
+              disabled={isSaving}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-md active:scale-95 cursor-pointer ${
+                savedFeedback
+                  ? "bg-emerald-600 text-white shadow-emerald-500/20"
+                  : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20 hover:shadow-indigo-600/30"
+              }`}
+            >
+              {savedFeedback ? (
+                <>
+                  <Check size={14} className="stroke-[3]" />
+                  <span>Applied & Synced</span>
+                </>
+              ) : isSaving ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  <span>Save & Apply</span>
+                </>
+              )}
+            </button>
+
+            <button 
+              onClick={() => getCurrentWindow().hide()}
+              className="p-1.5 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] transition-all focus:outline-none cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
         
         {/* Scrollable Content */}

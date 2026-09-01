@@ -134,10 +134,10 @@ impl AudioCapture {
         
         // Highly responsive vocal energy formula:
         // Peak captures immediate voice consonants, RMS captures sustained vowel body
-        let peak_comp = (max_peak * 5.0).min(1.0);
-        let rms_comp = (rms * 15.0).min(1.0);
-        let raw_level = (peak_comp * 0.65 + rms_comp * 0.35).clamp(0.0, 1.0);
-        raw_level.powf(0.6)
+        let peak_comp = (max_peak * 8.0).min(1.0);
+        let rms_comp = (rms * 24.0).min(1.0);
+        let raw_level = (peak_comp * 0.70 + rms_comp * 0.30).clamp(0.0, 1.0);
+        raw_level.powf(0.5)
     }
 
     pub fn clear_buffer(&self) {
