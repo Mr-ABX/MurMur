@@ -3,7 +3,16 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 export type RecordingState = "idle" | "recording" | "transcribing" | "done" | "error";
-export type WhisperModel = "tiny" | "base" | "small" | "medium";
+export type WhisperModel =
+  | "tiny.en"
+  | "tiny"
+  | "base.en"
+  | "base"
+  | "small.en"
+  | "small"
+  | "medium.en"
+  | "medium"
+  | "large-v3-turbo";
 export type GemmaModel = "e2b" | "e4b";
 
 export interface AppSettings {
@@ -100,10 +109,15 @@ export function useAppState(): AppState {
   const [partialTranscript, setPartialTranscript] = useState("");
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isModelDownloaded, setIsModelDownloaded] = useState<Record<WhisperModel, boolean>>({
+    "tiny.en": false,
     tiny: false,
+    "base.en": false,
     base: false,
+    "small.en": false,
     small: false,
+    "medium.en": false,
     medium: false,
+    "large-v3-turbo": false,
   });
   const [isGemmaModelDownloaded, setIsGemmaModelDownloaded] = useState<Record<GemmaModel, boolean>>({
     e2b: false,

@@ -158,12 +158,25 @@ impl GemmaModel {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-#[serde(rename_all = "lowercase")]
 pub enum WhisperModel {
+    #[serde(rename = "tiny.en")]
+    TinyEn,
+    #[serde(rename = "tiny")]
     Tiny,
+    #[serde(rename = "base.en")]
+    BaseEn,
+    #[serde(rename = "base")]
     Base,
+    #[serde(rename = "small.en")]
+    SmallEn,
+    #[serde(rename = "small")]
     Small,
+    #[serde(rename = "medium.en")]
+    MediumEn,
+    #[serde(rename = "medium")]
     Medium,
+    #[serde(rename = "large-v3-turbo")]
+    LargeV3Turbo,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -182,10 +195,15 @@ impl Default for TrayIconStyle {
 impl WhisperModel {
     pub fn filename(&self) -> &'static str {
         match self {
+            WhisperModel::TinyEn => "ggml-tiny.en.bin",
             WhisperModel::Tiny => "ggml-tiny.bin",
+            WhisperModel::BaseEn => "ggml-base.en.bin",
             WhisperModel::Base => "ggml-base.bin",
+            WhisperModel::SmallEn => "ggml-small.en.bin",
             WhisperModel::Small => "ggml-small.bin",
+            WhisperModel::MediumEn => "ggml-medium.en.bin",
             WhisperModel::Medium => "ggml-medium.bin",
+            WhisperModel::LargeV3Turbo => "ggml-large-v3-turbo.bin",
         }
     }
 
@@ -196,12 +214,34 @@ impl WhisperModel {
 
     pub fn as_str(&self) -> &'static str {
         match self {
+            WhisperModel::TinyEn => "tiny.en",
             WhisperModel::Tiny => "tiny",
+            WhisperModel::BaseEn => "base.en",
             WhisperModel::Base => "base",
+            WhisperModel::SmallEn => "small.en",
             WhisperModel::Small => "small",
+            WhisperModel::MediumEn => "medium.en",
             WhisperModel::Medium => "medium",
+            WhisperModel::LargeV3Turbo => "large-v3-turbo",
         }
     }
+
+    pub fn is_multilingual(&self) -> bool {
+        match self {
+            WhisperModel::TinyEn | WhisperModel::BaseEn | WhisperModel::SmallEn | WhisperModel::MediumEn => false,
+            WhisperModel::Tiny | WhisperModel::Base | WhisperModel::Small | WhisperModel::Medium | WhisperModel::LargeV3Turbo => true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VoiceHistoryItem {
+    pub id: String,
+    pub text: String,
+    pub timestamp: i64,
+    pub date_str: String,
+    pub model: String,
 }
 
 impl Default for AppSettings {
@@ -285,25 +325,39 @@ impl AppSettings {
     pub fn model_path(&self, model: &WhisperModel) -> PathBuf {
         let mut path = Self::models_dir();
         path.push(model.filename());
-        if !path.exists() {
-            // Fallback check for legacy .en.bin models
-            let legacy_name = match model {
-                WhisperModel::Tiny => "ggml-tiny.en.bin",
-                WhisperModel::Base => "ggml-base.en.bin",
-                WhisperModel::Small => "ggml-small.en.bin",
-                WhisperModel::Medium => "ggml-medium.en.bin",
-            };
-            let mut legacy_path = Self::models_dir();
-            legacy_path.push(legacy_name);
-            if legacy_path.exists() {
-                return legacy_path;
-            }
-        }
         path
     }
 
     pub fn is_model_downloaded(&self, model: &WhisperModel) -> bool {
         self.model_path(model).exists()
+    }
+
+    pub fn history_path() -> PathBuf {
+        let mut path = Self::models_dir();
+        path.push("history.json");
+        path
+    }
+
+    pub fn load_history() -> Vec<VoiceHistoryItem> {
+        let path = Self::history_path();
+        if path.exists() {
+            if let Ok(content) = std::fs::read_to_string(&path) {
+                if let Ok(items) = serde_json::from_str::<Vec<VoiceHistoryItem>>(&content) {
+                    return items;
+                }
+            }
+        }
+        Vec::new()
+    }
+
+    pub fn save_history(items: &[VoiceHistoryItem]) -> Result<()> {
+        let path = Self::history_path();
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let json = serde_json::to_string_pretty(items)?;
+        std::fs::write(path, json)?;
+        Ok(())
     }
 
     pub fn gemma_model_path(&self, model: &GemmaModel) -> PathBuf {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,11 +28,16 @@ export interface VoiceHistoryItem {
   model: string;
 }
 
-const MODEL_INFO: Record<WhisperModel, { size: string; ram: string; speed: string; quality: string; description: string }> = {
-  tiny: { size: "75 MB", ram: "~300 MB", speed: "~50ms", quality: "Good", description: "Fastest multilingual model. Lowest memory footprint." },
-  base: { size: "142 MB", ram: "~500 MB", speed: "~200ms", quality: "Great", description: "Recommended. 99 languages + Urdu/Roman Urdu capable." },
-  small: { size: "466 MB", ram: "~1.5 GB", speed: "~500ms", quality: "Excellent", description: "High accuracy for mixed technical terms & accents." },
-  medium: { size: "1.5 GB", ram: "~4.0 GB", speed: "~1s", quality: "Near-perfect", description: "Best accuracy. Slower on older hardware." },
+const MODEL_INFO: Record<WhisperModel, { size: string; ram: string; speed: string; quality: string; description: string; isMultilingual: boolean }> = {
+  "base": { size: "142 MB", ram: "~500 MB", speed: "~200ms", quality: "Great", description: "Recommended. 99 Languages + Urdu & Roman Urdu support.", isMultilingual: true },
+  "base.en": { size: "142 MB", ram: "~500 MB", speed: "~180ms", quality: "Great", description: "English-only Base model for pure English dictation.", isMultilingual: false },
+  "large-v3-turbo": { size: "1.5 GB", ram: "~4.0 GB", speed: "~600ms", quality: "Best-in-class", description: "Fastest large multilingual model with highest accuracy.", isMultilingual: true },
+  "tiny": { size: "75 MB", ram: "~300 MB", speed: "~50ms", quality: "Good", description: "Fastest multilingual model across 99 languages.", isMultilingual: true },
+  "tiny.en": { size: "39 MB", ram: "~250 MB", speed: "~40ms", quality: "Good", description: "Ultra-compact English-only model.", isMultilingual: false },
+  "small": { size: "466 MB", ram: "~1.5 GB", speed: "~500ms", quality: "Excellent", description: "High accuracy multilingual model for mixed accents.", isMultilingual: true },
+  "small.en": { size: "466 MB", ram: "~1.5 GB", speed: "~450ms", quality: "Excellent", description: "English-only Small model with high accuracy.", isMultilingual: false },
+  "medium": { size: "1.5 GB", ram: "~4.0 GB", speed: "~1.0s", quality: "Near-perfect", description: "Studio-grade accuracy across 99 languages.", isMultilingual: true },
+  "medium.en": { size: "1.5 GB", ram: "~4.0 GB", speed: "~900ms", quality: "Near-perfect", description: "Studio-grade accuracy English-only model.", isMultilingual: false },
 };
 
 const GEMMA_MODEL_INFO: Record<GemmaModel, { size: string; ram: string; speed: string; quality: string; description: string }> = {
@@ -288,6 +294,7 @@ export default function SettingsPanel({ state }: Props) {
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [lastCheckedTime, setLastCheckedTime] = useState<string | null>(null);
+  const [modelFilter, setModelFilter] = useState<"all" | "multi" | "en">("all");
 
   // Persistent voice history state (persists across app restarts and system reboots)
   const [historyItems, setHistoryItems] = useState<VoiceHistoryItem[]>(() => {
@@ -301,7 +308,17 @@ export default function SettingsPanel({ state }: Props) {
   const [searchHistory, setSearchHistory] = useState("");
   const [copiedHistoryId, setCopiedHistoryId] = useState<string | null>(null);
 
-  const refreshHistory = () => {
+  const refreshHistory = async () => {
+    try {
+      const items = await invoke<VoiceHistoryItem[]>("get_voice_history");
+      if (Array.isArray(items)) {
+        setHistoryItems(items);
+        try {
+          localStorage.setItem("murmur_voice_history", JSON.stringify(items));
+        } catch {}
+        return;
+      }
+    } catch {}
     try {
       const saved = localStorage.getItem("murmur_voice_history");
       if (saved) {
@@ -312,15 +329,24 @@ export default function SettingsPanel({ state }: Props) {
 
   useEffect(() => {
     refreshHistory();
+    let unlisten: (() => void) | null = null;
+    listen<VoiceHistoryItem[]>("murmur://history-updated", (e) => {
+      if (Array.isArray(e.payload)) {
+        setHistoryItems(e.payload);
+        try {
+          localStorage.setItem("murmur_voice_history", JSON.stringify(e.payload));
+        } catch {}
+      }
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
     const handleUpdate = () => refreshHistory();
-    window.addEventListener("murmur-history-updated", handleUpdate);
     window.addEventListener("focus", handleUpdate);
-    window.addEventListener("storage", handleUpdate);
 
     return () => {
-      window.removeEventListener("murmur-history-updated", handleUpdate);
+      if (unlisten) unlisten();
       window.removeEventListener("focus", handleUpdate);
-      window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 
@@ -330,37 +356,23 @@ export default function SettingsPanel({ state }: Props) {
     }
   }, [activeTab]);
 
-  // Automatically save every completed transcription to history
-  useEffect(() => {
-    if (state.transcript && state.transcript.trim()) {
-      setHistoryItems((prev) => {
-        if (prev.length > 0 && prev[0].text === state.transcript.trim()) {
-          return prev;
-        }
-        const now = new Date();
-        const newItem: VoiceHistoryItem = {
-          id: Date.now().toString(),
-          text: state.transcript.trim(),
-          timestamp: Date.now(),
-          dateStr: now.toLocaleDateString([], { month: "short", day: "numeric" }) + " • " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          model: settings.cloudProvider === "local" ? settings.model : settings.cloudProvider,
-        };
-        const updated = [newItem, ...prev].slice(0, 100);
-        try {
-          localStorage.setItem("murmur_voice_history", JSON.stringify(updated));
-        } catch {}
-        return updated;
-      });
-    }
-  }, [state.transcript]);
-
   const handleCopyHistoryItem = (item: VoiceHistoryItem) => {
     navigator.clipboard.writeText(item.text);
     setCopiedHistoryId(item.id);
     setTimeout(() => setCopiedHistoryId(null), 2000);
   };
 
-  const handleDeleteHistoryItem = (id: string) => {
+  const handleDeleteHistoryItem = async (id: string) => {
+    try {
+      const updated = await invoke<VoiceHistoryItem[]>("delete_voice_history_item", { id });
+      if (Array.isArray(updated)) {
+        setHistoryItems(updated);
+        try {
+          localStorage.setItem("murmur_voice_history", JSON.stringify(updated));
+        } catch {}
+        return;
+      }
+    } catch {}
     setHistoryItems((prev) => {
       const updated = prev.filter((i) => i.id !== id);
       try {
@@ -377,7 +389,12 @@ export default function SettingsPanel({ state }: Props) {
     });
     if (confirmed) {
       setHistoryItems([]);
-      localStorage.removeItem("murmur_voice_history");
+      try {
+        await invoke("clear_voice_history");
+        localStorage.removeItem("murmur_voice_history");
+      } catch {
+        localStorage.removeItem("murmur_voice_history");
+      }
     }
   };
 
@@ -835,117 +852,199 @@ export default function SettingsPanel({ state }: Props) {
                 className="max-w-3xl"
               >
                 <SectionHeader icon={<Cpu size={16} />} title="Whisper Model" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
-                  All models run 100% locally on your device. No internet required after download.
+                <p className="text-[13px] text-[var(--text-secondary)] mb-4">
+                  All models run 100% locally on your device with Whisper.cpp. No cloud or internet required during transcription.
                 </p>
-                <div className="flex flex-col gap-4">
-                  {(["tiny", "base", "small", "medium"] as WhisperModel[]).map((model) => {
-                    const info = MODEL_INFO[model];
-                    const downloaded = isModelDownloaded[model];
-                    const isSelected = settings.model === model;
-                    const isThisDownloading = isDownloading && downloadingModel === model;
 
-                    return (
-                      <motion.div
-                        key={model}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => downloaded && updateSettings({ model })}
-                        className={`relative rounded-xl p-4 cursor-pointer transition-all ${
-                          isSelected ? "ring-1 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10" : "hover:border-[var(--border-strong)]"
-                        }`}
-                        style={{
-                          background: isSelected ? "var(--bg-surface-elevated)" : "var(--bg-surface)",
-                          border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
-                        }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-sm font-semibold text-[var(--text-primary)] capitalize">{model}</span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                                99 Languages (Urdu / Multilingual)
-                              </span>
-                              {model === "base" && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-green-500/10 text-green-400 border border-green-500/20">
-                                  Recommended
+                {/* Filter Pills */}
+                <div className="flex items-center gap-2 mb-6 p-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl w-fit">
+                  <button
+                    onClick={() => setModelFilter("all")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      modelFilter === "all"
+                        ? "bg-[var(--accent-primary)] text-white shadow-sm"
+                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    All Models (9)
+                  </button>
+                  <button
+                    onClick={() => setModelFilter("multi")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      modelFilter === "multi"
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : "text-[var(--text-secondary)] hover:text-indigo-400"
+                    }`}
+                  >
+                    🌍 99 Languages & Urdu (5)
+                  </button>
+                  <button
+                    onClick={() => setModelFilter("en")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      modelFilter === "en"
+                        ? "bg-zinc-700 text-white shadow-sm"
+                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    🇬🇧 English Only (4)
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {(
+                    [
+                      "base",
+                      "base.en",
+                      "large-v3-turbo",
+                      "tiny",
+                      "tiny.en",
+                      "small",
+                      "small.en",
+                      "medium",
+                      "medium.en",
+                    ] as WhisperModel[]
+                  )
+                    .filter((m) => {
+                      const isMulti = MODEL_INFO[m].isMultilingual;
+                      if (modelFilter === "multi") return isMulti;
+                      if (modelFilter === "en") return !isMulti;
+                      return true;
+                    })
+                    .map((model) => {
+                      const info = MODEL_INFO[model];
+                      const downloaded = isModelDownloaded[model];
+                      const isSelected = settings.model === model;
+                      const isThisDownloading = isDownloading && downloadingModel === model;
+
+                      return (
+                        <motion.div
+                          key={model}
+                          whileHover={{ scale: 1.005 }}
+                          whileTap={{ scale: 0.995 }}
+                          onClick={() => downloaded && updateSettings({ model })}
+                          className={`relative rounded-xl p-4 cursor-pointer transition-all ${
+                            isSelected
+                              ? "ring-2 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10 bg-[var(--bg-surface-elevated)]"
+                              : "hover:border-[var(--border-strong)] bg-[var(--bg-surface)]"
+                          }`}
+                          style={{
+                            border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
+                          }}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide">
+                                  {model}
                                 </span>
+                                {info.isMultilingual ? (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                                    🌍 99 Languages (Urdu / Roman Urdu)
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-zinc-700/40 text-zinc-300 border border-zinc-600/30">
+                                    🇬🇧 English Only
+                                  </span>
+                                )}
+                                {model === "base" && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                    Recommended
+                                  </span>
+                                )}
+                                {model === "large-v3-turbo" && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                    Max Accuracy
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-[var(--text-secondary)] mb-2.5 leading-relaxed">
+                                {info.description}
+                              </p>
+                              <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                                <span className="font-mono" title="Disk Size">💾 {info.size}</span>
+                                <span>·</span>
+                                <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
+                                <span>·</span>
+                                <span title="Latency">⏱️ {info.speed}</span>
+                                <span>·</span>
+                                <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
+                              </div>
+                            </div>
+
+                            <div className="ml-4 flex-shrink-0 flex items-center gap-2">
+                              {downloaded ? (
+                                <>
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      const confirmed = await ask(
+                                        `Are you sure you want to delete the ${model} model file from your disk?`,
+                                        {
+                                          title: "Delete Model",
+                                          kind: "warning",
+                                        }
+                                      );
+                                      if (confirmed) {
+                                        deleteModel(model);
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
+                                    title="Delete Model"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                  <div
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                      isSelected
+                                        ? "bg-[var(--accent-primary)] text-white"
+                                        : "bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)]"
+                                    }`}
+                                  >
+                                    <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
+                                  </div>
+                                </>
+                              ) : isThisDownloading ? (
+                                <div className="flex flex-col items-center gap-1">
+                                  <Loader2 size={16} className="text-[var(--accent-primary)] animate-spin" />
+                                  <span className="text-xs text-[var(--accent-primary)] font-mono">
+                                    {downloadProgress.total > 0
+                                      ? `${downloadProgress.progress}%`
+                                      : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
+                                  </span>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    downloadModel(model);
+                                  }}
+                                  className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+                                >
+                                  <Download size={13} />
+                                  Get
+                                </button>
                               )}
                             </div>
-                            <p className="text-xs text-[var(--text-secondary)] mb-2">{info.description}</p>
-                            <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
-                              <span className="font-mono" title="Disk Size">💾 {info.size}</span>
-                              <span>·</span>
-                              <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
-                              <span>·</span>
-                              <span title="Latency">⏱️ {info.speed}</span>
-                              <span>·</span>
-                              <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
+                          </div>
+
+                          {/* Download progress bar */}
+                          {isThisDownloading && downloadProgress.total > 0 && (
+                            <div className="mt-3 h-1.5 rounded-full overflow-hidden bg-zinc-800">
+                              <motion.div
+                                className="h-full rounded-full bg-[var(--accent-primary)]"
+                                initial={{ width: "0%" }}
+                                animate={{ width: `${downloadProgress.progress}%` }}
+                                transition={{ duration: 0.2 }}
+                              />
                             </div>
-                          </div>
-
-                          <div className="ml-3 flex-shrink-0 flex items-center gap-2">
-                            {downloaded ? (
-                              <>
-                                <button
-                                  onClick={async (e) => { 
-                                    e.stopPropagation(); 
-                                    const confirmed = await ask(`Are you sure you want to delete the ${model} model file from your disk?`, {
-                                      title: 'Delete Model',
-                                      kind: 'warning',
-                                    });
-                                    if (confirmed) {
-                                      deleteModel(model); 
-                                    }
-                                  }}
-                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors"
-                                  title="Delete Model"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-[var(--accent-primary)]" : "bg-[var(--bg-surface-elevated)]"}`}>
-                                  <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
-                                </div>
-                              </>
-                            ) : isThisDownloading ? (
-                              <div className="flex flex-col items-center gap-1">
-                                <Loader2 size={16} className="text-[var(--accent-primary)] animate-spin" />
-                                <span className="text-xs text-[var(--accent-primary)]">
-                                  {downloadProgress.total > 0 
-                                    ? `${downloadProgress.progress}% (${(downloadProgress.downloaded / 1048576).toFixed(1)} MB)` 
-                                    : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
-                                </span>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); downloadModel(model); }}
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium bg-[var(--bg-surface-elevated)] hover:bg-[var(--accent-primary)] border border-[var(--border-strong)] hover:border-[var(--accent-primary)] text-[var(--text-primary)] transition-all"
-                              >
-                                <Download size={14} />
-                                Get
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Download progress bar */}
-                        {isThisDownloading && downloadProgress.total > 0 && (
-                          <div className="mt-3 h-1 rounded-full overflow-hidden bg-[var(--bg-base)]">
-                            <motion.div
-                              className="h-full rounded-full bg-[var(--accent-primary)]"
-                              initial={{ width: "0%" }}
-                              animate={{ width: `${downloadProgress.progress}%` }}
-                              transition={{ duration: 0.3 }}
-                            />
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
+                          )}
+                        </motion.div>
+                      );
+                    })}
                   <div className="mt-6 flex justify-center">
                     <button
                       onClick={() => invoke("open_models_directory")}
-                      className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-surface-elevated)] px-4 py-2 rounded-lg border border-[var(--border-strong)]"
+                      className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-surface-elevated)] px-4 py-2 rounded-lg border border-[var(--border-strong)] cursor-pointer"
                     >
                       <FolderOpen size={14} />
                       Open Models Directory

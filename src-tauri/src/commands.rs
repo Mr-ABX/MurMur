@@ -262,6 +262,26 @@ async fn handle_transcription_result(
     // Emit transcript to UI
     let _ = app.emit("murmur://transcript-done", &text);
 
+    // Save to persistent backend history
+    let mut history = crate::settings::AppSettings::load_history();
+    let item = crate::settings::VoiceHistoryItem {
+        id: format!("{}", chrono::Utc::now().timestamp_millis()),
+        text: text.clone(),
+        timestamp: chrono::Utc::now().timestamp_millis(),
+        date_str: chrono::Local::now().format("%b %d • %I:%M %p").to_string(),
+        model: if settings.cloud_provider == crate::settings::CloudProvider::Local {
+            settings.model.as_str().to_string()
+        } else {
+            format!("{:?}", settings.cloud_provider)
+        },
+    };
+    history.insert(0, item);
+    if history.len() > 200 {
+        history.truncate(200);
+    }
+    let _ = crate::settings::AppSettings::save_history(&history);
+    let _ = app.emit("murmur://history-updated", &history);
+
     // Auto-paste if enabled
     if settings.auto_paste {
         // Hide overlay immediately so macOS returns focus to the user's text editor
@@ -393,10 +413,42 @@ pub fn save_settings(
 #[tauri::command]
 pub fn get_downloaded_models(state: State<'_, MurmurState>) -> HashMap<String, bool> {
     let settings = state.settings.lock().unwrap();
-    let models = [WhisperModel::Tiny, WhisperModel::Base, WhisperModel::Small, WhisperModel::Medium];
+    let models = [
+        WhisperModel::TinyEn,
+        WhisperModel::Tiny,
+        WhisperModel::BaseEn,
+        WhisperModel::Base,
+        WhisperModel::SmallEn,
+        WhisperModel::Small,
+        WhisperModel::MediumEn,
+        WhisperModel::Medium,
+        WhisperModel::LargeV3Turbo,
+    ];
     models.iter().map(|m| {
         (m.as_str().to_string(), settings.is_model_downloaded(m))
     }).collect()
+}
+
+#[tauri::command]
+pub fn get_voice_history() -> Vec<crate::settings::VoiceHistoryItem> {
+    crate::settings::AppSettings::load_history()
+}
+
+#[tauri::command]
+pub fn delete_voice_history_item(id: String, app: AppHandle) -> Vec<crate::settings::VoiceHistoryItem> {
+    let mut history = crate::settings::AppSettings::load_history();
+    history.retain(|item| item.id != id);
+    let _ = crate::settings::AppSettings::save_history(&history);
+    let _ = app.emit("murmur://history-updated", &history);
+    history
+}
+
+#[tauri::command]
+pub fn clear_voice_history(app: AppHandle) -> Result<(), String> {
+    let empty: Vec<crate::settings::VoiceHistoryItem> = Vec::new();
+    let _ = crate::settings::AppSettings::save_history(&empty);
+    let _ = app.emit("murmur://history-updated", &empty);
+    Ok(())
 }
 
 #[tauri::command]

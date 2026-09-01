@@ -47,8 +47,12 @@ impl TranscriberState {
 
         // Build inference parameters - use Beam Search for larger models to improve accuracy
         let mut params = match self.model {
-            WhisperModel::Tiny | WhisperModel::Base => FullParams::new(SamplingStrategy::Greedy { best_of: 1 }),
-            WhisperModel::Small | WhisperModel::Medium => FullParams::new(SamplingStrategy::BeamSearch { beam_size: 5, patience: -1.0 }),
+            WhisperModel::Tiny | WhisperModel::TinyEn | WhisperModel::Base | WhisperModel::BaseEn => {
+                FullParams::new(SamplingStrategy::Greedy { best_of: 1 })
+            }
+            WhisperModel::Small | WhisperModel::SmallEn | WhisperModel::Medium | WhisperModel::MediumEn | WhisperModel::LargeV3Turbo => {
+                FullParams::new(SamplingStrategy::BeamSearch { beam_size: 5, patience: -1.0 })
+            }
         };
 
         let lang_opt = if language.is_empty() || language == "auto" {
