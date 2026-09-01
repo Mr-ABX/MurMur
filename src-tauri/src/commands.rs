@@ -304,27 +304,24 @@ fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
     // Wait a tiny bit for the clipboard to register
     std::thread::sleep(std::time::Duration::from_millis(50));
 
+    use enigo::{Enigo, Keyboard, Key, Settings, Direction};
+    let mut enigo = Enigo::new(&Settings::default())
+        .map_err(|e| anyhow::anyhow!("Failed to initialize enigo: {}", e))?;
+
     #[cfg(target_os = "macos")]
     {
-        // Use AppleScript which naturally prompts the user for Accessibility Permissions if missing
-        let output = std::process::Command::new("osascript")
-            .arg("-e")
-            .arg("tell application \"System Events\" to keystroke \"v\" using command down")
-            .output()?;
-            
-        if !output.status.success() {
-            return Err(anyhow::anyhow!("Missing Accessibility permissions."));
-        }
+        // Explicitly press Meta (Command), click 'v', and release Meta
+        // This ensures the virtual modifier is immediately released in the macOS event queue
+        enigo.key(Key::Meta, Direction::Press).map_err(|e| anyhow::anyhow!("Enigo meta press error: {}", e))?;
+        enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| anyhow::anyhow!("Enigo v click error: {}", e))?;
+        enigo.key(Key::Meta, Direction::Release).map_err(|e| anyhow::anyhow!("Enigo meta release error: {}", e))?;
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(target_os = "macos"))]
     {
-        use enigo::{Enigo, Keyboard, Key, Settings, Direction};
-        let mut enigo = Enigo::new(&Settings::default())?;
-        // Press Control down, click V, release Control — simulates Ctrl+V
-        enigo.key(Key::Control, Direction::Press)?;
-        enigo.key(Key::Unicode('v'), Direction::Click)?;
-        enigo.key(Key::Control, Direction::Release)?;
+        enigo.key(Key::Control, Direction::Press).map_err(|e| anyhow::anyhow!("Enigo ctrl press error: {}", e))?;
+        enigo.key(Key::Unicode('v'), Direction::Click).map_err(|e| anyhow::anyhow!("Enigo v click error: {}", e))?;
+        enigo.key(Key::Control, Direction::Release).map_err(|e| anyhow::anyhow!("Enigo ctrl release error: {}", e))?;
     }
 
     Ok(())

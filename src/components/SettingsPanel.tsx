@@ -380,7 +380,7 @@ export default function SettingsPanel({ state }: Props) {
     <div className="flex h-full bg-[var(--bg-base)] text-[var(--text-primary)] overflow-hidden font-sans">
       {/* Collapsible Sidebar */}
       <div
-        className={`flex flex-col bg-zinc-950/90 border-r border-white/5 relative z-10 shadow-2xl transition-all duration-300 ease-in-out select-none flex-shrink-0 ${
+        className={`flex flex-col bg-zinc-950/90 border-r border-white/5 relative z-10 shadow-2xl transition-all duration-300 ease-in-out select-none flex-shrink-0 overflow-x-hidden ${
           isSidebarCollapsed ? "w-[72px]" : "w-60"
         }`}
       >
@@ -414,7 +414,7 @@ export default function SettingsPanel({ state }: Props) {
         </div>
         
         {/* Navigation */}
-        <div className="flex-1 px-2.5 py-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
+        <div className="flex-1 px-2.5 py-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden no-scrollbar">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -759,10 +759,13 @@ export default function SettingsPanel({ state }: Props) {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="text-sm font-semibold text-[var(--text-primary)] capitalize">{model}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                99 Languages (Urdu / Multilingual)
+                              </span>
                               {model === "base" && (
-                                <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                                <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-green-500/10 text-green-400 border border-green-500/20">
                                   Recommended
                                 </span>
                               )}
