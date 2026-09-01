@@ -167,10 +167,10 @@ impl Default for TrayIconStyle {
 impl WhisperModel {
     pub fn filename(&self) -> &'static str {
         match self {
-            WhisperModel::Tiny => "ggml-tiny.en.bin",
-            WhisperModel::Base => "ggml-base.en.bin",
-            WhisperModel::Small => "ggml-small.en.bin",
-            WhisperModel::Medium => "ggml-medium.en.bin",
+            WhisperModel::Tiny => "ggml-tiny.bin",
+            WhisperModel::Base => "ggml-base.bin",
+            WhisperModel::Small => "ggml-small.bin",
+            WhisperModel::Medium => "ggml-medium.bin",
         }
     }
 
@@ -235,7 +235,7 @@ impl AppSettings {
     }
 
     pub fn models_dir() -> PathBuf {
-        let mut path = dirs::data_local_dir()
+        let mut path = dirs::data_dir()
             .unwrap_or_else(|| PathBuf::from("."));
         path.push("Murmur");
         path.push("models");
@@ -269,6 +269,20 @@ impl AppSettings {
     pub fn model_path(&self, model: &WhisperModel) -> PathBuf {
         let mut path = Self::models_dir();
         path.push(model.filename());
+        if !path.exists() {
+            // Fallback check for legacy .en.bin models
+            let legacy_name = match model {
+                WhisperModel::Tiny => "ggml-tiny.en.bin",
+                WhisperModel::Base => "ggml-base.en.bin",
+                WhisperModel::Small => "ggml-small.en.bin",
+                WhisperModel::Medium => "ggml-medium.en.bin",
+            };
+            let mut legacy_path = Self::models_dir();
+            legacy_path.push(legacy_name);
+            if legacy_path.exists() {
+                return legacy_path;
+            }
+        }
         path
     }
 

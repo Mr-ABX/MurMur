@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Mic, Cpu, Code2, Globe, ChevronRight,
   Download, CheckCircle2, Loader2, Keyboard, X, Cloud, Key, Trash2, FolderOpen, Beaker, History, FileText, Wrench, Bot, RefreshCw,
-  PanelLeftClose, PanelLeftOpen
+  PanelLeftClose, PanelLeftOpen, Copy, Check, Search
 } from "lucide-react";
 import type { AppState, WhisperModel, GemmaModel } from "../hooks/useAppState";
 import { ModernSelect } from "./ModernSelect";
@@ -19,10 +19,18 @@ interface Props {
   state: AppState;
 }
 
+export interface VoiceHistoryItem {
+  id: string;
+  text: string;
+  timestamp: number;
+  dateStr: string;
+  model: string;
+}
+
 const MODEL_INFO: Record<WhisperModel, { size: string; ram: string; speed: string; quality: string; description: string }> = {
-  tiny: { size: "75 MB", ram: "~300 MB", speed: "~50ms", quality: "Good", description: "Fastest, lowest memory. Perfect for simple dictation." },
-  base: { size: "142 MB", ram: "~500 MB", speed: "~200ms", quality: "Great", description: "Recommended. Best balance of speed and accuracy." },
-  small: { size: "466 MB", ram: "~1.5 GB", speed: "~500ms", quality: "Excellent", description: "Higher accuracy for complex, technical terms." },
+  tiny: { size: "75 MB", ram: "~300 MB", speed: "~50ms", quality: "Good", description: "Fastest multilingual model. Lowest memory footprint." },
+  base: { size: "142 MB", ram: "~500 MB", speed: "~200ms", quality: "Great", description: "Recommended. 99 languages + Urdu/Roman Urdu capable." },
+  small: { size: "466 MB", ram: "~1.5 GB", speed: "~500ms", quality: "Excellent", description: "High accuracy for mixed technical terms & accents." },
   medium: { size: "1.5 GB", ram: "~4.0 GB", speed: "~1s", quality: "Near-perfect", description: "Best accuracy. Slower on older hardware." },
 };
 
@@ -32,16 +40,19 @@ const GEMMA_MODEL_INFO: Record<GemmaModel, { size: string; ram: string; speed: s
 };
 
 const LANGUAGES = [
+  { code: "auto", name: "Auto-Detect Language" },
   { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "zh", name: "Chinese" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "ar", name: "Arabic" },
-  { code: "pt", name: "Portuguese" },
-  { code: "ru", name: "Russian" },
+  { code: "ur", name: "Urdu (اردو / Roman Urdu)" },
+  { code: "hi", name: "Hindi (हिन्दी)" },
+  { code: "es", name: "Spanish (Español)" },
+  { code: "fr", name: "French (Français)" },
+  { code: "de", name: "German (Deutsch)" },
+  { code: "zh", name: "Chinese (中文)" },
+  { code: "ja", name: "Japanese (日本語)" },
+  { code: "ko", name: "Korean (한국어)" },
+  { code: "ar", name: "Arabic (العربية)" },
+  { code: "pt", name: "Portuguese (Português)" },
+  { code: "ru", name: "Russian (Русский)" },
 ];
 
 type Tab = "notes" | "skills" | "general" | "model" | "assistant" | "cloud" | "voxcoder" | "history" | "experimental" | "about";
@@ -269,6 +280,69 @@ export default function SettingsPanel({ state }: Props) {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [lastCheckedTime, setLastCheckedTime] = useState<string | null>(null);
 
+  // Persistent voice history state (persists across app restarts and system reboots)
+  const [historyItems, setHistoryItems] = useState<VoiceHistoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("murmur_voice_history");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [searchHistory, setSearchHistory] = useState("");
+  const [copiedHistoryId, setCopiedHistoryId] = useState<string | null>(null);
+
+  // Automatically save every completed transcription to history
+  useEffect(() => {
+    if (state.transcript && state.transcript.trim()) {
+      setHistoryItems((prev) => {
+        if (prev.length > 0 && prev[0].text === state.transcript.trim()) {
+          return prev;
+        }
+        const now = new Date();
+        const newItem: VoiceHistoryItem = {
+          id: Date.now().toString(),
+          text: state.transcript.trim(),
+          timestamp: Date.now(),
+          dateStr: now.toLocaleDateString([], { month: "short", day: "numeric" }) + " • " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          model: settings.cloudProvider === "local" ? settings.model : settings.cloudProvider,
+        };
+        const updated = [newItem, ...prev].slice(0, 100);
+        try {
+          localStorage.setItem("murmur_voice_history", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+    }
+  }, [state.transcript]);
+
+  const handleCopyHistoryItem = (item: VoiceHistoryItem) => {
+    navigator.clipboard.writeText(item.text);
+    setCopiedHistoryId(item.id);
+    setTimeout(() => setCopiedHistoryId(null), 2000);
+  };
+
+  const handleDeleteHistoryItem = (id: string) => {
+    setHistoryItems((prev) => {
+      const updated = prev.filter((i) => i.id !== id);
+      try {
+        localStorage.setItem("murmur_voice_history", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handleClearAllHistory = async () => {
+    const confirmed = await ask("Are you sure you want to clear all transcription history?", {
+      title: "Clear Voice History",
+      kind: "warning",
+    });
+    if (confirmed) {
+      setHistoryItems([]);
+      localStorage.removeItem("murmur_voice_history");
+    }
+  };
+
   const handleCheckUpdates = async (isManual = true) => {
     setIsCheckingUpdates(true);
     try {
@@ -371,19 +445,6 @@ export default function SettingsPanel({ state }: Props) {
             );
           })}
         </div>
-
-        {/* Bottom Expand Hint when Collapsed */}
-        {isSidebarCollapsed && (
-          <div className="p-2 flex justify-center">
-            <button
-              onClick={() => setIsSidebarCollapsed(false)}
-              className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition-colors cursor-pointer"
-              title="Expand Sidebar"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Main Content Area */}
@@ -1051,18 +1112,93 @@ export default function SettingsPanel({ state }: Props) {
                 transition={{ duration: 0.15, ease: "easeOut" }}
                 className="max-w-3xl"
               >
-                <SectionHeader icon={<History size={16} />} title="Transcription History" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
-                  Recently transcribed text is saved here temporarily. History is cleared when the app restarts.
-                </p>
-                
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-10 shadow-sm flex flex-col items-center justify-center text-center">
-                  <div className="w-14 h-14 rounded-full bg-[var(--bg-surface-elevated)] flex items-center justify-center mb-5 border border-[var(--border-strong)]">
-                    <History size={24} className="text-[var(--text-secondary)]" />
-                  </div>
-                  <h4 className="text-base font-semibold text-[var(--text-primary)] mb-2">No History Yet</h4>
-                  <p className="text-sm text-[var(--text-secondary)] max-w-sm">Transcriptions will appear here once you start using Murmur.</p>
+                <div className="flex items-center justify-between mb-4">
+                  <SectionHeader icon={<History size={16} />} title="Voice Transcription History" />
+                  {historyItems.length > 0 && (
+                    <button
+                      onClick={handleClearAllHistory}
+                      className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/20 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                      <span>Clear All ({historyItems.length})</span>
+                    </button>
+                  )}
                 </div>
+
+                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                  Every voice dictation is automatically saved locally to your device and persists across restarts.
+                </p>
+
+                {/* Search Bar */}
+                {historyItems.length > 0 && (
+                  <div className="relative mb-5">
+                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                      type="text"
+                      placeholder="Search past voice notes and transcripts..."
+                      value={searchHistory}
+                      onChange={(e) => setSearchHistory(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 text-xs bg-zinc-900/90 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                    />
+                  </div>
+                )}
+
+                {/* History List or Empty State */}
+                {historyItems.length === 0 ? (
+                  <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-10 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="w-14 h-14 rounded-full bg-[var(--bg-surface-elevated)] flex items-center justify-center mb-5 border border-[var(--border-strong)]">
+                      <History size={24} className="text-[var(--text-secondary)]" />
+                    </div>
+                    <h4 className="text-base font-semibold text-[var(--text-primary)] mb-2">No Voice History Yet</h4>
+                    <p className="text-sm text-[var(--text-secondary)] max-w-sm">
+                      Your voice transcriptions and prompt dictations will automatically appear here once you speak.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {historyItems
+                      .filter((item) => item.text.toLowerCase().includes(searchHistory.toLowerCase()))
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="group relative bg-zinc-900/70 hover:bg-zinc-900 border border-white/5 hover:border-white/10 rounded-xl p-4 transition-all duration-200 shadow-sm"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></span>
+                              {item.dateStr}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] uppercase font-semibold text-zinc-500 tracking-wider bg-white/5 px-2 py-0.5 rounded-md">
+                                {item.model}
+                              </span>
+                              <button
+                                onClick={() => handleCopyHistoryItem(item)}
+                                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                title="Copy to Clipboard"
+                              >
+                                {copiedHistoryId === item.id ? (
+                                  <Check size={14} className="text-emerald-400" />
+                                ) : (
+                                  <Copy size={14} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteHistoryItem(item.id)}
+                                className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Delete from History"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-[13px] text-zinc-200 leading-relaxed select-text font-normal whitespace-pre-wrap">
+                            {item.text}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </motion.div>
             )}
 

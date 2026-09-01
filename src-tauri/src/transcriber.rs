@@ -51,14 +51,19 @@ impl TranscriberState {
             WhisperModel::Small | WhisperModel::Medium => FullParams::new(SamplingStrategy::BeamSearch { beam_size: 5, patience: -1.0 }),
         };
 
-        params.set_language(Some(language));
+        let lang_opt = if language.is_empty() || language == "auto" {
+            None
+        } else {
+            Some(language)
+        };
+        params.set_language(lang_opt);
         params.set_translate(false);
         params.set_print_special(false);
         params.set_print_progress(false);
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
         params.set_token_timestamps(false);
-        params.set_n_threads(num_cpus::get().min(8) as i32);
+        params.set_n_threads(num_cpus::get().min(4) as i32);
         params.set_no_context(true);
 
         let mut state = ctx.create_state()
