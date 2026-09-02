@@ -20,19 +20,10 @@
 ---
 
 > [!NOTE]
-> ### 🚀 MurMur v0.3.0 Release
-> **MurMur v0.3.0 is live with major upgrades:**
+> ### 💬 A Note from the Creator — Active Beta & Early MVP Stage
+> Hey there! 👋 **MurMur is currently in active Public Beta (MVP).** We are building in the open and shipping rapid refinements, squashing bugs, and continuously tuning performance every day. If you encounter any rough edges or have feature suggestions, please bear with us — we are working relentlessly to craft the ultimate ambient voice AI operating system for you.
 > 
-> - 🏝️ **Dynamic Island & MacBook Notch**: Smooth fluid spring physics, Apple Intelligence glowing sinusoidal AI wave, and auto-hidden activation.
-> - ⚡ **Native CoreAudio 60 FPS Audio Engine**: Sub-millisecond RMS level streaming from Rust to UI with 0ms visual latency.
-> - 🎙️ **100% Local Whisper Voice Dictation**: Instant auto-paste into active apps (`Option+Space` / custom shortcut).
-> - 🧑‍💻 **VoxCoder Mode**: Smart voice formatting for developers (`camelCase`, `snake_case`, brackets, symbols).
-> - 🛠️ **Upcoming in Future Roadmap**:
->   - 🤖 **Screen-Aware AI Vision Assistant**: In active development.
->   - 📝 **Auto Voice Note-Taking & Tasks**: In active development.
->   - Built-in embedded GGUF engine for 100% offline assistant reasoning.
-> 
-> 💬 *Found a bug or have a suggestion? We'd love to hear from you! Please [open an Issue](https://github.com/Mr-ABX/MurMur/issues) or join the discussion.*
+> *Found a bug or have an idea? Please [open an Issue](https://github.com/Mr-ABX/MurMur/issues) or join the discussion — we'd love to hear from you!*
 
 ---
 
@@ -45,7 +36,8 @@ Tired of expensive **$15–$20/month subscriptions**, cloud audio logging, and h
 | Feature | 🎙️ **MurMur** | ☁️ **Wispr Flow** | 🦦 **Otter.ai** | 🏷️ **Superwhisper** | 🍎 **MacWhisper Pro** |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Pricing** | **100% Free & Open-Source** | $15 / month | $10–$20 / month | $8.99 / mo or $199 | €29 – €49 (Pro) |
-| **Audio Privacy** | **100% Local (Never leaves device)** | Sent to Cloud | Sent to Cloud | Hybrid / Local | Local |
+| **Audio Privacy** | **100% Local (Zero data leaves device)** | Sent to Cloud | Sent to Cloud | Hybrid / Local | Local |
+| **Inference Support** | **Hybrid: 100% Local + Free Cloud (Groq, Gemini, Deepgram)** | Cloud Only (Proprietary) | Cloud Only | Local + Paid Credits | Local Only (Cloud Pro extra) |
 | **Disk Footprint** | **~150 MB (Base model)** | 500 MB+ | Web / Mobile | 1.2 GB+ | 1.5 GB+ |
 | **RAM Usage** | **~35 MB Idle (~120MB Peak)** | ~250 MB+ | ~300 MB+ | ~400 MB+ | ~500 MB+ |
 | **Universal Auto-Paste** | **Instant (Zero popups)** | Yes | ❌ (Manual Copy) | Yes | Manual / Dictation |
@@ -58,6 +50,7 @@ Tired of expensive **$15–$20/month subscriptions**, cloud audio logging, and h
 ### 🚀 Why Creators & Developers Choose MurMur:
 
 - 💸 **100% Free Forever**: No subscriptions, no hidden token limits, no paywalls, and no credit card required.
+- 🌐 **Hybrid Local + Free Cloud Freedom**: Choose between **100% offline private Whisper models** on your hardware (CPU/GPU) or plug in free API keys for ultra-fast cloud inference (**Google Gemini 2.0 Flash**, **Groq Whisper LPU**, or **Deepgram Nova-2**).
 - 🪶 **Ultra-Lightweight (~150 MB Disk & ~35 MB Idle RAM)**: Unlike heavy Electron or Python apps, MurMur is compiled natively with **Rust & Tauri v2**, consuming negligible system memory so your computer stays blazing fast.
 - ⚡ **Seamless "Type Anywhere" Dictation**: Press your shortcut (`Option+Space` / customizable), speak naturally at 150+ words per minute, and release. MurMur instantly types your words directly into Cursor, VS Code, Slack, Notion, Claude, or ChatGPT.
 - 🏝️ **Dynamic Island & Fluid Wave**: Minimal floating pill that expands dynamically when you speak and tucks away automatically when you're done.
@@ -79,6 +72,7 @@ With **v0.3.0**, MurMur introduces the **Dynamic Island** with smooth spring ani
 | Feature | Status | Description |
 | :--- | :---: | :--- |
 | **100% Local Whisper Dictation** | ✅ **Live** | Zero-latency, private on-device speech transcription via `whisper.cpp`. |
+| **Hybrid Local & Free Cloud Inference** | ✅ **Live** | Switch between local Whisper models and free-tier cloud APIs (Groq, Gemini, Deepgram). |
 | **Dynamic Island & Notch Overlay** | ✅ **Live** | Interactive floating pill with spring physics and auto-hidden activation. |
 | **Fluid AI Wave Visualizer** | ✅ **Live** | Apple Intelligence glowing sinusoidal wave driven by real-time audio levels. |
 | **VoxCoder Mode** | ✅ **Live** | Formats spoken programming syntax into `camelCase`, `snake_case`, and symbols. |
