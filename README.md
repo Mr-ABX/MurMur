@@ -4,11 +4,16 @@
   <p><strong>Lightning-fast local Whisper dictation, Dynamic Notch overlay, and screen-aware AI assistant for macOS & Windows.</strong></p>
 
   [![Version: v0.3.0](https://img.shields.io/badge/Version-v0.3.0-8b5cf6.svg?style=flat-square&logo=github)](https://github.com/Mr-ABX/MurMur/releases/tag/v0.3.0)
+  [![GitHub Stars](https://img.shields.io/github/stars/Mr-ABX/MurMur?style=flat-square&logo=github&color=eab308)](https://github.com/Mr-ABX/MurMur/stargazers)
   [![Release: Download](https://img.shields.io/badge/Release-Download%20Installer-5dd99e.svg?style=flat-square&logo=apple)](https://github.com/Mr-ABX/MurMur/releases/latest)
   [![License: MIT](https://img.shields.io/badge/License-MIT-7c6df2.svg?style=flat-square)](https://opensource.org/licenses/MIT)
   [![Platform: macOS | Windows](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows-38bdf8.svg?style=flat-square)]()
   [![Tauri v2](https://img.shields.io/badge/Built%20with-Tauri%20v2-f06ba0.svg?style=flat-square)](https://tauri.app/)
   [![Whisper.cpp](https://img.shields.io/badge/Powered%20by-Whisper.cpp-c4b5fd.svg?style=flat-square)](https://github.com/ggerganov/whisper.cpp)
+
+  <br>
+
+  <p>⭐ <strong>If you love what we're building, please consider starring this repository — it means the world to us and helps more developers discover MurMur!</strong> ⭐</p>
 </div>
 
 <br>
