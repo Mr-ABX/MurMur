@@ -94,9 +94,18 @@ Download the latest pre-compiled installer for your operating system:
 
 👉 **[Download MurMur from GitHub Releases](https://github.com/Mr-ABX/MurMur/releases/latest)**
 
-- **macOS:** Download **`Murmur_0.3.0_aarch64.dmg`** (or Intel x64), open the `.dmg`, and drag MurMur into `/Applications`.
-- **Windows:** Download **`Murmur_0.3.0_x64-setup.exe`** or **`.msi`** installer.
-- Install and run! Allow microphone and accessibility permissions on first launch.
+- **macOS (Apple Silicon — M1/M2/M3/M4)**: Download **`Murmur_0.3.0_aarch64.dmg`** or **`Murmur_aarch64.app.tar.gz`**
+- **macOS (Intel — x86_64)**: Download **`Murmur_0.3.0_x64.dmg`**
+- **Windows (64-bit)**: Download **`Murmur_0.3.0_x64-setup.exe`** or **`.msi`** installer
+
+### 💻 Minimum System Requirements:
+| Platform | Minimum OS Version | Recommended | Architecture |
+| :--- | :--- | :--- | :--- |
+| **macOS (Apple Silicon)** | **macOS 11.0 (Big Sur)** | macOS 14 (Sonoma) / 15 (Sequoia) | Apple Silicon (`aarch64`) |
+| **macOS (Intel)** | **macOS 10.15 (Catalina)** | macOS 12 (Monterey) / 13 (Ventura) | Intel 64-bit (`x86_64`) |
+| **Windows** | **Windows 10 (64-bit, 1809+)** | Windows 11 (64-bit) | 64-bit (`x64`) |
+
+- *Note for macOS*: Allow Microphone and Accessibility permissions on first launch.
 
 ---
 
