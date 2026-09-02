@@ -3,7 +3,7 @@
   <h1>MurMur: Ambient AI Voice & Assistant Operating System 🎙️⚡</h1>
   <p><strong>Lightning-fast local Whisper dictation, Dynamic Notch overlay, and screen-aware AI assistant for macOS & Windows.</strong></p>
 
-  [![Version: v0.2.0 (MVP)](https://img.shields.io/badge/Version-v0.2.0%20(MVP)-8b5cf6.svg?style=flat-square&logo=github)](https://github.com/Mr-ABX/MurMur/releases/tag/v0.2.0)
+  [![Version: v0.3.0](https://img.shields.io/badge/Version-v0.3.0-8b5cf6.svg?style=flat-square&logo=github)](https://github.com/Mr-ABX/MurMur/releases/tag/v0.3.0)
   [![Release: Download](https://img.shields.io/badge/Release-Download%20Installer-5dd99e.svg?style=flat-square&logo=apple)](https://github.com/Mr-ABX/MurMur/releases/latest)
   [![License: MIT](https://img.shields.io/badge/License-MIT-7c6df2.svg?style=flat-square)](https://opensource.org/licenses/MIT)
   [![Platform: macOS | Windows](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows-38bdf8.svg?style=flat-square)]()
@@ -20,14 +20,14 @@
 ---
 
 > [!NOTE]
-> ### 🚀 MVP (Minimum Viable Product) Notice
-> **MurMur v0.2.0 is currently in active Early Access / MVP stage.**
+> ### 🚀 MurMur v0.3.0 Release
+> **MurMur v0.3.0 is live with major upgrades:**
 > 
-> - ✅ **Fully Functional in MVP**:
->   - **100% Local Whisper Voice Dictation**: Instant auto-paste into active apps (`Cmd+Shift+Space` / `Ctrl+Shift+Space`).
->   - **Dynamic Notch & Floating Island**: Real-time RMS voice waveforms, collapsible 3-page workspace, and trackpad swipe gestures.
->   - **Screen AI Assistant**: Instant multi-monitor screenshot capture routed through **Google Gemini 2.0 Flash API** or local **Ollama Gemma**.
->   - **Natural Language Intent Router**: Voice triggers like *"Take a note: ..."* or *"Add task: ..."* auto-save to local workspace tabs.
+> - 🏝️ **Dynamic Island & MacBook Notch**: Smooth fluid spring physics, Apple Intelligence glowing sinusoidal AI wave, and auto-hidden activation.
+> - ⚡ **Native CoreAudio 60 FPS Audio Engine**: Sub-millisecond RMS level streaming from Rust to UI with 0ms visual latency.
+> - 🎙️ **100% Local Whisper Voice Dictation**: Instant auto-paste into active apps (`Option+Space` / custom shortcut).
+> - 🧑‍💻 **VoxCoder Mode**: Smart voice formatting for developers (`camelCase`, `snake_case`, brackets, symbols).
+> - 🤖 **Screen AI Assistant & Notes**: Screen context capture + voice notes and task routing.
 > - 🛠️ **Upcoming in Future Roadmap**:
 >   - Built-in embedded GGUF engine for 100% offline assistant reasoning.
 >   - Customizable global hotkey manager.
