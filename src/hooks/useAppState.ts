@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
 
 export type RecordingState = "idle" | "recording" | "transcribing" | "done" | "error";
 export type WhisperModel =
@@ -48,6 +48,13 @@ export interface AppSettings {
   visualizerStyle?: "wave" | "bars";
 }
 
+export interface DownloadProgress {
+  model?: string;
+  progress: number;
+  downloaded: number;
+  total: number;
+}
+
 export interface AppState {
   recordingState: RecordingState;
   transcript: string;
@@ -58,7 +65,7 @@ export interface AppState {
   isDownloading: boolean;
   downloadingModel: WhisperModel | null;
   downloadingGemmaModel: GemmaModel | null;
-  downloadProgress: { progress: number, downloaded: number, total: number };
+  downloadProgress: DownloadProgress;
   error: string | null;
   startRecording: () => void;
   stopRecording: () => void;
@@ -67,6 +74,7 @@ export interface AppState {
   deleteModel: (model: WhisperModel) => void;
   downloadGemmaModel: (model: GemmaModel) => void;
   deleteGemmaModel: (model: GemmaModel) => void;
+  refreshModelsStatus: () => Promise<void>;
   clearTranscript: () => void;
 }
 
@@ -97,10 +105,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   widgetPetEnabled: false,
   gemmaModel: null,
   autoUpdateCheck: true,
-  visibilityMode: "alwayson",
-  notchStyle: "macbook",
+  visibilityMode: "autohidden",
+  notchStyle: "dynamicisland",
   activationMode: "toggle",
-  visualizerStyle: "bars",
+  visualizerStyle: "wave",
 };
 
 export function useAppState(): AppState {
@@ -126,7 +134,7 @@ export function useAppState(): AppState {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingModel, setDownloadingModel] = useState<WhisperModel | null>(null);
   const [downloadingGemmaModel, setDownloadingGemmaModel] = useState<GemmaModel | null>(null);
-  const [downloadProgress, setDownloadProgress] = useState({ progress: 0, downloaded: 0, total: 0 });
+  const [downloadProgress, setDownloadProgress] = useState<DownloadProgress>({ model: "", progress: 0, downloaded: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
 
   // Listen to backend events
@@ -215,14 +223,18 @@ export function useAppState(): AppState {
           setDownloadingModel(null);
           setTimeout(() => setRecordingState("idle"), 3000);
         }),
-        await listen<{ progress: number, downloaded: number, total: number }>("murmur://download-progress", (e) => {
+        await listen<DownloadProgress>("murmur://download-progress", (e) => {
           setDownloadProgress(e.payload);
+          setIsDownloading(true);
+          if (e.payload.model) {
+            setDownloadingModel(e.payload.model as WhisperModel);
+          }
         }),
         await listen<WhisperModel>("murmur://model-downloaded", (e) => {
           setIsModelDownloaded((prev) => ({ ...prev, [e.payload]: true }));
           setIsDownloading(false);
           setDownloadingModel(null);
-          setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
+          setDownloadProgress({ model: "", progress: 0, downloaded: 0, total: 0 });
           setSettings((prev) => {
             const next = { ...prev, model: e.payload };
             invoke("save_settings", { settings: next }).catch(console.error);
@@ -233,7 +245,7 @@ export function useAppState(): AppState {
           setIsGemmaModelDownloaded((prev) => ({ ...prev, [e.payload]: true }));
           setIsDownloading(false);
           setDownloadingGemmaModel(null);
-          setDownloadProgress({ progress: 0, downloaded: 0, total: 0 });
+          setDownloadProgress({ model: "", progress: 0, downloaded: 0, total: 0 });
         }),
         await listen<AppSettings>("murmur://settings-updated", (e) => {
           setSettings(e.payload);
@@ -277,8 +289,21 @@ export function useAppState(): AppState {
       invoke("save_settings", { settings: merged }).catch((err) => {
         console.error("Failed to save settings:", err);
       });
+      // Broadcast across all Tauri webviews immediately
+      emit("murmur://settings-updated", merged).catch(() => {});
       return merged;
     });
+  }, []);
+
+  const refreshModelsStatus = useCallback(async () => {
+    try {
+      const models = await invoke<Record<WhisperModel, boolean>>("get_downloaded_models");
+      if (models) setIsModelDownloaded(models);
+      const gemma = await invoke<Record<GemmaModel, boolean>>("get_downloaded_gemma_models");
+      if (gemma) setIsGemmaModelDownloaded(gemma);
+    } catch (err) {
+      console.error("Failed to refresh models status:", err);
+    }
   }, []);
 
   const downloadModel = useCallback(async (model: WhisperModel) => {
@@ -356,6 +381,7 @@ export function useAppState(): AppState {
     deleteModel,
     downloadGemmaModel,
     deleteGemmaModel,
+    refreshModelsStatus,
     clearTranscript,
   };
 }

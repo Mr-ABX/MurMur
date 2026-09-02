@@ -110,9 +110,46 @@ pub fn ensure_model_loaded(
     settings: &AppSettings,
 ) -> Result<()> {
     if !transcriber.is_loaded() || transcriber.model != settings.model {
-        let model_path = settings.model_path(&settings.model);
+        let mut target_model = settings.model.clone();
+        let mut model_path = settings.model_path(&target_model);
+
+        if !model_path.exists() {
+            // Find any available downloaded model so transcription NEVER breaks!
+            let fallback_candidates = [
+                WhisperModel::BaseEn,
+                WhisperModel::SmallEn,
+                WhisperModel::TinyEn,
+                WhisperModel::Base,
+                WhisperModel::Small,
+                WhisperModel::Tiny,
+                WhisperModel::MediumEn,
+                WhisperModel::Medium,
+                WhisperModel::LargeV3Turbo,
+            ];
+            let mut found = false;
+            for candidate in &fallback_candidates {
+                let p = settings.model_path(candidate);
+                if p.exists() {
+                    log::warn!(
+                        "Selected model {:?} not downloaded yet ({:?}). Seamlessly using available model {:?} ({:?})",
+                        target_model, model_path, candidate, p
+                    );
+                    target_model = candidate.clone();
+                    model_path = p;
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                return Err(anyhow!(
+                    "No downloaded Whisper model found in {:?}. Please open Settings -> AI Model to download one.",
+                    AppSettings::models_dir()
+                ));
+            }
+        }
+
         transcriber.load_model(&model_path)?;
-        transcriber.model = settings.model.clone();
+        transcriber.model = target_model;
     }
     Ok(())
 }
@@ -128,7 +165,7 @@ fn encode_wav(audio: &[f32]) -> Result<Vec<u8>> {
     let mut writer = hound::WavWriter::new(&mut cursor, spec)?;
     for &sample in audio {
         // Convert f32 [-1.0, 1.0] to i16
-        let amplitude = (sample * std::i16::MAX as f32) as i16;
+        let amplitude = (sample * i16::MAX as f32) as i16;
         writer.write_sample(amplitude)?;
     }
     writer.finalize()?;

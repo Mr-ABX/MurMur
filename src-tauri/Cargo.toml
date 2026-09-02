@@ -1,6 +1,6 @@
 [package]
 name = "murmur"
-version = "0.2.0"
+version = "0.3.0"
 description = "Murmur - Local voice-to-text for AI coding tools"
 authors = ["Murmur Team"]
 license = "MIT"

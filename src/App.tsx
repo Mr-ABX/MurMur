@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import OverlayWindow from "./components/OverlayWindow";
 import SettingsPanel from "./components/SettingsPanel";
@@ -22,6 +22,24 @@ function App() {
     windowLabel === "notch" ? "notch" :
     "tray"
   );
+
+  // Global scroll listener: shows sleek scrollbar only while actively scrolling
+  useEffect(() => {
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleScroll = () => {
+      document.body.classList.add("is-scrolling");
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        document.body.classList.remove("is-scrolling");
+      }, 750);
+    };
+
+    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll, { capture: true });
+      if (scrollTimer) clearTimeout(scrollTimer);
+    };
+  }, []);
 
   return (
     <AnimatePresence mode="wait">

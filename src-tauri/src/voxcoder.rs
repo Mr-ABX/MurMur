@@ -10,7 +10,7 @@ pub fn apply_voxcoder_mode(text: &str) -> String {
     // Apply phrase replacements (order matters - longer phrases first)
     let replacements = get_replacements();
     let mut sorted_keys: Vec<&str> = replacements.keys().map(|s| s.as_ref()).collect();
-    sorted_keys.sort_by(|a, b| b.len().cmp(&a.len())); // longest first
+    sorted_keys.sort_by_key(|b| std::cmp::Reverse(b.len())); // longest first
 
     for key in sorted_keys {
         let pattern = format!(r"(?i)\b{}\b", regex_escape(key));

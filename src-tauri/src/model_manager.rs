@@ -9,6 +9,7 @@ use tokio::io::AsyncWriteExt;
 
 #[derive(Clone, Serialize)]
 pub struct ProgressPayload {
+    pub model: String,
     pub progress: u32,
     pub downloaded: u64,
     pub total: u64,
@@ -26,10 +27,11 @@ pub async fn download_model_file(
         tokio::fs::create_dir_all(parent).await?;
     }
 
-    log::info!("Downloading model from: {}", url);
+    log::info!("Downloading model '{}' from: {}", model_name, url);
 
     let client = Client::builder()
-        .timeout(std::time::Duration::from_secs(600))
+        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Murmur/0.2.0")
+        .timeout(std::time::Duration::from_secs(1200))
         .build()?;
 
     let response = client.get(url).send().await?;
@@ -43,7 +45,16 @@ pub async fn download_model_file(
     let mut last_reported = 0u32;
     let mut last_reported_bytes = 0u64;
 
-    let mut file = tokio::fs::File::create(dest_path).await?;
+    // Immediately emit an initial progress event (0%) so frontend syncs instantly
+    let _ = app.emit("murmur://download-progress", ProgressPayload {
+        model: model_name.to_string(),
+        progress: 0,
+        downloaded: 0,
+        total,
+    });
+
+    let temp_path = dest_path.with_extension("download");
+    let mut file = tokio::fs::File::create(&temp_path).await?;
     let mut stream = response.bytes_stream();
 
     use futures_util::StreamExt;
@@ -63,14 +74,15 @@ pub async fn download_model_file(
             }
         }
         
-        // Always report at least every 500KB to keep the UI feeling responsive
-        if downloaded - last_reported_bytes > 500_000 {
+        // Report at least every 250KB to keep the UI smooth and responsive
+        if downloaded.saturating_sub(last_reported_bytes) > 250_000 {
             should_report = true;
         }
 
         if should_report {
             last_reported_bytes = downloaded;
             let _ = app.emit("murmur://download-progress", ProgressPayload {
+                model: model_name.to_string(),
                 progress,
                 downloaded,
                 total,
@@ -79,6 +91,17 @@ pub async fn download_model_file(
     }
 
     file.flush().await?;
+    drop(file);
+    tokio::fs::rename(&temp_path, dest_path).await?;
+
+    // Final 100% emit
+    let _ = app.emit("murmur://download-progress", ProgressPayload {
+        model: model_name.to_string(),
+        progress: 100,
+        downloaded,
+        total: if total > 0 { total } else { downloaded },
+    });
+
     log::info!("Model '{}' downloaded successfully to {:?}", model_name, dest_path);
 
     Ok(())
@@ -86,7 +109,7 @@ pub async fn download_model_file(
 
 pub async fn download_gemma_model(
     model: &crate::settings::GemmaModel,
-    dest_dir: &PathBuf,
+    dest_dir: &std::path::Path,
     app: &AppHandle,
 ) -> Result<()> {
     let repo_id = model.repo_id();

@@ -38,11 +38,12 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
 
     let settings = state.settings.lock().unwrap().clone();
 
-    // Show the visualizer
+    // Show the visualizer FIRST
     overlay::show_visualizer(app, &settings);
 
-    // Emit event to frontend
-    app.emit("murmur://recording-started", ())?;
+    // Emit event to all windows and specifically to the notch window
+    let _ = app.emit("murmur://recording-started", ());
+    let _ = app.emit_to("notch", "murmur://recording-started", ());
 
     // Start audio capture in background
     let app_clone = app.clone();
@@ -84,16 +85,24 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
         }
 
         let mut last_processed_len = 0;
+        let mut frame_count: u64 = 0;
 
-        // Wait until recording is stopped
+        // Wait until recording is stopped (60 FPS Native Audio Snapshot loop)
         loop {
-            std::thread::sleep(std::time::Duration::from_millis(25));
+            std::thread::sleep(std::time::Duration::from_millis(16));
             let recording = is_recording.lock().unwrap();
 
             if *recording {
-                let level = audio.get_recent_rms(2400);
-                let _ = app_clone.emit("audio_level", level);
-                let _ = app_clone.emit_to("notch", "audio_level", level);
+                let snapshot = audio.get_recent_snapshot(1024);
+                let _ = app_clone.emit("audio_level", snapshot.level);
+                let _ = app_clone.emit_to("notch", "audio_level", snapshot.level);
+                let _ = app_clone.emit("murmur://audio-snapshot", &snapshot);
+                let _ = app_clone.emit_to("notch", "murmur://audio-snapshot", &snapshot);
+
+                frame_count = frame_count.wrapping_add(1);
+                if frame_count % 90 == 0 {
+                    log::info!("[audio_level] emitting level={:.4}", snapshot.level);
+                }
 
                 if is_live && is_deepgram {
                     if let Ok(samples) = audio.get_samples() {
@@ -113,6 +122,7 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
                 match audio.stop() {
                     Ok(samples) => {
                         let _ = app_clone.emit("murmur://recording-stopped", ());
+                        let _ = app_clone.emit_to("notch", "murmur://recording-stopped", ());
                         
                         // Close tx_audio to end the WS loop
                         drop(tx_audio);
@@ -223,12 +233,14 @@ async fn handle_transcription(
     transcriber: std::sync::Arc<std::sync::Mutex<TranscriberState>>,
 ) {
     if samples.is_empty() {
+        overlay::hide_visualizers(&app, &settings);
         let _ = app.emit("murmur://error", "No audio captured");
         return;
     }
 
     let max_amp = samples.iter().map(|s| s.abs()).fold(0.0f32, |a, b| a.max(b));
     if max_amp < 0.005 {
+        overlay::hide_visualizers(&app, &settings);
         let _ = app.emit("murmur://error", "Microphone input was silent (is it muted?)");
         return;
     }
@@ -254,6 +266,8 @@ async fn handle_transcription_result(
         return;
     }
 
+    log::info!("Transcribed text successfully: {:?}", text);
+
     // Apply VoxCoder mode if enabled
     if settings.voxcoder_mode {
         text = voxcoder::apply_voxcoder_mode(&text);
@@ -261,6 +275,7 @@ async fn handle_transcription_result(
 
     // Emit transcript to UI
     let _ = app.emit("murmur://transcript-done", &text);
+    let _ = app.emit_to("notch", "murmur://transcript-done", &text);
 
     // Save to persistent backend history
     let mut history = crate::settings::AppSettings::load_history();
@@ -281,17 +296,19 @@ async fn handle_transcription_result(
     }
     let _ = crate::settings::AppSettings::save_history(&history);
     let _ = app.emit("murmur://history-updated", &history);
+    let _ = app.emit_to("notch", "murmur://history-updated", &history);
+    let _ = app.emit_to("settings", "murmur://history-updated", &history);
+
+    // Hide visualizer if auto_hidden mode is active
+    overlay::hide_visualizers(&app, &settings);
 
     // Auto-paste if enabled
     if settings.auto_paste {
-        // Hide overlay immediately so macOS returns focus to the user's text editor
-        overlay::hide_visualizers(&app, &settings);
-        
         // Small delay to allow macOS to finish switching focus
         std::thread::sleep(std::time::Duration::from_millis(150));
         if let Err(e) = paste_text(&app, &text) {
             log::error!("Failed to paste text: {}", e);
-            let _ = app.emit("murmur://error", format!("Accessibility Permission Required: Go to System Settings -> Privacy & Security -> Accessibility and enable it for your Terminal/IDE."));
+            let _ = app.emit("murmur://error", "Accessibility Permission Required: Go to System Settings -> Privacy & Security -> Accessibility and enable it for your Terminal/IDE.".to_string());
         }
     }
 }
@@ -309,10 +326,18 @@ fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         // Safe, non-panicking AppleScript keystroke
-        let _ = std::process::Command::new("osascript")
+        let output = std::process::Command::new("osascript")
             .arg("-e")
             .arg("tell application \"System Events\" to keystroke \"v\" using command down")
             .output();
+        if let Ok(out) = output {
+            if out.status.success() {
+                log::info!("Pasted text into active application via AppleScript");
+            } else {
+                let err_msg = String::from_utf8_lossy(&out.stderr);
+                log::warn!("AppleScript keystroke warning: {}", err_msg);
+            }
+        }
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -371,6 +396,7 @@ pub fn save_settings(
     {
         if settings.show_dock_icon {
             let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
+            crate::overlay::set_dock_icon();
         } else {
             let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
         }
@@ -401,7 +427,14 @@ pub fn save_settings(
         }
     }
 
+    // Update global shortcut dynamically
+    crate::setup_global_shortcut(&app, &settings.hotkey);
+
+    // Broadcast updated settings to ALL webviews
     let _ = app.emit("murmur://settings-updated", &settings);
+    let _ = app.emit_to("notch", "murmur://settings-updated", &settings);
+    let _ = app.emit_to("settings", "murmur://settings-updated", &settings);
+    let _ = app.emit_to("overlay", "murmur://settings-updated", &settings);
 
     res
 }

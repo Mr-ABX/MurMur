@@ -141,27 +141,42 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
     return { mod1, mod2, key3 };
   };
 
-  const isModifier = (k: string) => ["Shift", "Option", "Alt", "Control", "Command"].includes(k);
   const { mod1, mod2, key3 } = parseHotkey(hotkey);
 
   const handleUpdate = (newMod1: string, newMod2: string, newKey3: string) => {
-    let finalMod2 = newMod2;
-    let finalKey3 = newKey3;
-
-    // If Key 2 is a modifier and Key 3 is 'none', default Key 3 to 'Space' to ensure a valid OS hotkey
-    if (isModifier(finalMod2) && (!finalKey3 || finalKey3 === "none")) {
-      finalKey3 = "Space";
-    }
-
     let result = newMod1;
-    if (finalMod2 && finalMod2 !== "none") {
-      result += `+${finalMod2}`;
+    if (newMod2 && newMod2 !== "none") {
+      result += `+${newMod2}`;
     }
-    if (finalKey3 && finalKey3 !== "none") {
-      result += `+${finalKey3}`;
+    if (newKey3 && newKey3 !== "none") {
+      result += `+${newKey3}`;
     }
     onChange(result);
   };
+
+  const isKey2Modifier = ["Shift", "Option", "Alt", "Control", "Command"].includes(mod2);
+  const isKey2NormalKey = mod2 && mod2 !== "none" && !isKey2Modifier;
+  const isKey3NormalKey = key3 && key3 !== "none";
+
+  // A valid OS global shortcut requires at least 1 non-modifier key
+  const hasValidMainKey = isKey2NormalKey || isKey3NormalKey;
+
+  const presets = isMac
+    ? [
+        { label: "⌃⌥ Space (3-Key)", value: "Control+Option+Space" },
+        { label: "⌃ Space (2-Key)", value: "Control+Space" },
+        { label: "⌥ Space (2-Key)", value: "Option+Space" },
+        { label: "⌘ Space (2-Key)", value: "Command+Space" },
+        { label: "⌥ D (Dictate)", value: "Option+D" },
+        { label: "⌘⇧ Space (Default)", value: "Command+Shift+Space" },
+      ]
+    : [
+        { label: "Ctrl+Alt+Space", value: "Control+Alt+Space" },
+        { label: "Ctrl + Space", value: "Control+Space" },
+        { label: "Alt + Space", value: "Alt+Space" },
+        { label: "Alt + D", value: "Alt+D" },
+        { label: "Ctrl+Shift+Space", value: "Control+Shift+Space" },
+      ];
 
   const mod1Options = isMac
     ? [
@@ -177,10 +192,11 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
       ];
 
   const mod2Options = [
+    { value: "none", label: "— None —" },
+    { value: "Space", label: "Spacebar" },
     { value: "Shift", label: isMac ? "⇧ Shift" : "Shift" },
     { value: isMac ? "Option" : "Alt", label: isMac ? "⌥ Option" : "Alt" },
     { value: isMac ? "Control" : "Control", label: isMac ? "⌃ Control" : "Ctrl" },
-    { value: "Space", label: "Spacebar" },
     { value: "D", label: "D (Dictate)" },
     { value: "K", label: "K" },
     { value: "A", label: "A" },
@@ -219,7 +235,28 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2.5 w-full max-w-[340px]">
+    <div className="flex flex-col gap-2.5 w-full max-w-[360px]">
+      {/* 1-Click Popular Presets */}
+      <div className="flex flex-wrap items-center gap-1.5 pb-1">
+        {presets.map((p) => {
+          const isSelected = hotkey === p.value;
+          return (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => onChange(p.value)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-all ${
+                isSelected
+                  ? "bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-600/30"
+                  : "bg-zinc-900/90 border-white/5 text-zinc-400 hover:text-zinc-200 hover:border-white/10"
+              }`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="grid grid-cols-3 gap-1.5">
         <div>
           <label className="text-[10px] font-semibold text-zinc-400 mb-1 block">Key 1 (Modifier)</label>
@@ -240,7 +277,7 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
         </div>
 
         <div>
-          <label className="text-[10px] font-semibold text-zinc-400 mb-1 block">Key 3 (Optional)</label>
+          <label className="text-[10px] font-semibold text-zinc-400 mb-1 block">Key 3</label>
           <ModernSelect
             value={key3}
             onChange={(val) => handleUpdate(mod1, mod2, val)}
@@ -249,7 +286,7 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
         </div>
       </div>
 
-      {/* Live Badge Preview */}
+      {/* Live Badge Preview & Validation */}
       <div className="flex items-center justify-between pt-1 px-1">
         <div className="flex items-center gap-1.5">
           <kbd className="px-2 py-0.5 text-xs font-mono font-semibold bg-zinc-800 border border-zinc-700/80 rounded-md text-zinc-200 shadow-sm">
@@ -276,6 +313,13 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
           {key3 && key3 !== "none" ? "3-Key Combo" : "2-Key Combo"}
         </span>
       </div>
+
+      {!hasValidMainKey && (
+        <div className="text-[10px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1 flex items-center gap-1">
+          <span>⚠️</span>
+          <span>Shortcut requires a main key (e.g. Space, D, K) alongside modifiers.</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -295,6 +339,7 @@ export default function SettingsPanel({ state }: Props) {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [lastCheckedTime, setLastCheckedTime] = useState<string | null>(null);
   const [modelFilter, setModelFilter] = useState<"all" | "multi" | "en">("all");
+  const [isRefreshingModels, setIsRefreshingModels] = useState(false);
 
   // Persistent voice history state (persists across app restarts and system reboots)
   const [historyItems, setHistoryItems] = useState<VoiceHistoryItem[]>(() => {
@@ -418,7 +463,7 @@ export default function SettingsPanel({ state }: Props) {
   const handleSaveAndApply = async () => {
     setIsSaving(true);
     try {
-      await invoke("save_settings", { settings: state.settings });
+      await invoke("save_settings", { settings });
       setSavedFeedback(true);
       setTimeout(() => setSavedFeedback(false), 2500);
     } catch (err) {
@@ -466,7 +511,7 @@ export default function SettingsPanel({ state }: Props) {
               </div>
               <div className="min-w-0">
                 <h1 className="text-sm font-bold tracking-wide text-white leading-tight truncate">Murmur</h1>
-                <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Preferences</p>
+                <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Dashboard</p>
               </div>
             </div>
           ) : (
@@ -641,11 +686,11 @@ export default function SettingsPanel({ state }: Props) {
                   <SettingRow label="Visibility Mode" description="Choose when the visualizer should be shown">
                     <div className="w-full sm:w-64">
                       <ModernSelect
-                        value={settings.visibilityMode}
+                        value={settings.visibilityMode ?? "autohidden"}
                         onChange={(val) => updateSettings({ visibilityMode: val as any })}
                         options={[
+                          { value: "autohidden", label: "Show Only When Active", description: "Auto-hide when idle (Default)" },
                           { value: "alwayson", label: "Always Show", description: "Keep notch visible on screen" },
-                          { value: "autohidden", label: "Show Only When Active", description: "Auto-hide when idle" },
                         ]}
                       />
                     </div>
@@ -655,11 +700,11 @@ export default function SettingsPanel({ state }: Props) {
                     <SettingRow label="Notch Style" description="Choose the appearance of the top notch">
                       <div className="w-full sm:w-64">
                         <ModernSelect
-                          value={settings.notchStyle}
+                          value={settings.notchStyle ?? "dynamicisland"}
                           onChange={(val) => updateSettings({ notchStyle: val as any })}
                           options={[
+                            { value: "dynamicisland", label: "Dynamic Island", description: "Floating pill with smooth fluid animations (Default)" },
                             { value: "macbook", label: "MacBook Style", description: "Classic MacBook top bezel attachment" },
-                            { value: "dynamicisland", label: "Dynamic Island", description: "Floating pill with smooth fluid animations" },
                           ]}
                         />
                       </div>
@@ -680,15 +725,38 @@ export default function SettingsPanel({ state }: Props) {
                   </SettingRow>
 
                   <SettingRow label="Visualizer Style" description="Choose the animated visualizer shown in the Notch">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.visualizerStyle ?? "bars"}
-                        onChange={(val) => updateSettings({ visualizerStyle: val as any })}
-                        options={[
-                          { value: "bars", label: "📊 Equalizer Bars (Handy / Freeflow)", description: "Dynamic dancing multi-bar equalizer (Recommended)" },
-                          { value: "wave", label: "🌊 Fluid AI Wave (Apple Intelligence)", description: "Glowing sinusoidal ribbon wave" },
-                        ]}
-                      />
+                    <div className="flex flex-col gap-2 w-full sm:w-72">
+                      <div className="grid grid-cols-2 gap-2 bg-zinc-950/80 p-1 rounded-xl border border-white/5">
+                        <button
+                          type="button"
+                          onClick={() => updateSettings({ visualizerStyle: "wave" })}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                            (settings.visualizerStyle ?? "wave") === "wave"
+                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/50"
+                              : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                          }`}
+                        >
+                          <span>🌊</span>
+                          <span>Fluid AI Wave</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateSettings({ visualizerStyle: "bars" })}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                            (settings.visualizerStyle ?? "wave") === "bars"
+                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/50"
+                              : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                          }`}
+                        >
+                          <span>📊</span>
+                          <span>Equalizer Bars</span>
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-zinc-500 px-1">
+                        {(settings.visualizerStyle ?? "wave") === "wave"
+                          ? "🌊 Multi-ribbon glowing sinusoidal wave (Apple Intelligence - Default)"
+                          : "📊 Dynamic dancing multi-bar equalizer (Handy / Freeflow)"}
+                      </span>
                     </div>
                   </SettingRow>
 
@@ -856,38 +924,61 @@ export default function SettingsPanel({ state }: Props) {
                   All models run 100% locally on your device with Whisper.cpp. No cloud or internet required during transcription.
                 </p>
 
+                {/* Notice Banner & Refresh Controls */}
+                <div className="mb-5 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3 text-xs text-indigo-300">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">⚡</span>
+                    <span>
+                      <strong>Background Downloads:</strong> Models download in the background. If you started a download, click <strong>Refresh Status</strong> to check completion.
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setIsRefreshingModels(true);
+                      await state.refreshModelsStatus();
+                      setTimeout(() => setIsRefreshingModels(false), 800);
+                    }}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                  >
+                    <RefreshCw size={12} className={isRefreshingModels ? "animate-spin" : ""} />
+                    <span>Refresh Status</span>
+                  </button>
+                </div>
+
                 {/* Filter Pills */}
-                <div className="flex items-center gap-2 mb-6 p-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl w-fit">
-                  <button
-                    onClick={() => setModelFilter("all")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      modelFilter === "all"
-                        ? "bg-[var(--accent-primary)] text-white shadow-sm"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    }`}
-                  >
-                    All Models (9)
-                  </button>
-                  <button
-                    onClick={() => setModelFilter("multi")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      modelFilter === "multi"
-                        ? "bg-indigo-600 text-white shadow-sm"
-                        : "text-[var(--text-secondary)] hover:text-indigo-400"
-                    }`}
-                  >
-                    🌍 99 Languages & Urdu (5)
-                  </button>
-                  <button
-                    onClick={() => setModelFilter("en")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      modelFilter === "en"
-                        ? "bg-zinc-700 text-white shadow-sm"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    }`}
-                  >
-                    🇬🇧 English Only (4)
-                  </button>
+                <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                  <div className="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl w-fit">
+                    <button
+                      onClick={() => setModelFilter("all")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        modelFilter === "all"
+                          ? "bg-[var(--accent-primary)] text-white shadow-sm"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      All Models (9)
+                    </button>
+                    <button
+                      onClick={() => setModelFilter("multi")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        modelFilter === "multi"
+                          ? "bg-indigo-600 text-white shadow-sm"
+                          : "text-[var(--text-secondary)] hover:text-indigo-400"
+                      }`}
+                    >
+                      🌍 99 Languages & Urdu (5)
+                    </button>
+                    <button
+                      onClick={() => setModelFilter("en")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        modelFilter === "en"
+                          ? "bg-zinc-700 text-white shadow-sm"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      🇬🇧 English Only (4)
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4">
@@ -914,7 +1005,7 @@ export default function SettingsPanel({ state }: Props) {
                       const info = MODEL_INFO[model];
                       const downloaded = isModelDownloaded[model];
                       const isSelected = settings.model === model;
-                      const isThisDownloading = isDownloading && downloadingModel === model;
+                      const isThisDownloading = isDownloading && (downloadingModel === model || downloadProgress.model === model);
 
                       return (
                         <motion.div
@@ -1004,13 +1095,9 @@ export default function SettingsPanel({ state }: Props) {
                                   </div>
                                 </>
                               ) : isThisDownloading ? (
-                                <div className="flex flex-col items-center gap-1">
-                                  <Loader2 size={16} className="text-[var(--accent-primary)] animate-spin" />
-                                  <span className="text-xs text-[var(--accent-primary)] font-mono">
-                                    {downloadProgress.total > 0
-                                      ? `${downloadProgress.progress}%`
-                                      : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
-                                  </span>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs font-semibold text-indigo-400 shadow-sm">
+                                  <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                  <span>Downloading...</span>
                                 </div>
                               ) : (
                                 <button
@@ -1027,15 +1114,23 @@ export default function SettingsPanel({ state }: Props) {
                             </div>
                           </div>
 
-                          {/* Download progress bar */}
-                          {isThisDownloading && downloadProgress.total > 0 && (
-                            <div className="mt-3 h-1.5 rounded-full overflow-hidden bg-zinc-800">
-                              <motion.div
-                                className="h-full rounded-full bg-[var(--accent-primary)]"
-                                initial={{ width: "0%" }}
-                                animate={{ width: `${downloadProgress.progress}%` }}
-                                transition={{ duration: 0.2 }}
-                              />
+                          {/* Background download status bar */}
+                          {isThisDownloading && (
+                            <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
+                              <span className="flex items-center gap-2 font-medium text-indigo-300">
+                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                                Downloading in background... Click Refresh Status when completed.
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  state.refreshModelsStatus();
+                                }}
+                                className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 hover:underline cursor-pointer"
+                              >
+                                <RefreshCw size={11} />
+                                <span>Check Status</span>
+                              </button>
                             </div>
                           )}
                         </motion.div>
@@ -1156,35 +1251,39 @@ export default function SettingsPanel({ state }: Props) {
                                 </div>
                               </>
                             ) : isThisDownloading ? (
-                              <div className="flex flex-col items-center gap-1">
-                                <Loader2 size={16} className="text-[var(--accent-primary)] animate-spin" />
-                                <span className="text-xs text-[var(--accent-primary)]">
-                                  {downloadProgress.total > 0 
-                                    ? `${downloadProgress.progress}% (${(downloadProgress.downloaded / 1048576).toFixed(1)} MB)` 
-                                    : `${(downloadProgress.downloaded / 1048576).toFixed(1)} MB`}
-                                </span>
+                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs font-semibold text-indigo-400 shadow-sm">
+                                <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                <span>Downloading...</span>
                               </div>
                             ) : (
                               <button
                                 onClick={(e) => { e.stopPropagation(); downloadGemmaModel(model); }}
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium bg-[var(--bg-surface-elevated)] hover:bg-[var(--accent-primary)] border border-[var(--border-strong)] hover:border-[var(--accent-primary)] text-[var(--text-primary)] transition-all"
+                                className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
                               >
-                                <Download size={14} />
+                                <Download size={13} />
                                 Get
                               </button>
                             )}
                           </div>
                         </div>
 
-                        {/* Download progress bar */}
-                        {isThisDownloading && downloadProgress.total > 0 && (
-                          <div className="mt-3 h-1 rounded-full overflow-hidden bg-[var(--bg-base)]">
-                            <motion.div
-                              className="h-full rounded-full bg-[var(--accent-primary)]"
-                              initial={{ width: "0%" }}
-                              animate={{ width: `${downloadProgress.progress}%` }}
-                              transition={{ duration: 0.3 }}
-                            />
+                        {/* Background download status bar */}
+                        {isThisDownloading && (
+                          <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-2 font-medium text-indigo-300">
+                              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                              Downloading assistant weights in background... Click Refresh Status when completed.
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                state.refreshModelsStatus();
+                              }}
+                              className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 hover:underline cursor-pointer"
+                            >
+                              <RefreshCw size={11} />
+                              <span>Check Status</span>
+                            </button>
                           </div>
                         )}
                       </motion.div>

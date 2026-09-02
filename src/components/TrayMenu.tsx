@@ -144,7 +144,7 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
           className="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
         >
           <Settings size={14} className="text-murmur-muted" />
-          <span className="text-sm text-murmur-text">Settings</span>
+          <span className="text-sm text-murmur-text">Dashboard</span>
         </motion.button>
 
         <motion.button

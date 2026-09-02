@@ -203,9 +203,105 @@ pub fn hide_visualizers(app: &AppHandle, settings: &AppSettings) {
     }
 }
 
+/// Set macOS Dock application icon at runtime so raw binaries and dev builds show the Murmur bird icon instead of the terminal 'exec' icon
+pub fn set_dock_icon() {
+    #[cfg(target_os = "macos")]
+    {
+        use objc2::msg_send;
+        use objc2::runtime::AnyObject;
+
+        let icon_bytes = include_bytes!("../icons/icon.png");
+
+        unsafe {
+            let app_cls = objc2::ffi::objc_getClass(b"NSApplication\0".as_ptr() as *const _);
+            if app_cls.is_null() {
+                return;
+            }
+            let ns_app: *mut AnyObject = msg_send![app_cls as *mut AnyObject, sharedApplication];
+            if ns_app.is_null() {
+                return;
+            }
+
+            let data_cls = objc2::ffi::objc_getClass(b"NSData\0".as_ptr() as *const _);
+            if data_cls.is_null() {
+                return;
+            }
+            let ns_data: *mut AnyObject = msg_send![
+                data_cls as *mut AnyObject,
+                dataWithBytes: icon_bytes.as_ptr() as *const std::ffi::c_void,
+                length: icon_bytes.len()
+            ];
+            if ns_data.is_null() {
+                return;
+            }
+
+            let img_cls = objc2::ffi::objc_getClass(b"NSImage\0".as_ptr() as *const _);
+            if img_cls.is_null() {
+                return;
+            }
+            let alloc_img: *mut AnyObject = msg_send![img_cls as *mut AnyObject, alloc];
+            let ns_img: *mut AnyObject = msg_send![alloc_img, initWithData: ns_data];
+            if ns_img.is_null() {
+                return;
+            }
+
+            let _: () = msg_send![ns_app, setApplicationIconImage: ns_img];
+
+            let dock_tile: *mut AnyObject = msg_send![ns_app, dockTile];
+            if !dock_tile.is_null() {
+                let _: () = msg_send![dock_tile, display];
+            }
+        }
+    }
+}
+
+/// Apply macOS dark title bar styling matching the window background color (#09090b)
+pub fn apply_macos_window_styling(window: &tauri::WebviewWindow) {
+    #[cfg(target_os = "macos")]
+    {
+        use objc2::msg_send;
+        use objc2::runtime::AnyObject;
+
+        if let Ok(ns_win) = window.ns_window() {
+            let ns_win = ns_win as *mut AnyObject;
+            unsafe {
+                // 1. Make the title bar transparent so window background shows through
+                let _: () = msg_send![ns_win, setTitlebarAppearsTransparent: true];
+
+                // 2. Set NSWindow background color to matching dark window background (#09090b)
+                // sRGB values for #09090b: r = 9/255 = 0.0353, g = 9/255 = 0.0353, b = 11/255 = 0.0431
+                let color_cls = objc2::ffi::objc_getClass(b"NSColor\0".as_ptr() as *const _);
+                if !color_cls.is_null() {
+                    let bg_color: *mut AnyObject = msg_send![
+                        color_cls as *mut AnyObject,
+                        colorWithSRGBRed: 0.0353f64,
+                        green: 0.0353f64,
+                        blue: 0.0431f64,
+                        alpha: 1.0f64
+                    ];
+                    let _: () = msg_send![ns_win, setBackgroundColor: bg_color];
+                }
+
+                // 3. Set dark appearance (NSAppearanceNameDarkAqua)
+                let appearance_cls = objc2::ffi::objc_getClass(b"NSAppearance\0".as_ptr() as *const _);
+                if !appearance_cls.is_null() {
+                    let str_cls = objc2::ffi::objc_getClass(b"NSString\0".as_ptr() as *const _);
+                    let dark_aqua: *mut AnyObject = msg_send![str_cls as *mut AnyObject, stringWithUTF8String: b"NSAppearanceNameDarkAqua\0".as_ptr()];
+                    let appearance: *mut AnyObject = msg_send![appearance_cls as *mut AnyObject, appearanceNamed: dark_aqua];
+                    if !appearance.is_null() {
+                        let _: () = msg_send![ns_win, setAppearance: appearance];
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// Show the settings panel window
 pub fn show_settings_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("settings") {
+        apply_macos_window_styling(&window);
+        set_dock_icon();
         let _ = window.show();
         let _ = window.set_focus();
         let _ = window.center();
@@ -227,7 +323,7 @@ pub fn toggle_tray_popover(app: &AppHandle) {
 pub fn resize_notch(app: &AppHandle, expanded: bool) {
     if let Some(window) = app.get_webview_window("notch") {
         let target_w = 460.0_f64;
-        let target_h = if expanded { 280.0_f64 } else { 30.0_f64 };
+        let target_h = if expanded { 280.0_f64 } else { 48.0_f64 };
 
         #[cfg(target_os = "macos")]
         {

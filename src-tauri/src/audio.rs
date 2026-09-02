@@ -11,6 +11,12 @@ pub struct AudioCapture {
     pub sample_rate: u32,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AudioSnapshot {
+    pub level: f32,
+    pub bands: [f32; 7],
+}
+
 impl AudioCapture {
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -54,7 +60,7 @@ impl AudioCapture {
     }
 
     pub fn stop(&mut self) -> Result<Vec<f32>> {
-        // Drop the stream to stop recording
+        // Drop the stream to stop recording and release the hardware microphone immediately
         self.stream = None;
 
         let buffer = self.buffer.lock().unwrap();
@@ -113,10 +119,13 @@ impl AudioCapture {
         Ok(resampled)
     }
 
-    pub fn get_recent_rms(&self, count: usize) -> f32 {
+    pub fn get_recent_snapshot(&self, count: usize) -> AudioSnapshot {
         let buffer = self.buffer.lock().unwrap();
         if buffer.is_empty() {
-            return 0.0;
+            return AudioSnapshot {
+                level: 0.0,
+                bands: [0.0; 7],
+            };
         }
         let take_len = count.min(buffer.len());
         let slice = &buffer[buffer.len() - take_len..];
@@ -132,12 +141,40 @@ impl AudioCapture {
         }
         let rms = (sum_sq / take_len as f32).sqrt();
         
-        // Highly responsive vocal energy formula:
-        // Peak captures immediate voice consonants, RMS captures sustained vowel body
-        let peak_comp = (max_peak * 8.0).min(1.0);
-        let rms_comp = (rms * 24.0).min(1.0);
-        let raw_level = (peak_comp * 0.70 + rms_comp * 0.30).clamp(0.0, 1.0);
-        raw_level.powf(0.5)
+        // Use more realistic multipliers for standard mic levels
+        let peak_comp = (max_peak * 2.5).clamp(0.0, 1.0);
+        let rms_comp = (rms * 8.0).clamp(0.0, 1.0);
+        let raw_level = peak_comp * 0.60 + rms_comp * 0.40;
+        
+        // Subtle noise gate: ignore very faint background room noise
+        let level = if raw_level < 0.03 { 0.0 } else { raw_level };
+
+        // 7 Discrete Acoustic Frequency Centers (Bass to Air)
+        let center_freqs = [120.0f32, 350.0, 750.0, 1500.0, 2800.0, 4800.0, 8500.0];
+        let sample_rate = self.sample_rate as f32;
+        let mut bands = [0.0f32; 7];
+
+        let n_samples = take_len.min(2048);
+        let sample_slice = &slice[slice.len() - n_samples..];
+
+        for (i, &fc) in center_freqs.iter().enumerate() {
+            let omega = 2.0 * std::f32::consts::PI * fc / sample_rate;
+            let mut real = 0.0f32;
+            let mut imag = 0.0f32;
+            for (n, &s) in sample_slice.iter().enumerate() {
+                let angle = omega * (n as f32);
+                real += s * angle.cos();
+                imag += s * angle.sin();
+            }
+            let mag = (real * real + imag * imag).sqrt() / (n_samples as f32);
+            // Relax multiplier from 45.0 to 15.0 and remove non-linear pow compression
+            let normalized = (mag * 15.0).clamp(0.0, 1.0);
+            
+            // Allow bands to drop to 0 independently (stop pegging them to master level)
+            bands[i] = if normalized < 0.03 { 0.0 } else { normalized };
+        }
+
+        AudioSnapshot { level, bands }
     }
 
     pub fn clear_buffer(&self) {

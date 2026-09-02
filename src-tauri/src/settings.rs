@@ -55,60 +55,40 @@ pub struct AppSettings {
     pub visualizer_style: VisualizerStyle,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum VisualizerStyle {
+    #[default]
     Wave,
     Bars,
 }
 
-impl Default for VisualizerStyle {
-    fn default() -> Self {
-        Self::Bars
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ActivationMode {
+    #[default]
     Toggle,
     Hold,
-}
-
-impl Default for ActivationMode {
-    fn default() -> Self {
-        Self::Toggle
-    }
 }
 
 fn default_true() -> bool {
     true
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum VisibilityMode {
     AlwaysOn,
+    #[default]
     AutoHidden,
 }
 
-impl Default for VisibilityMode {
-    fn default() -> Self {
-        Self::AlwaysOn
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum NotchStyle {
+    #[default]
     DynamicIsland,
     Macbook,
-}
-
-impl Default for NotchStyle {
-    fn default() -> Self {
-        Self::Macbook
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -120,18 +100,13 @@ pub enum CloudProvider {
     Deepgram,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum OperatingMode {
+    #[default]
     Dictation,
     Assistant,
     Hybrid,
-}
-
-impl Default for OperatingMode {
-    fn default() -> Self {
-        Self::Dictation
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -179,17 +154,12 @@ pub enum WhisperModel {
     LargeV3Turbo,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum TrayIconStyle {
+    #[default]
     Color,
     Flat,
-}
-
-impl Default for TrayIconStyle {
-    fn default() -> Self {
-        Self::Color
-    }
 }
 
 impl WhisperModel {
@@ -273,10 +243,10 @@ impl Default for AppSettings {
             widget_pet_enabled: false,
             gemma_model: None,
             auto_update_check: true,
-            visibility_mode: VisibilityMode::AlwaysOn,
-            notch_style: NotchStyle::Macbook,
+            visibility_mode: VisibilityMode::AutoHidden,
+            notch_style: NotchStyle::DynamicIsland,
             activation_mode: ActivationMode::Toggle,
-            visualizer_style: VisualizerStyle::Bars,
+            visualizer_style: VisualizerStyle::Wave,
         }
     }
 }
@@ -329,7 +299,19 @@ impl AppSettings {
     }
 
     pub fn is_model_downloaded(&self, model: &WhisperModel) -> bool {
-        self.model_path(model).exists()
+        let p = self.model_path(model);
+        if let Ok(meta) = std::fs::metadata(&p) {
+            let min_bytes: u64 = match model {
+                WhisperModel::TinyEn | WhisperModel::Tiny => 70_000_000,
+                WhisperModel::BaseEn | WhisperModel::Base => 140_000_000,
+                WhisperModel::SmallEn | WhisperModel::Small => 450_000_000,
+                WhisperModel::MediumEn | WhisperModel::Medium => 1_400_000_000,
+                WhisperModel::LargeV3Turbo => 1_500_000_000,
+            };
+            meta.len() >= min_bytes
+        } else {
+            false
+        }
     }
 
     pub fn history_path() -> PathBuf {

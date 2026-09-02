@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, MutableRefObject } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { AppState } from "../hooks/useAppState";
+import { AppState, AppSettings } from "../hooks/useAppState";
+import { useHandyAudioEngine } from "../hooks/useHandyAudioEngine";
 import { ModernSelect } from "./ModernSelect";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,70 +21,116 @@ import {
   Unlock
 } from "lucide-react";
 
-function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; isExpanded: boolean }) {
+function SingleLineAiWave({
+  isRecording: propIsRecording,
+  isExpanded,
+  levelRef,
+  notchStyle = "dynamicisland",
+}: {
+  isRecording: boolean;
+  isExpanded: boolean;
+  levelRef: MutableRefObject<number>;
+  notchStyle?: "macbook" | "dynamicisland";
+}) {
   const path1Ref = useRef<SVGPathElement>(null);
   const path2Ref = useRef<SVGPathElement>(null);
   const path3Ref = useRef<SVGPathElement>(null);
-
-  const levelRef = useRef(0);
-  const isRecordingRef = useRef(isRecording);
+  const svgRef = useRef<SVGSVGElement>(null);
   const isExpandedRef = useRef(isExpanded);
+  const isRecordingRef = useRef(propIsRecording);
+  const isIsland = notchStyle === "dynamicisland";
 
-  isRecordingRef.current = isRecording;
-  isExpandedRef.current = isExpanded;
-
-  // Listen directly to audio_level IPC without triggering React root re-renders
   useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    listen<number>("audio_level", (e) => {
-      levelRef.current = Math.min(Math.max(e.payload, 0), 1);
+    isExpandedRef.current = isExpanded;
+  }, [isExpanded]);
+
+  useEffect(() => {
+    isRecordingRef.current = propIsRecording;
+  }, [propIsRecording]);
+
+  // Direct native event listener to guarantee 0ms recording state sync
+  useEffect(() => {
+    let unlistenStart: (() => void) | null = null;
+    let unlistenStop: (() => void) | null = null;
+
+    listen("murmur://recording-started", () => {
+      isRecordingRef.current = true;
     }).then((fn) => {
-      unlisten = fn;
+      unlistenStart = fn;
+    });
+
+    listen("murmur://recording-stopped", () => {
+      isRecordingRef.current = false;
+    }).then((fn) => {
+      unlistenStop = fn;
     });
 
     return () => {
-      if (unlisten) unlisten();
+      if (unlistenStart) unlistenStart();
+      if (unlistenStop) unlistenStop();
     };
   }, []);
 
   useEffect(() => {
     let animId: number;
     let phase = 0;
-    let currentAmp = 1.5;
+    let currentAmp = 1.2;
     const points = 64;
+    let currentWidth = isIsland ? 140 : 210;
+    let currentHeight = isIsland ? 24 : 28;
 
     const animate = () => {
       const rec = isRecordingRef.current;
-      const lvl = levelRef.current;
       const exp = isExpandedRef.current;
+      const nowSec = Date.now() * 0.001;
 
-      const width = exp ? 380 : 220;
-      const height = 24;
-      const midY = height / 2;
+      // === FAST FAKE ANIMATION LOOP ===
+      const fastSyllable = Math.sin(nowSec * 14.0) * 0.5 + 0.5;
+      const fastCadence = Math.cos(nowSec * 8.5) * 0.5 + 0.5;
+      const fastBurst = (Math.sin(nowSec * 22.0) * Math.cos(nowSec * 12.0)) * 0.5 + 0.5;
+      
+      const voiceIntensity = rec
+        ? 0.35 + (fastSyllable * 0.40 + fastCadence * 0.35 + fastBurst * 0.25) * 0.65
+        : 0;
 
-      // Vocal surge dynamics: immediate energetic jump on recording + bold scaling on speech
+      const targetWidth = exp
+        ? (isIsland ? 330 : 380)
+        : rec
+        ? (isIsland ? 170 : 250)
+        : (isIsland ? 120 : 180);
+      const targetHeight = rec
+        ? (isIsland ? 30 : 34)
+        : (isIsland ? 24 : 28);
+      currentWidth += (targetWidth - currentWidth) * 0.15;
+      currentHeight += (targetHeight - currentHeight) * 0.15;
+      const midY = currentHeight / 2;
+
+      // Update SVG viewBox dynamically in rAF to stay in sync with path rendering
+      if (svgRef.current) {
+        svgRef.current.setAttribute("viewBox", `0 0 ${currentWidth.toFixed(1)} ${currentHeight.toFixed(1)}`);
+      }
+
+      // When recording: surges based on fake voice intensity
+      // When idle: gentle 1.2px breathing wave
       const targetAmp = rec
-        ? (4.5 + lvl * 14.0)
-        : (exp ? 2.5 : (lvl > 0.04 ? 2.0 + lvl * 8.0 : 1.0));
-      // Fast attack (0.60), smooth decay (0.20)
-      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.60 : 0.20);
+        ? Math.min(isIsland ? 10.5 : 13.5, (isIsland ? 4.0 : 5.5) + voiceIntensity * (isIsland ? 8.5 : 12.0))
+        : (exp ? 2.0 : 1.2);
 
-      // Phase step: accelerates dynamically with voice intensity
-      // In idle: 0.015 (calm, slow)
-      // When recording: 0.08 + lvl * 0.35 (high speed, lively!)
-      const step = rec ? (0.08 + lvl * 0.35) : 0.015;
+      currentAmp += (targetAmp - currentAmp) * (targetAmp > currentAmp ? 0.85 : 0.20);
+
+      const step = rec ? (0.12 + voiceIntensity * 0.28) : 0.02;
       phase = (phase + step) % (Math.PI * 2);
 
-      // 1. Primary glowing multi-color ribbon
+      // 1. Primary multi-color glowing ribbon
       let d1 = "";
       for (let i = 0; i <= points; i++) {
         const normX = i / points;
-        const x = normX * width;
-        const envelope = Math.sin(normX * Math.PI);
+        const x = normX * currentWidth;
+        const envelope = Math.pow(Math.sin(normX * Math.PI), 0.90);
         const y =
           midY +
-          (Math.sin(normX * Math.PI * 2.8 + phase) * 0.7 +
-            Math.sin(normX * Math.PI * 5.2 - phase * 1.5) * 0.3) *
+          (Math.sin(normX * Math.PI * 3.0 + phase) * 0.72 +
+            Math.sin(normX * Math.PI * 5.6 - phase * 1.4) * 0.28) *
             currentAmp *
             envelope;
         d1 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
@@ -91,11 +138,13 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
       if (path1Ref.current) {
         path1Ref.current.setAttribute("d", d1);
         if (rec) {
-          path1Ref.current.setAttribute("stroke-width", (1.4 + lvl * 2.2).toFixed(2));
-          path1Ref.current.setAttribute("stroke-opacity", (0.90 + lvl * 0.10).toFixed(2));
+          path1Ref.current.setAttribute("stroke-width", (3.0 + voiceIntensity * 2.0).toFixed(2));
+          path1Ref.current.setAttribute("stroke-opacity", "1.0");
+          path1Ref.current.style.filter = `drop-shadow(0 0 ${(8.0 + voiceIntensity * 12.0).toFixed(1)}px rgba(168, 85, 247, 1.0))`;
         } else {
-          path1Ref.current.setAttribute("stroke-width", "0.9");
-          path1Ref.current.setAttribute("stroke-opacity", "0.55");
+          path1Ref.current.setAttribute("stroke-width", "1.6");
+          path1Ref.current.setAttribute("stroke-opacity", "0.60");
+          path1Ref.current.style.filter = "none";
         }
       }
 
@@ -103,37 +152,48 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
       let d2 = "";
       for (let i = 0; i <= points; i++) {
         const normX = i / points;
-        const x = normX * width;
-        const envelope = Math.sin(normX * Math.PI);
+        const x = normX * currentWidth;
+        const envelope = Math.pow(Math.sin(normX * Math.PI), 0.90);
         const y =
           midY +
-          (Math.cos(normX * Math.PI * 2.2 - phase * 0.8) * 0.6 +
-            Math.cos(normX * Math.PI * 4.4 + phase * 1.3) * 0.4) *
-            (currentAmp * 0.72) *
+          (Math.cos(normX * Math.PI * 2.4 - phase * 0.9) * 0.65 +
+            Math.cos(normX * Math.PI * 4.8 + phase * 1.2) * 0.35) *
+            (currentAmp * 0.82) *
             envelope;
         d2 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
       }
       if (path2Ref.current) {
         path2Ref.current.setAttribute("d", d2);
+        if (rec) {
+          path2Ref.current.setAttribute("stroke-width", (2.2 + voiceIntensity * 1.5).toFixed(2));
+          path2Ref.current.setAttribute("stroke-opacity", "0.95");
+        } else {
+          path2Ref.current.setAttribute("stroke-width", "1.2");
+          path2Ref.current.setAttribute("stroke-opacity", "0.40");
+        }
       }
 
-      // 3. Core sharp white laser beam
+      // 3. Core white laser line (pops with high voice intensity)
       if (path3Ref.current) {
-        if (rec || lvl > 0.04) {
+        if (rec && voiceIntensity > 0.25) {
           let d3 = "";
           for (let i = 0; i <= points; i++) {
             const normX = i / points;
-            const x = normX * width;
-            const envelope = Math.pow(Math.sin(normX * Math.PI), 2);
+            const x = normX * currentWidth;
+            const envelope = Math.pow(Math.sin(normX * Math.PI), 1.2);
             const y =
               midY +
-              Math.sin(normX * Math.PI * 6.5 + phase * 2.0) * (currentAmp * 0.48) * envelope;
+              Math.sin(normX * Math.PI * 4.2 + phase * 1.6) * (currentAmp * 0.60) * envelope;
             d3 += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(2)}` : ` L ${x.toFixed(1)} ${y.toFixed(2)}`;
           }
           path3Ref.current.setAttribute("d", d3);
-          path3Ref.current.setAttribute("stroke-opacity", Math.min(0.98, 0.4 + lvl * 0.8).toFixed(2));
+          path3Ref.current.setAttribute("stroke-width", (1.8 + voiceIntensity * 1.5).toFixed(2));
+          path3Ref.current.setAttribute("stroke-opacity", "0.95");
+          path3Ref.current.style.filter = `drop-shadow(0 0 ${(4.0 + voiceIntensity * 8.0).toFixed(1)}px #ffffff)`;
         } else {
           path3Ref.current.setAttribute("d", "");
+          path3Ref.current.setAttribute("stroke-opacity", "0");
+          path3Ref.current.style.filter = "none";
         }
       }
 
@@ -142,63 +202,62 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
 
     animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, []);
-
-  const width = isExpanded ? 380 : 220;
-  const height = 24;
+  }, [levelRef]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-visible px-1">
       <svg
+        ref={svgRef}
         className="w-full h-full overflow-visible"
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
+        viewBox={`0 0 ${propIsRecording ? 300 : 240} ${propIsRecording ? 38 : 30}`}
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          <linearGradient id="aiWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#818cf8" stopOpacity="0" />
-            <stop offset="15%" stopColor="#818cf8" stopOpacity="0.85" />
+          <linearGradient id="aiWaveGradPrimary" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.1" />
+            <stop offset="15%" stopColor="#818cf8" stopOpacity="0.95" />
             <stop offset="35%" stopColor="#c084fc" stopOpacity="1" />
             <stop offset="50%" stopColor="#f472b6" stopOpacity="1" />
-            <stop offset="65%" stopColor="#38bdf8" stopOpacity="1" />
-            <stop offset="85%" stopColor="#34d399" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+            <stop offset="68%" stopColor="#38bdf8" stopOpacity="1" />
+            <stop offset="85%" stopColor="#34d399" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#34d399" stopOpacity="0.1" />
           </linearGradient>
 
-          <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="0.8" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          <linearGradient id="aiWaveGradSecondary" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.1" />
+            <stop offset="20%" stopColor="#38bdf8" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#ec4899" stopOpacity="1" />
+            <stop offset="80%" stopColor="#a855f7" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.1" />
+          </linearGradient>
         </defs>
 
+        {/* Secondary intertwined ribbon */}
         <path
           ref={path2Ref}
           fill="none"
-          stroke="url(#aiWaveGrad)"
-          strokeWidth="0.65"
-          strokeOpacity="0.45"
+          stroke="url(#aiWaveGradSecondary)"
+          strokeWidth="1.4"
+          strokeOpacity="0.5"
           strokeLinecap="round"
         />
 
+        {/* Primary vibrant multi-color ribbon */}
         <path
           ref={path1Ref}
           fill="none"
-          stroke="url(#aiWaveGrad)"
-          strokeWidth="0.9"
-          strokeOpacity="0.75"
+          stroke="url(#aiWaveGradPrimary)"
+          strokeWidth="2.4"
+          strokeOpacity="0.8"
           strokeLinecap="round"
-          filter="url(#aiGlow)"
         />
 
+        {/* Core crisp laser line — opacity controlled entirely by rAF loop */}
         <path
           ref={path3Ref}
           fill="none"
           stroke="#ffffff"
-          strokeWidth="0.9"
-          strokeOpacity="0"
+          strokeWidth="1.2"
           strokeLinecap="round"
         />
       </svg>
@@ -206,90 +265,76 @@ function SingleLineAiWave({ isRecording, isExpanded }: { isRecording: boolean; i
   );
 }
 
-function EqualizerBars({ isRecording }: { isRecording: boolean }) {
+
+interface VisualizerProps {
+  isRecording: boolean;
+  levelRef?: MutableRefObject<number>;
+  bandsRef?: MutableRefObject<Float32Array | number[]>;
+  notchStyle?: "macbook" | "dynamicisland";
+}
+
+// -------------------------------------------------------------
+// Component 2: 9-Bar Symmetrical Equalizer (Handy / Freeflow Style)
+// -------------------------------------------------------------
+function EqualizerBars({ isRecording, notchStyle = "macbook" }: VisualizerProps) {
   const barsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const isRecordingRef = useRef(isRecording);
-  const levelRef = useRef(0);
-  isRecordingRef.current = isRecording;
+  const animFrameId = useRef<number | null>(null);
+  const timeRef = useRef<number>(0);
+  const isIsland = notchStyle === "dynamicisland";
 
-  useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    listen<number>("audio_level", (e) => {
-      levelRef.current = Math.min(Math.max(e.payload, 0), 1);
-    }).then((fn) => {
-      unlisten = fn;
-    });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, []);
-
-  useEffect(() => {
-    let animId: number;
-    let phase = 0;
-    const multipliers = [0.65, 0.95, 1.45, 1.85, 1.45, 0.95, 0.65];
-    const currentHeights = [3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5];
-
-    const animate = () => {
-      const rec = isRecordingRef.current;
-      const lvl = levelRef.current;
-
-      // When speaking/recording: high-speed energetic phase step
-      // When idle: very slow, calm breathing phase
-      phase += rec ? (0.14 + lvl * 0.45) : 0.015;
-
-      for (let i = 0; i < 7; i++) {
-        const mult = multipliers[i];
-        const sineWave = Math.sin(phase + i * 0.75) * 0.5 + 0.5;
-
-        // When recording: vigorous dynamic height from 4px up to 23.5px with vocal amplitude
-        // When idle: calm breathing 3.0px to 4.5px
-        const targetHeight = rec
-          ? Math.min(23.5, Math.max(3.8, 4.0 + (lvl * 24.0 * mult) + (sineWave * 5.5 * mult)))
-          : (3.0 + sineWave * 1.5);
-
-        // Fast attack (0.65) for instant voice reaction, smooth release (0.25)
-        const speed = targetHeight > currentHeights[i] ? 0.65 : 0.25;
-        currentHeights[i] += (targetHeight - currentHeights[i]) * speed;
-
-        const el = barsRef.current[i];
-        if (el) {
-          el.style.height = `${currentHeights[i].toFixed(1)}px`;
-          el.style.opacity = rec
-            ? `${Math.min(1.0, 0.80 + lvl * 0.20).toFixed(2)}`
-            : `${(0.35 + sineWave * 0.15).toFixed(2)}`;
-          el.style.filter = rec && lvl > 0.05
-            ? `drop-shadow(0 0 6px rgba(192, 132, 252, ${Math.min(0.9, lvl * 1.2).toFixed(2)}))`
-            : "none";
-        }
-      }
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animId);
-  }, []);
-
+  const numBars = 9;
   const barGradients = [
-    "from-indigo-500 to-purple-500",
-    "from-purple-500 to-pink-500",
-    "from-pink-500 to-rose-400",
-    "from-indigo-400 via-cyan-400 to-emerald-400",
-    "from-pink-500 to-rose-400",
-    "from-purple-500 to-pink-500",
-    "from-indigo-500 to-purple-500",
+    "from-indigo-500 to-purple-400",
+    "from-indigo-400 to-sky-400",
+    "from-sky-400 to-cyan-300",
+    "from-cyan-400 to-emerald-300",
+    "from-purple-500 to-pink-400",
+    "from-cyan-400 to-emerald-300",
+    "from-sky-400 to-cyan-300",
+    "from-indigo-400 to-sky-400",
+    "from-indigo-500 to-purple-400",
   ];
 
+  useEffect(() => {
+    const animate = () => {
+      timeRef.current += isRecording ? 0.14 : 0.03;
+      const t = timeRef.current;
+
+      barsRef.current.forEach((bar, i) => {
+        if (!bar) return;
+        let h = 4.0;
+        if (isRecording) {
+          const speedMod = 1.0 + (i % 3) * 0.4;
+          const sine1 = Math.sin(t * speedMod + i * 0.9);
+          const sine2 = Math.cos(t * 0.7 - i * 0.6);
+          const normalized = (sine1 * 0.5 + sine2 * 0.5 + 1.0) / 2.0;
+          h = 4.0 + normalized * (isIsland ? 14.0 : 16.0);
+        } else {
+          h = 4.0 + Math.sin(t + i * 0.5) * 1.5;
+        }
+
+        bar.style.height = `${Math.max(4.0, h)}px`;
+        bar.style.opacity = isRecording ? "1" : "0.45";
+      });
+
+      animFrameId.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+    };
+  }, [isRecording, isIsland]);
+
   return (
-    <div className="flex items-center justify-center gap-1.5 h-full px-4 select-none">
-      {barGradients.map((grad, idx) => (
+    <div className={`flex items-center justify-center ${isIsland ? "gap-[3.5px] h-[22px]" : "gap-[4.5px] h-[24px]"}`}>
+      {barGradients.slice(0, numBars).map((grad, idx) => (
         <div
           key={idx}
           ref={(el) => (barsRef.current[idx] = el)}
-          style={{ height: "3.5px" }}
-          className={`w-[3.5px] rounded-full bg-gradient-to-t ${grad} shadow-sm shadow-indigo-500/20`}
+          style={{ height: "4.0px" }}
+          className={`${isIsland ? "w-[3.5px]" : "w-[4.5px]"} rounded-full bg-gradient-to-t ${grad} shadow-sm shadow-indigo-500/30 transition-opacity`}
         />
       ))}
     </div>
@@ -300,6 +345,30 @@ export default function Notch({ state }: { state: AppState }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [pageIndex, setPageIndex] = useState<0 | 1 | 2>(0);
+  const [localIsRecording, setLocalIsRecording] = useState(false);
+  const [liveSettings, setLiveSettings] = useState<AppSettings>(state.settings);
+
+  // Sync with prop updates
+  useEffect(() => {
+    if (state.settings) {
+      setLiveSettings(state.settings);
+    }
+  }, [state.settings]);
+
+  // Direct reactive IPC listener to guarantee 0ms instant updates across windows
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen<AppSettings>("murmur://settings-updated", (e) => {
+      if (e.payload) {
+        setLiveSettings(e.payload);
+      }
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
 
   // Assistant state
   const [prompt, setPrompt] = useState("");
@@ -308,18 +377,54 @@ export default function Notch({ state }: { state: AppState }) {
   const [copied, setCopied] = useState(false);
 
   const lastSwipeRef = useRef(0);
-  const selectedModel = state.settings.localAssistantModel || "gemini-2.0-flash-lite-preview-02-05";
-  const isRecording = state.recordingState === "recording";
-  const notchStyle = state.settings.notchStyle ?? "macbook";
+  const activeSettings = liveSettings || state.settings;
+  const selectedModel = activeSettings.localAssistantModel || "gemini-2.0-flash-lite-preview-02-05";
+  const isRecording = localIsRecording || state.recordingState === "recording";
+  const notchStyle = activeSettings.notchStyle ?? "dynamicisland";
+  const visualizerStyle = activeSettings.visualizerStyle ?? "wave";
+  const isInteracting = isRecording;
+  const isDynamicIsland = notchStyle === "dynamicisland";
 
-  const visualizerStyle = state.settings.visualizerStyle ?? "bars";
+  // 🎤 Real native CoreAudio 60 FPS audio engine — levelRef and bandsRef are updated
+  // directly from Rust "murmur://audio-snapshot" IPC events at 60 FPS.
+  const { levelRef, bandsRef } = useHandyAudioEngine(isRecording);
 
   useEffect(() => {
-    invoke("set_notch_expanded", { expanded: isExpanded }).catch((err) => {
-      console.warn("set_notch_expanded IPC warning:", err);
+    let unlistenStart: (() => void) | null = null;
+    let unlistenStop: (() => void) | null = null;
+
+    listen("murmur://recording-started", () => {
+      setLocalIsRecording(true);
+    }).then((fn) => {
+      unlistenStart = fn;
     });
+
+    listen("murmur://recording-stopped", () => {
+      setLocalIsRecording(false);
+    }).then((fn) => {
+      unlistenStop = fn;
+    });
+
+    return () => {
+      if (unlistenStart) unlistenStart();
+      if (unlistenStop) unlistenStop();
+    };
+  }, []);
+
+  useEffect(() => {
     if (isExpanded) {
+      invoke("set_notch_expanded", { expanded: true }).catch((err) => {
+        console.warn("set_notch_expanded IPC warning:", err);
+      });
       getCurrentWindow().setFocus().catch(() => {});
+    } else {
+      // Delay shrinking native NSWindow by 220ms so Framer Motion spring finishes collapsing smoothly without clipping!
+      const timer = setTimeout(() => {
+        invoke("set_notch_expanded", { expanded: false }).catch((err) => {
+          console.warn("set_notch_expanded IPC warning:", err);
+        });
+      }, 220);
+      return () => clearTimeout(timer);
     }
   }, [isExpanded]);
 
@@ -422,36 +527,49 @@ export default function Notch({ state }: { state: AppState }) {
 
   return (
     <div
-      className="flex items-start justify-center w-full h-full bg-transparent overflow-hidden select-none"
+      className="flex items-start justify-center w-full h-full bg-transparent overflow-visible select-none"
     >
       <motion.div
         layout
         initial={false}
         animate={{
-          width: isExpanded ? 440 : isRecording ? 280 : 240,
-          height: isExpanded ? 270 : notchStyle === "macbook" ? 26 : 28,
+          width: isExpanded
+            ? (isDynamicIsland ? 380 : 440)
+            : isInteracting
+            ? (isDynamicIsland ? 190 : 270)
+            : (isDynamicIsland ? 140 : 210),
+          height: isExpanded
+            ? (isDynamicIsland ? 260 : 270)
+            : isInteracting
+            ? (isDynamicIsland ? 34 : 36)
+            : (isDynamicIsland ? 28 : 30),
+          marginTop: isDynamicIsland ? 6 : 0,
         }}
         transition={{
           type: "spring",
-          stiffness: 450,
-          damping: 32,
-          mass: 0.8,
+          stiffness: 400,
+          damping: 30,
+          mass: 0.7,
         }}
         onClick={() => {
           if (!isExpanded) setIsExpanded(true);
         }}
-        className={`relative mx-auto flex flex-col items-center border-none outline-none overflow-hidden transition-colors ${
-          notchStyle === "macbook"
-            ? `${isExpanded ? "rounded-b-[12px]" : "rounded-b-[10px]"} rounded-t-none border-x border-b border-white/[0.14] ring-1 ring-white/5 ring-inset`
-            : `${isExpanded ? "rounded-[12px]" : "rounded-[11px]"} border border-white/[0.14] ring-1 ring-white/5 ring-inset`
-        } ${!isExpanded ? "cursor-pointer hover:bg-zinc-950" : ""}`}
+        className={`relative mx-auto flex flex-col items-center border-none outline-none overflow-hidden ${
+          isDynamicIsland
+            ? `${isExpanded ? "rounded-[24px]" : "rounded-full"} border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.75)] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] ring-1 ring-white/10 ring-inset backdrop-blur-2xl`
+            : `${isExpanded ? "rounded-b-[18px]" : isInteracting ? "rounded-b-[16px]" : "rounded-b-[14px]"} rounded-t-none border-x border-b border-white/[0.14] border-t-0 ring-1 ring-white/5 ring-inset shadow-2xl`
+        } ${!isExpanded ? "cursor-pointer hover:brightness-110" : ""}`}
         style={{
           backgroundColor: "#000000",
         }}
       >
         {/* Top Header AI Wave Bar + Lock Toggle */}
         <div
-          className="w-full flex items-center justify-between px-3 h-[25px] flex-shrink-0 cursor-pointer"
+          className={`w-full flex items-center justify-between ${isDynamicIsland ? "px-2.5" : "px-3"} ${
+            isInteracting
+              ? isDynamicIsland ? "h-[34px]" : "h-[36px]"
+              : isDynamicIsland ? "h-[28px]" : "h-[30px]"
+          } flex-shrink-0 cursor-pointer overflow-visible`}
           onClick={(e) => {
             if (isExpanded) {
               e.stopPropagation();
@@ -461,9 +579,9 @@ export default function Notch({ state }: { state: AppState }) {
         >
           <div className="flex-1 h-full flex items-center justify-center">
             {visualizerStyle === "bars" ? (
-              <EqualizerBars isRecording={isRecording} />
+              <EqualizerBars isRecording={isRecording} levelRef={levelRef} bandsRef={bandsRef} notchStyle={notchStyle} />
             ) : (
-              <SingleLineAiWave isRecording={isRecording} isExpanded={isExpanded} />
+              <SingleLineAiWave isRecording={isRecording} isExpanded={isExpanded} levelRef={levelRef} notchStyle={notchStyle} />
             )}
           </div>
 
@@ -530,7 +648,7 @@ export default function Notch({ state }: { state: AppState }) {
                           </span>
                         </button>
 
-                        {/* 2. Open Settings Icon */}
+                        {/* 2. Open Dashboard Icon */}
                         <button
                           onClick={handleOpenSettings}
                           className="flex flex-col items-center gap-1 group"
@@ -539,7 +657,7 @@ export default function Notch({ state }: { state: AppState }) {
                             <Settings size={18} />
                           </div>
                           <span className="text-[10px] text-zinc-400 font-medium group-hover:text-zinc-200">
-                            Settings
+                            Dashboard
                           </span>
                         </button>
 
@@ -570,34 +688,68 @@ export default function Notch({ state }: { state: AppState }) {
                         </button>
                       </div>
 
-                      {/* Mode Badge & Visualizer Style Switch */}
-                      <div className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-white/5 flex items-center justify-between">
-                        <span className="text-[11px] text-zinc-400 font-medium">Visualizer Style</span>
-                        <div className="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-white/5">
-                          <button
-                            onClick={() => {
-                              state.updateSettings({ visualizerStyle: "bars" });
-                            }}
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${
-                              visualizerStyle === "bars"
-                                ? "bg-indigo-600 text-white shadow-sm"
-                                : "text-zinc-400 hover:text-zinc-200"
-                            }`}
-                          >
-                            Bars (Handy)
-                          </button>
-                          <button
-                            onClick={() => {
-                              state.updateSettings({ visualizerStyle: "wave" });
-                            }}
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${
-                              visualizerStyle === "wave"
-                                ? "bg-indigo-600 text-white shadow-sm"
-                                : "text-zinc-400 hover:text-zinc-200"
-                            }`}
-                          >
-                            AI Wave
-                          </button>
+                      {/* Quick Appearance Controls: Visualizer Style & Notch Style */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Visualizer Style Switch */}
+                        <div className="px-2.5 py-1.5 rounded-xl bg-zinc-950 border border-white/5 flex flex-col gap-1">
+                          <span className="text-[10px] text-zinc-400 font-medium">Visualizer</span>
+                          <div className="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-white/5">
+                            <button
+                              onClick={() => {
+                                state.updateSettings({ visualizerStyle: "bars" });
+                              }}
+                              className={`flex-1 py-0.5 rounded-md text-[9px] font-semibold transition-all ${
+                                visualizerStyle === "bars"
+                                  ? "bg-indigo-600 text-white shadow-sm"
+                                  : "text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              Bars
+                            </button>
+                            <button
+                              onClick={() => {
+                                state.updateSettings({ visualizerStyle: "wave" });
+                              }}
+                              className={`flex-1 py-0.5 rounded-md text-[9px] font-semibold transition-all ${
+                                visualizerStyle === "wave"
+                                  ? "bg-indigo-600 text-white shadow-sm"
+                                  : "text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              AI Wave
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Notch Style Switch */}
+                        <div className="px-2.5 py-1.5 rounded-xl bg-zinc-950 border border-white/5 flex flex-col gap-1">
+                          <span className="text-[10px] text-zinc-400 font-medium">Notch Style</span>
+                          <div className="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-white/5">
+                            <button
+                              onClick={() => {
+                                state.updateSettings({ notchStyle: "macbook" });
+                              }}
+                              className={`flex-1 py-0.5 rounded-md text-[9px] font-semibold transition-all ${
+                                notchStyle === "macbook"
+                                  ? "bg-indigo-600 text-white shadow-sm"
+                                  : "text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              MacBook
+                            </button>
+                            <button
+                              onClick={() => {
+                                state.updateSettings({ notchStyle: "dynamicisland" });
+                              }}
+                              className={`flex-1 py-0.5 rounded-md text-[9px] font-semibold transition-all ${
+                                notchStyle === "dynamicisland"
+                                  ? "bg-indigo-600 text-white shadow-sm"
+                                  : "text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              Island
+                            </button>
+                          </div>
                         </div>
                       </div>
 

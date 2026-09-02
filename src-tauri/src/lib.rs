@@ -37,14 +37,13 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
-        .on_window_event(|window, event| match event {
-            tauri::WindowEvent::CloseRequested { api, .. } => {
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 if window.label() == "settings" {
-                    window.hide().unwrap();
+                    let _ = window.hide();
                     api.prevent_close();
                 }
             }
-            _ => {}
         })
         .setup(|app| {
             let settings = AppSettings::load_or_default();
@@ -60,6 +59,7 @@ pub fn run() {
 
             #[cfg(target_os = "macos")]
             {
+                overlay::set_dock_icon();
                 if settings.show_dock_icon {
                     app.set_activation_policy(tauri::ActivationPolicy::Regular);
                 } else {
@@ -72,7 +72,7 @@ pub fn run() {
             }
 
             // Build system tray menu
-            let settings_item = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+            let settings_item = MenuItem::with_id(app, "settings", "Murmur Dashboard", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit Murmur", true, None::<&str>)?;
 
@@ -120,6 +120,11 @@ pub fn run() {
             let hotkey = settings.hotkey.clone();
             setup_global_shortcut(&app_handle, &hotkey);
 
+            // Apply macOS window styling to settings window so top bar matches background color
+            if let Some(settings_win) = app.get_webview_window("settings") {
+                overlay::apply_macos_window_styling(&settings_win);
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -144,11 +149,21 @@ pub fn run() {
             screen_assistant::ask_screen_assistant,
             commands::set_notch_expanded,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running murmur");
+        .build(tauri::generate_context!())
+        .expect("error while building murmur")
+        .run(|app_handle, event| {
+            match event {
+                #[cfg(target_os = "macos")]
+                tauri::RunEvent::Reopen { .. } => {
+                    overlay::show_settings_window(app_handle);
+                }
+                _ => {}
+            }
+        });
 }
 
-fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
+pub fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
+    let _ = app.global_shortcut().unregister_all();
     let app_clone = app.clone();
 
     if let Err(e) = app.global_shortcut().on_shortcut(hotkey, move |_app, _shortcut, event| {
@@ -206,6 +221,7 @@ fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
         let fallback = "CommandOrControl+Shift+Space";
         if hotkey != fallback {
             log::info!("Falling back to default global shortcut '{}'", fallback);
+            let _ = app.global_shortcut().unregister_all();
             setup_global_shortcut(app, fallback);
         }
     } else {

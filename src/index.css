@@ -42,7 +42,7 @@
     color: var(--text-primary);
   }
 
-  /* Sleek modern scrollbars - auto-hidden by default */
+  /* Sleek, simple modern scrollbars - hidden until hovered or scrolled */
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -55,15 +55,26 @@
   ::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 9999px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  *:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+  /* Reveal thumb on hover over scrollable containers */
+  .overflow-y-auto:hover::-webkit-scrollbar-thumb,
+  .overflow-x-auto:hover::-webkit-scrollbar-thumb,
+  .overflow-auto:hover::-webkit-scrollbar-thumb,
+  [class*="overflow"]:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
   }
 
+  /* Reveal thumb dynamically when user is actively scrolling */
+  body.is-scrolling ::-webkit-scrollbar-thumb,
+  .is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Hovering directly on the scrollbar thumb */
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.28) !important;
+    background: rgba(255, 255, 255, 0.45) !important;
   }
 }
 
