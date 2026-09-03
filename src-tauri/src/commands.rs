@@ -313,6 +313,108 @@ async fn handle_transcription_result(
     }
 }
 
+#[cfg(target_os = "macos")]
+pub fn request_accessibility_permissions() -> bool {
+    #[link(name = "ApplicationServices", kind = "framework")]
+    extern "C" {
+        fn AXIsProcessTrusted() -> bool;
+        fn AXIsProcessTrustedWithOptions(options: *const std::ffi::c_void) -> bool;
+        fn CFDictionaryCreate(
+            allocator: *const std::ffi::c_void,
+            keys: *const *const std::ffi::c_void,
+            values: *const *const std::ffi::c_void,
+            numValues: isize,
+            keyCallBacks: *const std::ffi::c_void,
+            valueCallBacks: *const std::ffi::c_void,
+        ) -> *const std::ffi::c_void;
+        fn CFRelease(cf: *const std::ffi::c_void);
+        static kAXTrustedCheckOptionPrompt: *const std::ffi::c_void;
+        static kCFBooleanTrue: *const std::ffi::c_void;
+    }
+
+    unsafe {
+        if AXIsProcessTrusted() {
+            return true;
+        }
+
+        let keys = [kAXTrustedCheckOptionPrompt];
+        let values = [kCFBooleanTrue];
+        let dict = CFDictionaryCreate(
+            std::ptr::null(),
+            keys.as_ptr(),
+            values.as_ptr(),
+            1,
+            std::ptr::null(),
+            std::ptr::null(),
+        );
+        let trusted = AXIsProcessTrustedWithOptions(dict);
+        if !dict.is_null() {
+            CFRelease(dict);
+        }
+        trusted
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn simulate_paste_macos() -> bool {
+    #[link(name = "CoreGraphics", kind = "framework")]
+    extern "C" {
+        fn CGEventCreateKeyboardEvent(source: *mut std::ffi::c_void, virtual_key: u16, key_down: bool) -> *mut std::ffi::c_void;
+        fn CGEventSetFlags(event: *mut std::ffi::c_void, flags: u64);
+        fn CGEventPost(tap: u32, event: *mut std::ffi::c_void);
+        fn CFRelease(cf: *const std::ffi::c_void);
+    }
+
+    const K_CG_HID_EVENT_TAP: u32 = 0;
+    const K_CG_SESSION_EVENT_TAP: u32 = 1;
+    const K_CG_EVENT_FLAG_MASK_COMMAND: u64 = 0x00100000;
+    const K_VK_ANSI_V: u16 = 0x09;
+
+    unsafe {
+        // Key down: Command + V
+        let event_down = CGEventCreateKeyboardEvent(std::ptr::null_mut(), K_VK_ANSI_V, true);
+        if event_down.is_null() {
+            return false;
+        }
+        CGEventSetFlags(event_down, K_CG_EVENT_FLAG_MASK_COMMAND);
+        CGEventPost(K_CG_HID_EVENT_TAP, event_down);
+        CGEventPost(K_CG_SESSION_EVENT_TAP, event_down);
+        CFRelease(event_down);
+
+        std::thread::sleep(std::time::Duration::from_millis(25));
+
+        // Key up: Command + V
+        let event_up = CGEventCreateKeyboardEvent(std::ptr::null_mut(), K_VK_ANSI_V, false);
+        if !event_up.is_null() {
+            CGEventSetFlags(event_up, K_CG_EVENT_FLAG_MASK_COMMAND);
+            CGEventPost(K_CG_HID_EVENT_TAP, event_up);
+            CGEventPost(K_CG_SESSION_EVENT_TAP, event_up);
+            CFRelease(event_up);
+        }
+
+        true
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn simulate_paste_windows() {
+    #[link(name = "user32")]
+    extern "system" {
+        fn keybd_event(bVk: u8, bScan: u8, dwFlags: u32, dwExtraInfo: usize);
+    }
+    const VK_CONTROL: u8 = 0x11;
+    const VK_V: u8 = 0x56;
+    const KEYEVENTF_KEYUP: u32 = 0x0002;
+
+    unsafe {
+        keybd_event(VK_CONTROL, 0, 0, 0);
+        keybd_event(VK_V, 0, 0, 0);
+        std::thread::sleep(std::time::Duration::from_millis(25));
+        keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+    }
+}
+
 /// Use the clipboard to paste text into the active window
 fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
     use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -325,27 +427,32 @@ fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        // Safe, non-panicking AppleScript keystroke
-        let output = std::process::Command::new("osascript")
-            .arg("-e")
-            .arg("tell application \"System Events\" to keystroke \"v\" using command down")
-            .output();
-        if let Ok(out) = output {
-            if out.status.success() {
-                log::info!("Pasted text into active application via AppleScript");
-            } else {
-                let err_msg = String::from_utf8_lossy(&out.stderr);
-                log::warn!("AppleScript keystroke warning: {}", err_msg);
-            }
+        // Check/request accessibility permission
+        let _ = request_accessibility_permissions();
+
+        // 1. Native CoreGraphics HID event post (fastest & works directly in active window)
+        let native_success = simulate_paste_macos();
+
+        // 2. Secondary fallback: AppleScript keystroke
+        if !native_success {
+            let _ = std::process::Command::new("osascript")
+                .arg("-e")
+                .arg("tell application \"System Events\" to keystroke \"v\" using command down")
+                .output();
         }
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
+    {
+        simulate_paste_windows();
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     {
         use enigo::{Enigo, Keyboard, Key, Settings, Direction};
         if let Ok(mut enigo) = Enigo::new(&Settings::default()) {
             let _ = enigo.key(Key::Control, Direction::Press);
-            let _ = enigo.key(Key::Unicode('v'), Direction::Click);
+            let _ = enigo.key(Key::Layout('v'), Direction::Click);
             let _ = enigo.key(Key::Control, Direction::Release);
         }
     }

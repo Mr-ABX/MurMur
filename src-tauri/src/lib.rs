@@ -60,6 +60,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 overlay::set_dock_icon();
+                let _ = crate::commands::request_accessibility_permissions();
                 if settings.show_dock_icon {
                     app.set_activation_policy(tauri::ActivationPolicy::Regular);
                 } else {

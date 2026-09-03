@@ -3,7 +3,7 @@
   <h1>MurMur: Ambient AI Voice & Assistant Operating System 🎙️⚡</h1>
   <p><strong>Lightning-fast local Whisper dictation, Dynamic Notch overlay, and screen-aware AI assistant for macOS & Windows.</strong></p>
 
-  [![Version: v0.3.0](https://img.shields.io/badge/Version-v0.3.0-8b5cf6.svg?style=flat-square&logo=github)](https://github.com/Mr-ABX/MurMur/releases/tag/v0.3.0)
+  [![Version: v0.3.1](https://img.shields.io/badge/Version-v0.3.1-8b5cf6.svg?style=flat-square&logo=github)](https://github.com/Mr-ABX/MurMur/releases/tag/v0.3.1)
   [![GitHub Stars](https://img.shields.io/github/stars/Mr-ABX/MurMur?style=flat-square&logo=github&color=eab308)](https://github.com/Mr-ABX/MurMur/stargazers)
   [![Release: Download](https://img.shields.io/badge/Release-Download%20Installer-5dd99e.svg?style=flat-square&logo=apple)](https://github.com/Mr-ABX/MurMur/releases/latest)
   [![License: MIT](https://img.shields.io/badge/License-MIT-7c6df2.svg?style=flat-square)](https://opensource.org/licenses/MIT)
