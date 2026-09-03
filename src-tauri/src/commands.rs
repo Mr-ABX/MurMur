@@ -366,7 +366,6 @@ fn simulate_paste_macos() -> bool {
     }
 
     const K_CG_HID_EVENT_TAP: u32 = 0;
-    const K_CG_SESSION_EVENT_TAP: u32 = 1;
     const K_CG_EVENT_FLAG_MASK_COMMAND: u64 = 0x00100000;
     const K_VK_ANSI_V: u16 = 0x09;
 
@@ -377,8 +376,9 @@ fn simulate_paste_macos() -> bool {
             return false;
         }
         CGEventSetFlags(event_down, K_CG_EVENT_FLAG_MASK_COMMAND);
+        // Post to HID tap only — HID events propagate to the session level automatically.
+        // Posting to both taps would deliver the keystroke twice (causing double-paste).
         CGEventPost(K_CG_HID_EVENT_TAP, event_down);
-        CGEventPost(K_CG_SESSION_EVENT_TAP, event_down);
         CFRelease(event_down);
 
         std::thread::sleep(std::time::Duration::from_millis(25));
@@ -388,7 +388,6 @@ fn simulate_paste_macos() -> bool {
         if !event_up.is_null() {
             CGEventSetFlags(event_up, K_CG_EVENT_FLAG_MASK_COMMAND);
             CGEventPost(K_CG_HID_EVENT_TAP, event_up);
-            CGEventPost(K_CG_SESSION_EVENT_TAP, event_up);
             CFRelease(event_up);
         }
 
