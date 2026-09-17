@@ -30,7 +30,7 @@ export const AIEnhancementsView: React.FC = () => {
     markModelInstalled,
   } = useAppStore();
 
-  const [activeSubTab, setActiveSubTab] = useState<'speech' | 'ai' | 'promptRules'>('speech');
+  const [activeSubTab, setActiveSubTab] = useState<'speech' | 'ai'>('speech');
   const [testInput, setTestInput] = useState('hey guys please fix my spelling and grammer mistakes');
   const [testOutput, setTestOutput] = useState('');
   const [isTesting, setIsTesting] = useState(false);
@@ -57,7 +57,6 @@ export const AIEnhancementsView: React.FC = () => {
     try {
       await invoke('download_model', { model: rustModel });
     } catch (err) {
-      // Demo fallback
       let progress = 0;
       const interval = setInterval(() => {
         progress += 20;
@@ -116,12 +115,12 @@ export const AIEnhancementsView: React.FC = () => {
         </div>
 
         {/* Sub-tab Navigation */}
-        <div className="flex items-center gap-1 bg-[#0a0a0a] p-1 rounded-md border border-[#222222] text-xs">
+        <div className="flex items-center gap-1 bg-[#121215] p-1 rounded-full border border-[#1e1e24] text-xs">
           <button
             onClick={() => setActiveSubTab('speech')}
-            className={`px-3 py-1.5 rounded font-medium transition-colors ${
+            className={`px-3.5 py-1.5 rounded-full font-medium transition-all ${
               activeSubTab === 'speech'
-                ? 'bg-[#1a1a1a] text-[#ededed] border border-[#2e2e2e]'
+                ? 'bg-white text-black font-semibold'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -129,9 +128,9 @@ export const AIEnhancementsView: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveSubTab('ai')}
-            className={`px-3 py-1.5 rounded font-medium transition-colors ${
+            className={`px-3.5 py-1.5 rounded-full font-medium transition-all ${
               activeSubTab === 'ai'
-                ? 'bg-[#1a1a1a] text-[#ededed] border border-[#2e2e2e]'
+                ? 'bg-white text-black font-semibold'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -143,7 +142,7 @@ export const AIEnhancementsView: React.FC = () => {
       {activeSubTab === 'speech' && (
         <div className="space-y-5">
           {/* Info Banner on Local Models */}
-          <div className="p-4 rounded-xl bg-[#1c1c1e] border border-[#2c2c2e] space-y-2">
+          <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
                 <Info className="w-4 h-4" />
@@ -151,7 +150,7 @@ export const AIEnhancementsView: React.FC = () => {
               </div>
               <button
                 onClick={handleOpenFolder}
-                className="btn-liquid-ghost px-3 py-1 text-xs font-medium flex items-center gap-1.5 text-zinc-300"
+                className="btn-swift-ghost text-xs"
               >
                 <FolderOpen className="w-3.5 h-3.5 text-emerald-400" /> Open Models Directory
               </button>
@@ -171,18 +170,18 @@ export const AIEnhancementsView: React.FC = () => {
               return (
                 <div
                   key={model.id}
-                  className={`liquid-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
-                    isSelected ? 'liquid-card-active' : ''
+                  className={`p-4 rounded-2xl bg-[#121215] border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+                    isSelected ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
                   }`}
                 >
                   <div className="space-y-1.5 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold text-white">{model.name}</h3>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-[#1e1e24] text-zinc-300 border border-white/5">
                         {model.provider}
                       </span>
                       {model.isDefault && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           Default
                         </span>
                       )}
@@ -201,14 +200,14 @@ export const AIEnhancementsView: React.FC = () => {
                       isSelected ? (
                         <button
                           disabled
-                          className="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5"
+                          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5"
                         >
                           <Check className="w-3.5 h-3.5" /> Active Engine
                         </button>
                       ) : (
                         <button
                           onClick={() => handleSelectSpeechModel(model.id)}
-                          className="btn-liquid-ghost px-4 py-2 text-xs font-semibold hover:border-emerald-500/40"
+                          className="btn-swift-ghost text-xs"
                         >
                           Select Model
                         </button>
@@ -229,7 +228,7 @@ export const AIEnhancementsView: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => handleDownload(model)}
-                        className="btn-liquid-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+                        className="btn-swift-primary text-xs"
                       >
                         <Download className="w-3.5 h-3.5" /> Download
                       </button>
@@ -249,13 +248,13 @@ export const AIEnhancementsView: React.FC = () => {
             {/* Local Offline AI */}
             <button
               onClick={() => setSelectedAIProvider('local')}
-              className={`liquid-card p-4 text-left transition-all relative ${
-                selectedAIProvider === 'local' ? 'liquid-card-active' : ''
+              className={`p-4 rounded-2xl bg-[#121215] border text-left transition-all relative ${
+                selectedAIProvider === 'local' ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white">Local AI (Ollama / GGUF)</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-mono font-semibold">
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-semibold">
                   100% Offline
                 </span>
               </div>
@@ -267,13 +266,13 @@ export const AIEnhancementsView: React.FC = () => {
             {/* Groq LPU */}
             <button
               onClick={() => setSelectedAIProvider('groq')}
-              className={`liquid-card p-4 text-left transition-all relative ${
-                selectedAIProvider === 'groq' ? 'liquid-card-active' : ''
+              className={`p-4 rounded-2xl bg-[#121215] border text-left transition-all relative ${
+                selectedAIProvider === 'groq' ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white">Groq LPU (Cloud)</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-mono font-semibold">
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-semibold">
                   ⚡ 150ms
                 </span>
               </div>
@@ -285,13 +284,13 @@ export const AIEnhancementsView: React.FC = () => {
             {/* Google Gemini */}
             <button
               onClick={() => setSelectedAIProvider('gemini')}
-              className={`liquid-card p-4 text-left transition-all relative ${
-                selectedAIProvider === 'gemini' ? 'liquid-card-active' : ''
+              className={`p-4 rounded-2xl bg-[#121215] border text-left transition-all relative ${
+                selectedAIProvider === 'gemini' ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white">Gemini 2.0 Flash</span>
-                <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-mono font-semibold">
+                <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-mono font-semibold">
                   Multimodal
                 </span>
               </div>
@@ -302,7 +301,7 @@ export const AIEnhancementsView: React.FC = () => {
           </div>
 
           {/* Provider Configuration Panel */}
-          <div className="liquid-card p-5 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
               <Key className="w-4 h-4 text-emerald-400" />
               API Key & Provider Configuration ({selectedAIProvider.toUpperCase()})
@@ -320,9 +319,9 @@ export const AIEnhancementsView: React.FC = () => {
                       placeholder={`Enter your ${selectedAIProvider} API key...`}
                       value={apiKeys[selectedAIProvider] || ''}
                       onChange={(e) => setApiKey(selectedAIProvider, e.target.value)}
-                      className="flex-1 bg-[#1c1c1e] border border-[#2c2c2e] rounded-lg px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 font-mono"
+                      className="flex-1 bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 font-mono"
                     />
-                    <button className="btn-liquid-ghost px-4 py-2 text-xs font-medium flex items-center gap-1.5">
+                    <button className="btn-swift-ghost text-xs">
                       <Shield className="w-3.5 h-3.5 text-emerald-400" /> Stored
                     </button>
                   </div>
@@ -337,14 +336,14 @@ export const AIEnhancementsView: React.FC = () => {
                   type="text"
                   value={selectedModelByProvider[selectedAIProvider] || (selectedAIProvider === 'local' ? 'qwen2.5-coder:7b' : 'llama-3.3-70b-versatile')}
                   onChange={(e) => setModelForProvider(selectedAIProvider, e.target.value)}
-                  className="w-full bg-[#1c1c1e] border border-[#2c2c2e] rounded-lg px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 font-mono"
+                  className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 font-mono"
                 />
               </div>
             </div>
           </div>
 
           {/* Interactive AI Playground Card */}
-          <div className="liquid-card p-5 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
                 <Bot className="w-4 h-4 text-emerald-400" /> AI Enhancement Test Playground
@@ -359,7 +358,7 @@ export const AIEnhancementsView: React.FC = () => {
                   rows={2}
                   value={testInput}
                   onChange={(e) => setTestInput(e.target.value)}
-                  className="w-full bg-[#1c1c1e] border border-[#2c2c2e] rounded-lg p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 resize-none font-sans"
+                  className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 resize-none font-sans"
                 />
               </div>
 
@@ -367,7 +366,7 @@ export const AIEnhancementsView: React.FC = () => {
                 <button
                   onClick={handleTestPrompt}
                   disabled={isTesting}
-                  className="btn-liquid-primary px-4 py-2 text-xs font-medium flex items-center gap-1.5"
+                  className="btn-swift-primary text-xs"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{isTesting ? 'Enhancing with AI...' : 'Run Enhancement Test'}</span>
@@ -375,7 +374,7 @@ export const AIEnhancementsView: React.FC = () => {
               </div>
 
               {testOutput && (
-                <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-1">
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
                   <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Enhanced AI Output:
                   </div>

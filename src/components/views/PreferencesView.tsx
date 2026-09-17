@@ -44,7 +44,7 @@ export const PreferencesView: React.FC = () => {
   return (
     <div className="flex-1 h-full flex flex-col md:flex-row overflow-hidden select-none bg-[#000000] text-[#ededed]">
       {/* Settings Section Sidebar */}
-      <div className="w-full md:w-56 h-full border-r border-[#222222] p-3 space-y-0.5 bg-[#0a0a0a]">
+      <div className="w-full md:w-56 h-full border-r border-[#1e1e24] p-3 space-y-1 bg-[#0a0a0c]">
         <div className="px-3 py-2 mb-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
             <Sliders className="w-3.5 h-3.5 text-emerald-400" /> Preferences
@@ -59,15 +59,15 @@ export const PreferencesView: React.FC = () => {
             <button
               key={sec.id}
               onClick={() => setSettingsSection(sec.id as any)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                 isActive
-                  ? 'bg-[#1a1a1a] text-[#ededed] border border-[#2e2e2e]'
-                  : 'text-zinc-400 hover:text-white hover:bg-[#121212]'
+                  ? 'bg-white text-black font-semibold'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
               <Icon
                 className={`w-4 h-4 ${
-                  isActive ? 'text-[#ededed]' : 'text-zinc-500'
+                  isActive ? 'text-black' : 'text-zinc-400'
                 }`}
               />
               <span>{sec.label}</span>
@@ -86,7 +86,7 @@ export const PreferencesView: React.FC = () => {
             </div>
 
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f0f11] border border-[#222222]">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Audio Feedback Cues</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -101,7 +101,7 @@ export const PreferencesView: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f0f11] border border-[#222222]">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Estimated Typing Speed (WPM)</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -112,7 +112,7 @@ export const PreferencesView: React.FC = () => {
                   type="number"
                   value={typingWPM}
                   onChange={(e) => setTypingWPM(Number(e.target.value))}
-                  className="w-20 bg-[#0a0a0a] border border-[#262626] rounded px-2.5 py-1 text-xs text-white text-right font-mono"
+                  className="w-20 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-right font-mono"
                 />
               </div>
             </div>
@@ -127,7 +127,7 @@ export const PreferencesView: React.FC = () => {
             </div>
 
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f0f11] border border-[#222222]">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Primary Dictation Shortcut</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -139,12 +139,12 @@ export const PreferencesView: React.FC = () => {
                     type="text"
                     value={hotkey}
                     onChange={(e) => setHotkey(e.target.value)}
-                    className="w-36 bg-[#0a0a0a] border border-[#262626] rounded px-2.5 py-1 text-xs text-white text-center font-mono font-medium"
+                    className="w-40 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-center font-mono font-semibold"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f0f11] border border-[#222222]">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Secondary Command Shortcut</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -156,12 +156,12 @@ export const PreferencesView: React.FC = () => {
                     type="text"
                     value={secondaryHotkey}
                     onChange={(e) => setSecondaryHotkey(e.target.value)}
-                    className="w-36 bg-[#0a0a0a] border border-[#262626] rounded px-2.5 py-1 text-xs text-white text-center font-mono font-medium"
+                    className="w-40 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-center font-mono font-semibold"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f0f11] border border-[#222222]">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Push-to-Talk Mode</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -176,7 +176,7 @@ export const PreferencesView: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f0f11] border border-[#222222]">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Smart Auto-Paste</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -201,14 +201,14 @@ export const PreferencesView: React.FC = () => {
               <p className="text-xs text-zinc-400 mt-0.5">Select and calibrate your recording microphone.</p>
             </div>
 
-            <div className="p-4 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-3">
+            <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-3">
               <label className="block text-xs font-medium text-zinc-300">
                 Microphone Input Device
               </label>
               <select
                 value={selectedInputDevice}
                 onChange={(e) => setSelectedInputDevice(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-[#262626] rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-[#444444]"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/30"
               >
                 {inputDevices.map((dev) => (
                   <option key={dev.id} value={dev.id}>
@@ -229,20 +229,20 @@ export const PreferencesView: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {[
-                { id: 'notch', title: 'Dynamic Notch (Top)', desc: 'Top-screen dock hugging the bezel with live audio waveform' },
+                { id: 'notch', title: 'Dynamic Notch (SuPaste)', desc: 'Top-screen dock with 1:1 Apple cutout silhouette and card shelf' },
                 { id: 'minimal', title: 'Minimal Pill', desc: 'Compact floating recording indicator' },
                 { id: 'hidden', title: 'Hidden Mode', desc: 'No visual overlay, audio feedback only' },
               ].map((style) => (
                 <button
                   key={style.id}
                   onClick={() => setOverlayStyle(style.id as OverlayStyle)}
-                  className={`p-4 rounded-lg text-left transition-colors border ${
+                  className={`p-4 rounded-2xl text-left transition-all border ${
                     overlayStyle === style.id
-                      ? 'bg-[#141414] border-[#ededed]'
-                      : 'bg-[#0f0f11] border-[#222222] hover:border-[#333333]'
+                      ? 'bg-[#18181c] border-white/40 ring-1 ring-white/10'
+                      : 'bg-[#121215] border-[#1e1e24] hover:border-[#2a2a32]'
                   }`}
                 >
-                  <p className="text-xs font-medium text-[#ededed]">{style.title}</p>
+                  <p className="text-xs font-semibold text-[#ededed]">{style.title}</p>
                   <p className="text-[11px] text-zinc-400 mt-1">{style.desc}</p>
                 </button>
               ))}
@@ -257,12 +257,12 @@ export const PreferencesView: React.FC = () => {
               <p className="text-xs text-zinc-400 mt-0.5">Manage local transcription history and audio files.</p>
             </div>
 
-            <div className="p-4 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-3">
+            <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-3">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-[#ededed] font-medium">Local Dictation Cache</span>
                 <button
                   onClick={clearHistory}
-                  className="px-3 py-1.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-medium border border-red-500/20 transition-colors"
+                  className="px-3.5 py-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold border border-red-500/20 transition-colors"
                 >
                   Clear Audio Cache
                 </button>

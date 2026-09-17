@@ -24,7 +24,7 @@ export const FeedbackView: React.FC = () => {
         </p>
       </div>
 
-      <div className="p-6 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-4 max-w-xl">
+      <div className="p-6 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4 max-w-xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-[#ededed] mb-1.5">
@@ -35,15 +35,15 @@ export const FeedbackView: React.FC = () => {
               placeholder="Tell us what you love, what needs fixing, or what models you'd like added..."
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-[#222222] rounded-md p-3.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#444444] resize-none font-sans"
+              className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 resize-none font-sans"
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-zinc-500">Feedback is anonymous and private</span>
+            <span className="text-[11px] text-zinc-500">Feedback is anonymous and stored locally</span>
             <button
               type="submit"
-              className="btn-liquid-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+              className="btn-swift-primary text-xs"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Submit Feedback</span>
@@ -51,7 +51,7 @@ export const FeedbackView: React.FC = () => {
           </div>
 
           {submitted && (
-            <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>Thank you! Your feedback has been logged.</span>
             </div>

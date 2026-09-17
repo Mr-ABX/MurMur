@@ -7,17 +7,22 @@
 @layer base {
   :root {
     --bg-base: #000000;
-    --bg-surface: #0a0a0a;
-    --bg-surface-elevated: #111111;
-    --text-primary: #ededed;
-    --text-secondary: #888888;
-    --text-dim: #555555;
-    --border-subtle: #222222;
-    --border-strong: #333333;
+    --bg-surface: #0a0a0c;
+    --bg-surface-card: #121215;
+    --bg-surface-elevated: #18181c;
+    --border-subtle: #1e1e24;
+    --border-strong: #2a2a32;
+    --border-focus: #383842;
     
-    /* Vercel Accent */
+    --text-primary: #ededed;
+    --text-secondary: #9da0a6;
+    --text-muted: #5e6066;
+    
+    /* Apple / Swift Accent Tokens */
     --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
     --accent-blue: #0070f3;
+    --accent-purple: #8b5cf6;
   }
 
   * {
@@ -63,86 +68,101 @@
   .overflow-x-auto:hover::-webkit-scrollbar-thumb,
   .overflow-auto:hover::-webkit-scrollbar-thumb,
   [class*="overflow"]:hover::-webkit-scrollbar-thumb {
-    background: #262626;
+    background: #24242b;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a3a !important;
+    background: #363640 !important;
   }
 }
 
 @layer components {
-  /* Vercel Panel */
-  .liquid-glass-panel {
-    background: #0a0a0a;
-    border: 1px solid #222222;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+  /* Swift Card Style */
+  .swift-card {
+    background: #121215;
+    border: 1px solid #1e1e24;
+    border-radius: 14px;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Vercel Card */
-  .liquid-card {
-    background: #0f0f11;
-    border: 1px solid #222222;
-    border-radius: 8px;
-    transition: all 0.15s ease-in-out;
-  }
-  
-  .liquid-card:hover {
-    background: #141416;
-    border-color: #333333;
+  .swift-card:hover {
+    background: #16161a;
+    border-color: #2a2a32;
   }
 
-  /* Active Card */
-  .liquid-card-active {
-    background: #121214;
-    border: 1px solid #ededed;
+  .swift-card-active {
+    background: #18181e;
+    border: 1px solid rgba(255, 255, 255, 0.25);
   }
 
-  /* Primary High-Contrast Vercel Button */
-  .btn-liquid-primary {
-    position: relative;
-    background: #ededed;
-    color: #000000;
-    font-weight: 500;
-    font-size: 13px;
-    border-radius: 6px;
-    border: 1px solid #ffffff;
-    transition: all 0.15s ease-in-out;
-  }
-
-  .btn-liquid-primary:hover {
+  /* Primary Button */
+  .btn-swift-primary {
     background: #ffffff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    color: #000000;
+    font-weight: 600;
+    font-size: 12px;
+    border-radius: 8px;
+    border: 1px solid #ffffff;
+    padding: 6px 14px;
+    transition: all 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
-  .btn-liquid-primary:active {
-    transform: scale(0.98);
+  .btn-swift-primary:hover {
+    background: #f0f0f0;
+    transform: translateY(-0.5px);
   }
 
-  /* Secondary / Ghost Vercel Button */
-  .btn-liquid-ghost {
-    background: #0a0a0a;
+  .btn-swift-primary:active {
+    transform: translateY(0.5px) scale(0.99);
+  }
+
+  /* Secondary / Ghost Button */
+  .btn-swift-ghost {
+    background: #141418;
     color: #ededed;
-    border: 1px solid #262626;
-    border-radius: 6px;
-    font-size: 13px;
-    transition: all 0.15s ease-in-out;
+    border: 1px solid #22222a;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    transition: all 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
-  .btn-liquid-ghost:hover {
-    background: #171717;
-    border-color: #3a3a3a;
+  .btn-swift-ghost:hover {
+    background: #1c1c22;
+    border-color: #2e2e38;
     color: #ffffff;
   }
 
-  /* Compact FluidVoice Notch Container */
-  .liquid-notch-container {
-    background: #0a0a0a;
-    border-left: 1px solid #262626;
-    border-right: 1px solid #262626;
-    border-bottom: 1px solid #262626;
-    border-top: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  .btn-swift-ghost:active {
+    transform: scale(0.99);
+  }
+
+  /* Segmented Pill Navigation */
+  .swift-pill-active {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 600;
+    border-radius: 9999px;
+  }
+
+  .swift-pill-inactive {
+    background: #141418;
+    color: #8e8e93;
+    border-radius: 9999px;
+  }
+
+  .swift-pill-inactive:hover {
+    background: #1e1e24;
+    color: #ededed;
   }
 }
 
@@ -153,6 +173,6 @@
 
 /* Selection */
 ::selection {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.22);
   color: #ffffff;
 }

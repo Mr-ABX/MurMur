@@ -94,6 +94,23 @@ export function useLiquidSync() {
       })
       .catch(() => {});
 
+    // Sync downloaded models status from backend
+    invoke<Record<string, boolean>>('get_downloaded_models')
+      .then((downloaded) => {
+        if (downloaded) {
+          Object.entries(downloaded).forEach(([modelKey, isDown]) => {
+            if (isDown) {
+              markModelInstalled(modelKey);
+              if (modelKey === 'base') markModelInstalled('whisper-base');
+              if (modelKey === 'base.en') markModelInstalled('whisper-base-en');
+              if (modelKey === 'small.en') markModelInstalled('whisper-small');
+              if (modelKey === 'tiny.en') markModelInstalled('whisper-tiny');
+            }
+          });
+        }
+      })
+      .catch(() => {});
+
     const setupListeners = async () => {
       // 1. Recording started
       const unlistenStart = await listen('murmur://recording-started', () => {

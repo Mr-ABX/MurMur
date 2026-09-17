@@ -55,6 +55,51 @@ pub fn get_frontmost_app_name() -> String {
     "Clipboard".to_string()
 }
 
+#[cfg(target_os = "macos")]
+pub fn get_macos_pasteboard_text() -> Option<String> {
+    use objc2::msg_send;
+    use objc2::runtime::AnyObject;
+    use std::ffi::CStr;
+
+    unsafe {
+        let pb_cls = objc2::ffi::objc_getClass(b"NSPasteboard\0".as_ptr() as *const _);
+        if pb_cls.is_null() {
+            return None;
+        }
+        let general_pb: *mut AnyObject = msg_send![pb_cls as *mut AnyObject, generalPasteboard];
+        if general_pb.is_null() {
+            return None;
+        }
+
+        let str_cls = objc2::ffi::objc_getClass(b"NSString\0".as_ptr() as *const _);
+        
+        // 1. Try public.utf8-plain-text
+        let ns_type_str: *mut AnyObject = msg_send![str_cls as *mut AnyObject, stringWithUTF8String: b"public.utf8-plain-text\0".as_ptr()];
+        let item_ns: *mut AnyObject = msg_send![general_pb, stringForType: ns_type_str];
+        if !item_ns.is_null() {
+            let utf8: *const std::os::raw::c_char = msg_send![item_ns, UTF8String];
+            if !utf8.is_null() {
+                if let Ok(s) = CStr::from_ptr(utf8).to_str() {
+                    return Some(s.to_string());
+                }
+            }
+        }
+
+        // 2. Try NSStringPboardType
+        let legacy_type: *mut AnyObject = msg_send![str_cls as *mut AnyObject, stringWithUTF8String: b"NSStringPboardType\0".as_ptr()];
+        let item_ns2: *mut AnyObject = msg_send![general_pb, stringForType: legacy_type];
+        if !item_ns2.is_null() {
+            let utf8: *const std::os::raw::c_char = msg_send![item_ns2, UTF8String];
+            if !utf8.is_null() {
+                if let Ok(s) = CStr::from_ptr(utf8).to_str() {
+                    return Some(s.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
 /// Detect item category based on text patterns
 pub fn detect_category(text: &str) -> String {
     let trimmed = text.trim();
@@ -120,14 +165,31 @@ pub fn start_clipboard_monitor(app_handle: AppHandle) {
         let last_text = Arc::new(Mutex::new(String::new()));
         
         // Prime last_text with current clipboard so app start doesn't trigger spurious change
+        #[cfg(target_os = "macos")]
+        if let Some(initial_text) = get_macos_pasteboard_text() {
+            *last_text.lock().unwrap() = initial_text;
+        }
+
+        #[cfg(not(target_os = "macos"))]
         if let Ok(initial_text) = app_handle.clipboard().read_text() {
             *last_text.lock().unwrap() = initial_text;
         }
 
         loop {
-            tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
-            if let Ok(current_text) = app_handle.clipboard().read_text() {
+            let current_text_opt = {
+                #[cfg(target_os = "macos")]
+                {
+                    get_macos_pasteboard_text().or_else(|| app_handle.clipboard().read_text().ok())
+                }
+                #[cfg(not(target_os = "macos"))]
+                {
+                    app_handle.clipboard().read_text().ok()
+                }
+            };
+
+            if let Some(current_text) = current_text_opt {
                 let trimmed = current_text.trim();
                 if trimmed.is_empty() {
                     continue;
@@ -158,7 +220,7 @@ pub fn start_clipboard_monitor(app_handle: AppHandle) {
 
                     // Persist to disk
                     let mut saved = load_saved_clipboard();
-                    // Remove duplicate
+                    // Remove duplicate content so latest copy bubbles to the front
                     saved.retain(|c| c.content != item.content);
                     saved.insert(0, item.clone());
                     if saved.len() > 300 {
@@ -166,11 +228,11 @@ pub fn start_clipboard_monitor(app_handle: AppHandle) {
                     }
                     save_clipboard_to_disk(&saved);
 
-                    // Broadcast live update to all windows & notch
+                    log::info!("[clipboard] Captured new item: {} chars from {}", char_count, item.source_app);
+
+                    // Broadcast live update to all windows
                     let _ = app_handle.emit("murmur://clipboard-changed", &item);
-                    let _ = app_handle.emit_to("notch", "murmur://clipboard-changed", &item);
-                    let _ = app_handle.emit_to("settings", "murmur://clipboard-changed", &item);
-                    let _ = app_handle.emit_to("overlay", "murmur://clipboard-changed", &item);
+                    let _ = app_handle.emit("murmur://clipboard-history-updated", &saved);
                 }
             }
         }

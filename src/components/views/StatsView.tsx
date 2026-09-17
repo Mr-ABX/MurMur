@@ -30,7 +30,7 @@ export const StatsView: React.FC = () => {
       {/* 4 Stat Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Words Today */}
-        <div className="p-4 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-1">
+        <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-1 hover:border-[#2a2a32] transition-colors">
           <div className="flex justify-between items-center text-zinc-400 text-xs font-medium">
             <span>Words Today</span>
             <Sparkles className="w-4 h-4 text-emerald-400" />
@@ -40,7 +40,7 @@ export const StatsView: React.FC = () => {
         </div>
 
         {/* Time Saved Today */}
-        <div className="p-4 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-1">
+        <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-1 hover:border-[#2a2a32] transition-colors">
           <div className="flex justify-between items-center text-zinc-400 text-xs font-medium">
             <span>Time Saved</span>
             <Clock className="w-4 h-4 text-zinc-300" />
@@ -50,17 +50,17 @@ export const StatsView: React.FC = () => {
         </div>
 
         {/* Day Streak */}
-        <div className="p-4 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-1">
+        <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-1 hover:border-[#2a2a32] transition-colors">
           <div className="flex justify-between items-center text-zinc-400 text-xs font-medium">
             <span>Current Streak</span>
-            <Flame className="w-4 h-4 text-orange-400" />
+            <Flame className="w-4 h-4 text-amber-400" />
           </div>
           <p className="text-2xl font-bold text-white font-mono">{currentStreakDays} Days</p>
-          <p className="text-[11px] text-orange-400 font-medium">Personal Best: 14 Days</p>
+          <p className="text-[11px] text-amber-400 font-medium">Personal Best: 14 Days</p>
         </div>
 
         {/* All-Time Words */}
-        <div className="p-4 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-1">
+        <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-1 hover:border-[#2a2a32] transition-colors">
           <div className="flex justify-between items-center text-zinc-400 text-xs font-medium">
             <span>All-Time Total</span>
             <Award className="w-4 h-4 text-zinc-300" />
@@ -71,7 +71,7 @@ export const StatsView: React.FC = () => {
       </div>
 
       {/* 7-Day Activity Bar Chart */}
-      <div className="p-5 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-4">
+      <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-[#ededed]">
             7-Day Dictation Activity
@@ -88,9 +88,9 @@ export const StatsView: React.FC = () => {
                 <span className="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-200 transition-colors">
                   {item.words}
                 </span>
-                <div className="w-full max-w-[40px] bg-[#1a1a1a] border border-[#262626] rounded-md h-32 flex items-end p-1 overflow-hidden">
+                <div className="w-full max-w-[40px] bg-[#09090b] border border-[#1e1e24] rounded-xl h-32 flex items-end p-1.5 overflow-hidden">
                   <div
-                    className="w-full bg-white rounded transition-all duration-300 group-hover:bg-emerald-400"
+                    className="w-full bg-white rounded-lg transition-all duration-300 group-hover:bg-emerald-400"
                     style={{ height: `${heightPercent}%` }}
                   />
                 </div>

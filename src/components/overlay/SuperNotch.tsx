@@ -33,6 +33,7 @@ export const SuperNotch: React.FC = () => {
     setClipboardSearchQuery,
     togglePinClipboardItem,
     deleteClipboardItem,
+    setClipboardItems,
   } = useAppStore();
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -84,9 +85,28 @@ export const SuperNotch: React.FC = () => {
     }
   }, [filteredItems.length, selectedIndex]);
 
-  // Sync window size with Tauri backend (Expanded = 780x240, Idle/Recording = 560x180)
+  // Sync window size with Tauri backend & fetch fresh clipboard items
   useEffect(() => {
     if (activeMode === 'shelf') {
+      invoke<any[]>('get_clipboard_history')
+        .then((items) => {
+          if (Array.isArray(items)) {
+            setClipboardItems(
+              items.map((it) => ({
+                id: it.id,
+                content: it.content,
+                category: it.category,
+                timestamp: it.timestamp,
+                timestampRaw: it.timestamp_raw || Date.now(),
+                sourceApp: it.source_app || 'Clipboard',
+                charCount: it.char_count || it.content.length,
+                wordCount: it.word_count || it.content.split(/\s+/).filter(Boolean).length,
+                isPinned: it.is_pinned || false,
+              }))
+            );
+          }
+        })
+        .catch(() => {});
       invoke('set_notch_expanded', { expanded: true }).catch(() => {});
       getCurrentWindow().setFocus().catch(() => {});
       setTimeout(() => {
@@ -95,7 +115,7 @@ export const SuperNotch: React.FC = () => {
     } else {
       invoke('set_notch_expanded', { expanded: false }).catch(() => {});
     }
-  }, [activeMode]);
+  }, [activeMode, setClipboardItems]);
 
   // Keyboard navigation
   useEffect(() => {

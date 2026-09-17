@@ -42,7 +42,7 @@ export const CustomDictionaryView: React.FC = () => {
         </div>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="btn-liquid-primary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5"
+          className="btn-swift-primary text-xs"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add Dictionary Entry</span>
@@ -51,7 +51,7 @@ export const CustomDictionaryView: React.FC = () => {
 
       {/* Add Entry Form */}
       {isAdding && (
-        <div className="p-5 rounded-lg bg-[#0f0f11] border border-[#333333] space-y-4">
+        <div className="p-5 rounded-2xl bg-[#121215] border border-[#2a2a32] space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-[#ededed]">
             New Dictionary Rule
           </h2>
@@ -64,7 +64,7 @@ export const CustomDictionaryView: React.FC = () => {
                 placeholder="e.g. k8s, new line, postgres"
                 value={trigger}
                 onChange={(e) => setTrigger(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-[#222222] rounded-md px-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#444444]"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30"
               />
             </div>
             <div>
@@ -74,7 +74,7 @@ export const CustomDictionaryView: React.FC = () => {
                 placeholder="e.g. Kubernetes, \n, PostgreSQL"
                 value={replacement}
                 onChange={(e) => setReplacement(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-[#222222] rounded-md px-3 py-1.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#444444]"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30"
               />
             </div>
             <div>
@@ -82,7 +82,7 @@ export const CustomDictionaryView: React.FC = () => {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as any)}
-                className="w-full bg-[#0a0a0a] border border-[#222222] rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#444444]"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-white/30"
               >
                 <option value="word">Technical Word</option>
                 <option value="punctuation">Spoken Punctuation</option>
@@ -94,13 +94,13 @@ export const CustomDictionaryView: React.FC = () => {
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setIsAdding(false)}
-              className="btn-liquid-ghost px-3.5 py-1.5 text-xs font-medium"
+              className="btn-swift-ghost text-xs"
             >
               Cancel
             </button>
             <button
               onClick={handleAdd}
-              className="btn-liquid-primary px-4 py-1.5 text-xs font-semibold"
+              className="btn-swift-primary text-xs"
             >
               Save Entry
             </button>
@@ -113,7 +113,7 @@ export const CustomDictionaryView: React.FC = () => {
         {dictionaryEntries.map((entry) => (
           <div
             key={entry.id}
-            className="p-3.5 rounded-lg bg-[#0f0f11] border border-[#222222] flex items-center justify-between gap-3 hover:border-[#333333] transition-colors"
+            className="p-3.5 rounded-2xl bg-[#121215] border border-[#1e1e24] flex items-center justify-between gap-3 hover:border-[#2a2a32] transition-colors"
           >
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ export const CustomDictionaryView: React.FC = () => {
               />
               <button
                 onClick={() => deleteDictionaryEntry(entry.id)}
-                className="text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-red-500/10 transition-colors"
+                className="text-zinc-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
