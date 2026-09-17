@@ -411,6 +411,39 @@ export default function Notch({ state }: { state: AppState }) {
     };
   }, []);
 
+  // Listen for speech dictation in Assistant operating mode
+  useEffect(() => {
+    let unlistenVoice: (() => void) | null = null;
+    listen<string>("murmur://assistant-voice-input", async (event) => {
+      const voiceText = event.payload;
+      if (voiceText && voiceText.trim()) {
+        setIsExpanded(true);
+        setPageIndex(1);
+        setPrompt(voiceText);
+        setIsAsking(true);
+        setAssistantResponse("");
+        try {
+          const res = await invoke<string>("ask_screen_assistant", {
+            prompt: voiceText,
+            imageBase64: "",
+          });
+          setAssistantResponse(res);
+          setPrompt("");
+        } catch (err: any) {
+          setAssistantResponse("Error: " + (err?.toString() || "Failed to ask assistant"));
+        } finally {
+          setIsAsking(false);
+        }
+      }
+    }).then((fn) => {
+      unlistenVoice = fn;
+    });
+
+    return () => {
+      if (unlistenVoice) unlistenVoice();
+    };
+  }, []);
+
   useEffect(() => {
     if (isExpanded) {
       invoke("set_notch_expanded", { expanded: true }).catch((err) => {

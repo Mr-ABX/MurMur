@@ -299,16 +299,24 @@ async fn handle_transcription_result(
     let _ = app.emit_to("notch", "murmur://history-updated", &history);
     let _ = app.emit_to("settings", "murmur://history-updated", &history);
 
-    // Hide visualizer if auto_hidden mode is active
-    overlay::hide_visualizers(&app, &settings);
+    // If operating mode is Assistant, route transcript into Notch Assistant workspace
+    if settings.operating_mode == crate::settings::OperatingMode::Assistant {
+        overlay::show_visualizer(&app, &settings);
+        overlay::resize_notch(&app, true);
+        let _ = app.emit("murmur://assistant-voice-input", &text);
+        let _ = app.emit_to("notch", "murmur://assistant-voice-input", &text);
+    } else {
+        // Hide visualizer if auto_hidden mode is active
+        overlay::hide_visualizers(&app, &settings);
 
-    // Auto-paste if enabled
-    if settings.auto_paste {
-        // Small delay to allow macOS to finish switching focus
-        std::thread::sleep(std::time::Duration::from_millis(150));
-        if let Err(e) = paste_text(&app, &text) {
-            log::error!("Failed to paste text: {}", e);
-            let _ = app.emit("murmur://error", "Accessibility Permission Required: Go to System Settings -> Privacy & Security -> Accessibility and enable it for your Terminal/IDE.".to_string());
+        // Auto-paste if enabled
+        if settings.auto_paste {
+            // Small delay to allow macOS/Windows to finish switching focus
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            if let Err(e) = paste_text(&app, &text) {
+                log::error!("Failed to paste text: {}", e);
+                let _ = app.emit("murmur://error", "Accessibility Permission Required: Go to System Settings -> Privacy & Security -> Accessibility and enable it for your Terminal/IDE.".to_string());
+            }
         }
     }
 }
@@ -698,4 +706,18 @@ pub async fn clear_all_app_data(app: tauri::AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn set_notch_expanded(app: tauri::AppHandle, expanded: bool) {
     overlay::resize_notch(&app, expanded);
+}
+
+#[tauri::command]
+pub fn preview_notch(app: tauri::AppHandle, state: State<'_, MurmurState>) {
+    let settings = state.settings.lock().unwrap().clone();
+    overlay::show_visualizer(&app, &settings);
+    let app_clone = app.clone();
+    let settings_clone = settings.clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(tokio::time::Duration::from_millis(2500)).await;
+        if settings_clone.visibility_mode == crate::settings::VisibilityMode::AutoHidden {
+            overlay::hide_visualizers(&app_clone, &settings_clone);
+        }
+    });
 }

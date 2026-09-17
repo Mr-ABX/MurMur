@@ -61,7 +61,9 @@ const LANGUAGES = [
   { code: "ru", name: "Russian (Русский)" },
 ];
 
-type Tab = "notes" | "skills" | "general" | "model" | "assistant" | "cloud" | "voxcoder" | "history" | "experimental" | "about";
+type Tab = "notes" | "history" | "models" | "skills" | "settings" | "about";
+type SettingsSubTab = "general" | "advanced" | "experimental";
+type ModelsSubTab = "local" | "cloud" | "assistant";
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -72,11 +74,14 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
   );
 }
 
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ enabled, onChange, disabled }: { enabled: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
     <button
-      onClick={() => onChange(!enabled)}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 ${
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!enabled)}
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+        disabled ? "opacity-35 cursor-not-allowed" : "cursor-pointer"
+      } ${
         enabled ? "bg-[var(--accent-primary)]" : "bg-zinc-600/50"
       }`}
     >
@@ -121,20 +126,20 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
   // Parse existing hotkey into components
   const parseHotkey = (keyStr: string) => {
     const parts = (keyStr || "").split("+").map((s) => s.trim()).filter(Boolean);
-    let mod1 = isMac ? "Command" : "Control";
+    let mod1 = isMac ? "Command" : "Super";
     let mod2 = "Shift";
     let key3 = "Space";
 
     if (parts.length === 1) {
-      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Control") : parts[0];
+      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Super") : (parts[0] === "Command" && !isMac ? "Super" : parts[0]);
       mod2 = "none";
       key3 = "none";
     } else if (parts.length === 2) {
-      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Control") : parts[0];
+      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Super") : (parts[0] === "Command" && !isMac ? "Super" : parts[0]);
       mod2 = parts[1];
       key3 = "none";
     } else if (parts.length >= 3) {
-      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Control") : parts[0];
+      mod1 = parts[0] === "CommandOrControl" ? (isMac ? "Command" : "Super") : (parts[0] === "Command" && !isMac ? "Super" : parts[0]);
       mod2 = parts[1];
       key3 = parts[2];
     }
@@ -154,7 +159,7 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
     onChange(result);
   };
 
-  const isKey2Modifier = ["Shift", "Option", "Alt", "Control", "Command"].includes(mod2);
+  const isKey2Modifier = ["Shift", "Option", "Alt", "Control", "Command", "Super"].includes(mod2);
   const isKey2NormalKey = mod2 && mod2 !== "none" && !isKey2Modifier;
   const isKey3NormalKey = key3 && key3 !== "none";
 
@@ -171,11 +176,12 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
         { label: "⌘⇧ Space (Default)", value: "Command+Shift+Space" },
       ]
     : [
-        { label: "Ctrl+Alt+Space", value: "Control+Alt+Space" },
+        { label: "⊞ Start + Space", value: "Super+Space" },
+        { label: "⊞ Start+Shift+Space", value: "Super+Shift+Space" },
         { label: "Ctrl + Space", value: "Control+Space" },
+        { label: "Ctrl+Shift+Space", value: "Control+Shift+Space" },
         { label: "Alt + Space", value: "Alt+Space" },
         { label: "Alt + D", value: "Alt+D" },
-        { label: "Ctrl+Shift+Space", value: "Control+Shift+Space" },
       ];
 
   const mod1Options = isMac
@@ -186,6 +192,7 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
         { value: "Shift", label: "⇧ Shift" },
       ]
     : [
+        { value: "Super", label: "⊞ Start (Windows Key)" },
         { value: "Control", label: "Ctrl (Control)" },
         { value: "Alt", label: "Alt" },
         { value: "Shift", label: "Shift" },
@@ -226,10 +233,10 @@ function ShortcutBuilder({ hotkey, onChange }: ShortcutBuilderProps) {
   ];
 
   const getBadgeLabel = (key: string) => {
-    if (key === "Command") return "⌘ Cmd";
-    if (key === "Option") return "⌥ Opt";
-    if (key === "Control") return "⌃ Ctrl";
-    if (key === "Shift") return "⇧ Shift";
+    if (key === "Command" || key === "Super") return isMac ? "⌘ Cmd" : "⊞ Start";
+    if (key === "Option") return isMac ? "⌥ Opt" : "Alt";
+    if (key === "Control") return isMac ? "⌃ Ctrl" : "Ctrl";
+    if (key === "Shift") return isMac ? "⇧ Shift" : "Shift";
     if (key === "Space") return "␣ Space";
     return key;
   };
@@ -334,6 +341,8 @@ export default function SettingsPanel({ state }: Props) {
     downloadGemmaModel, deleteGemmaModel
   } = state;
   const [activeTab, setActiveTab] = useState<Tab>("notes");
+  const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("general");
+  const [modelsSubTab, setModelsSubTab] = useState<ModelsSubTab>("local");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
@@ -446,6 +455,10 @@ export default function SettingsPanel({ state }: Props) {
   const handleCheckUpdates = async (isManual = true) => {
     setIsCheckingUpdates(true);
     try {
+      if (isManual) {
+        // Add intentional smooth delay so the user sees the spinner working
+        await new Promise((r) => setTimeout(r, 600));
+      }
       const info = await checkForAppUpdates();
       setUpdateInfo(info);
       setLastCheckedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
@@ -464,6 +477,9 @@ export default function SettingsPanel({ state }: Props) {
     setIsSaving(true);
     try {
       await invoke("save_settings", { settings });
+      try {
+        await invoke("preview_notch");
+      } catch {}
       setSavedFeedback(true);
       setTimeout(() => setSavedFeedback(false), 2500);
     } catch (err) {
@@ -479,16 +495,12 @@ export default function SettingsPanel({ state }: Props) {
     }
   }, []);
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  const tabs: { id: Tab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: "notes", label: "Notes", icon: <FileText size={16} /> },
-    { id: "skills", label: "Skills", icon: <Wrench size={16} /> },
-    { id: "general", label: "General", icon: <Settings size={16} /> },
-    { id: "model", label: "AI Model", icon: <Cpu size={16} /> },
-    { id: "assistant", label: "Assistant", icon: <Bot size={16} /> },
-    { id: "cloud", label: "Cloud APIs", icon: <Cloud size={16} /> },
-    { id: "voxcoder", label: "VoxCoder", icon: <Code2 size={16} /> },
     { id: "history", label: "History", icon: <History size={16} /> },
-    { id: "experimental", label: "Experimental", icon: <Beaker size={16} /> },
+    { id: "models", label: "AI Models & APIs", icon: <Cpu size={16} /> },
+    { id: "skills", label: "Agents & Skills", icon: <Wrench size={16} />, badge: "Soon" },
+    { id: "settings", label: "Settings", icon: <Settings size={16} /> },
     { id: "about", label: "About", icon: <Mic size={16} /> },
   ];
 
@@ -502,7 +514,7 @@ export default function SettingsPanel({ state }: Props) {
       >
         {/* Header in sidebar */}
         <div className={`py-4 flex items-center mb-1 ${
-          isSidebarCollapsed ? "flex-col gap-3 px-2" : "justify-between px-4"
+          isSidebarCollapsed ? "justify-center px-2" : "px-4"
         }`}>
           {!isSidebarCollapsed ? (
             <div className="flex items-center gap-3 min-w-0 pointer-events-none">
@@ -519,14 +531,6 @@ export default function SettingsPanel({ state }: Props) {
               <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
             </div>
           )}
-
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-          </button>
         </div>
         
         {/* Navigation */}
@@ -548,29 +552,124 @@ export default function SettingsPanel({ state }: Props) {
                   }`}
                 >
                   <span className="flex-shrink-0">{tab.icon}</span>
-                  {!isSidebarCollapsed && <span className="truncate">{tab.label}</span>}
+                  {!isSidebarCollapsed && (
+                    <div className="flex items-center justify-between flex-1 min-w-0">
+                      <span className="truncate">{tab.label}</span>
+                      {tab.badge && (
+                        <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {tab.badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </button>
 
                 {/* Floating Hover Tooltip in Collapsed Mode */}
                 {isSidebarCollapsed && (
                   <div className="absolute left-full ml-3 px-2.5 py-1 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-700/80 text-white shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 pointer-events-none transition-all duration-150 z-50">
-                    {tab.label}
+                    {tab.label} {tab.badge ? `(${tab.badge})` : ""}
                   </div>
                 )}
               </div>
             );
           })}
         </div>
+
+        {/* Footer in sidebar with Collapse Button */}
+        <div className="p-2 border-t border-white/5 flex items-center justify-center">
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className={`flex items-center gap-2 p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer w-full ${
+              isSidebarCollapsed ? "justify-center" : "px-3"
+            }`}
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            {!isSidebarCollapsed && <span className="text-xs font-medium">Collapse Sidebar</span>}
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col relative z-0">
-        {/* Top Header with Tab Label, Save & Apply Button, and Close Button */}
+        {/* Top Header with Tab Label & Subtabs, Save & Apply Button, and Close Button */}
         <div data-tauri-drag-region className="h-14 flex items-center justify-between px-6 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/90 backdrop-blur-md absolute top-0 left-0 right-0 z-20">
-          <div className="flex items-center gap-2 pointer-events-none">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 pointer-events-none">
               {tabs.find((t) => t.id === activeTab)?.label}
             </span>
+
+            {/* Subtabs for AI Models & APIs */}
+            {activeTab === "models" && (
+              <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-white/5 text-xs font-medium">
+                <button
+                  onClick={() => setModelsSubTab("local")}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    modelsSubTab === "local"
+                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Local Whisper
+                </button>
+                <button
+                  onClick={() => setModelsSubTab("cloud")}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    modelsSubTab === "cloud"
+                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Cloud APIs
+                </button>
+                <button
+                  onClick={() => setModelsSubTab("assistant")}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    modelsSubTab === "assistant"
+                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Screen Assistant
+                </button>
+              </div>
+            )}
+
+            {/* Subtabs for Settings */}
+            {activeTab === "settings" && (
+              <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-lg border border-white/5 text-xs font-medium">
+                <button
+                  onClick={() => setSettingsSubTab("general")}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    settingsSubTab === "general"
+                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  General
+                </button>
+                <button
+                  onClick={() => setSettingsSubTab("advanced")}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    settingsSubTab === "advanced"
+                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Advanced
+                </button>
+                <button
+                  onClick={() => setSettingsSubTab("experimental")}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    settingsSubTab === "experimental"
+                      ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Experimental
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -613,6 +712,7 @@ export default function SettingsPanel({ state }: Props) {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-10 pt-20">
           <AnimatePresence mode="wait">
+            {/* 1. NOTES TAB */}
             {activeTab === "notes" && (
               <motion.div
                 key="notes"
@@ -626,786 +726,7 @@ export default function SettingsPanel({ state }: Props) {
               </motion.div>
             )}
 
-            {activeTab === "skills" && (
-              <motion.div
-                key="skills"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="h-full"
-              >
-                <SkillsTab state={state} />
-              </motion.div>
-            )}
-
-            {activeTab === "general" && (
-              <motion.div
-                key="general"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="max-w-3xl"
-              >
-                <SectionHeader icon={<Keyboard size={16} />} title="Input & Shortcuts" />
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow label="Operating Mode" description="Choose how Murmur processes your voice">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.operatingMode}
-                        onChange={(val) => updateSettings({ operatingMode: val as any })}
-                        options={[
-                          { value: "dictation", label: "Dictation (Type Anywhere)", description: "Auto-pastes transcribed speech directly into your active window" },
-                          { value: "assistant", label: "Assistant (Chat UI)", description: "Opens interactive AI workspace" },
-                          { value: "hybrid", label: "Hybrid (Contextual)", description: "Intelligently routes based on spoken intent" },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Visualizer Style" description="Choose how Murmur appears when recording">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.widgetNotchEnabled ? "notch" : "overlay"}
-                        onChange={(val) => {
-                          updateSettings({
-                            widgetPetEnabled: false,
-                            widgetNotchEnabled: val === "notch",
-                          });
-                        }}
-                        options={[
-                          { value: "notch", label: "Top Notch (Dynamic Island)", description: "Ambient top-screen island with live voice visuals (Recommended)" },
-                          { value: "overlay", label: "Minimal Overlay", description: "Subtle center-screen voice indicator" },
-                          { value: "widget", label: "Desktop Widget / Pet (Coming Soon)", description: "Interactive draggable companion widget (In development)", disabled: true },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Visibility Mode" description="Choose when the visualizer should be shown">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.visibilityMode ?? "autohidden"}
-                        onChange={(val) => updateSettings({ visibilityMode: val as any })}
-                        options={[
-                          { value: "autohidden", label: "Show Only When Active", description: "Auto-hide when idle (Default)" },
-                          { value: "alwayson", label: "Always Show", description: "Keep notch visible on screen" },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  {settings.widgetNotchEnabled && (
-                    <SettingRow label="Notch Style" description="Choose the appearance of the top notch">
-                      <div className="w-full sm:w-64">
-                        <ModernSelect
-                          value={settings.notchStyle ?? "dynamicisland"}
-                          onChange={(val) => updateSettings({ notchStyle: val as any })}
-                          options={[
-                            { value: "dynamicisland", label: "Dynamic Island", description: "Floating pill with smooth fluid animations (Default)" },
-                            { value: "macbook", label: "MacBook Style", description: "Classic MacBook top bezel attachment" },
-                          ]}
-                        />
-                      </div>
-                    </SettingRow>
-                  )}
-
-                  <SettingRow label="Activation Mode" description="Choose how your shortcut key triggers dictation">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.activationMode ?? "toggle"}
-                        onChange={(val) => updateSettings({ activationMode: val as any })}
-                        options={[
-                          { value: "toggle", label: "Toggle Mode", description: "Press shortcut once to start, press again to stop & paste (Recommended)" },
-                          { value: "hold", label: "Push-to-Talk (Hold)", description: "Hold shortcut down while speaking, release to transcribe & paste" },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Visualizer Style" description="Choose the animated visualizer shown in the Notch">
-                    <div className="flex flex-col gap-2 w-full sm:w-72">
-                      <div className="grid grid-cols-2 gap-2 bg-zinc-950/80 p-1 rounded-xl border border-white/5">
-                        <button
-                          type="button"
-                          onClick={() => updateSettings({ visualizerStyle: "wave" })}
-                          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                            (settings.visualizerStyle ?? "wave") === "wave"
-                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/50"
-                              : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
-                          }`}
-                        >
-                          <span>🌊</span>
-                          <span>Fluid AI Wave</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateSettings({ visualizerStyle: "bars" })}
-                          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                            (settings.visualizerStyle ?? "wave") === "bars"
-                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/50"
-                              : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
-                          }`}
-                        >
-                          <span>📊</span>
-                          <span>Equalizer Bars</span>
-                        </button>
-                      </div>
-                      <span className="text-[10px] text-zinc-500 px-1">
-                        {(settings.visualizerStyle ?? "wave") === "wave"
-                          ? "🌊 Multi-ribbon glowing sinusoidal wave (Apple Intelligence - Default)"
-                          : "📊 Dynamic dancing multi-bar equalizer (Handy / Freeflow)"}
-                      </span>
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Global Hotkey" description="Custom 2-key or 3-key shortcut dropdown picker">
-                    <ShortcutBuilder
-                      hotkey={settings.hotkey}
-                      onChange={(val) => updateSettings({ hotkey: val })}
-                    />
-                  </SettingRow>
-
-                  <SettingRow label="Microphone Device" description="Select which microphone to use">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.inputDevice}
-                        onChange={(val) => updateSettings({ inputDevice: val })}
-                        options={[
-                          { value: "default", label: "System Default Microphone", description: "Use macOS/Windows default input device" },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Auto-Paste" description="Automatically type transcription into active window">
-                    <Toggle enabled={settings.autoPaste} onChange={(v) => updateSettings({ autoPaste: v })} />
-                  </SettingRow>
-
-                  <SettingRow label="Sound Effects" description="Play sounds on recording start/stop">
-                    <Toggle enabled={settings.soundEffects} onChange={(v) => updateSettings({ soundEffects: v })} />
-                  </SettingRow>
-
-                  <SettingRow label="Show App in Dock" description="Show the app icon in the macOS Dock (restart required)">
-                    <Toggle enabled={settings.showDockIcon} onChange={(v) => updateSettings({ showDockIcon: v })} />
-                  </SettingRow>
-
-                  <SettingRow label="Tray Icon Style" description="Choose the style of the menu bar icon">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.trayIconStyle || "color"}
-                        onChange={(val) => updateSettings({ trayIconStyle: val as "color" | "flat" })}
-                        options={[
-                          { value: "color", label: "Color Icon", description: "Vibrant gradient microphone icon" },
-                          { value: "flat", label: "Monochrome (Flat)", description: "Minimal monochrome menu bar icon" },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Automatic Update Checks" description="Check for new Murmur releases on startup">
-                    <Toggle enabled={settings.autoUpdateCheck ?? true} onChange={(v) => updateSettings({ autoUpdateCheck: v })} />
-                  </SettingRow>
-
-                  <SettingRow 
-                    label="Software Updates" 
-                    description={`Installed version: v${APP_VERSION}${lastCheckedTime ? ` • Checked at ${lastCheckedTime}` : ""}`}
-                  >
-                    <div className="flex flex-col items-end gap-2.5">
-                      <div className="flex items-center gap-3">
-                        {updateInfo && !updateInfo.hasUpdate && !isCheckingUpdates && (
-                          <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                            <CheckCircle2 size={13} />
-                            Up to date
-                          </span>
-                        )}
-                        <button
-                          disabled={isCheckingUpdates}
-                          onClick={() => handleCheckUpdates(true)}
-                          className="px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] border border-[var(--border-strong)] transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                        >
-                          <RefreshCw size={13} className={`text-[var(--accent-primary)] ${isCheckingUpdates ? "animate-spin" : ""}`} />
-                          {isCheckingUpdates ? "Checking..." : "Check for Updates"}
-                        </button>
-                      </div>
-
-                      {updateInfo?.hasUpdate && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col gap-2 max-w-sm"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold text-indigo-300 flex items-center gap-1">
-                              🚀 New Release: v{updateInfo.latestVersion}
-                            </span>
-                            <span className="text-[10px] text-zinc-400 font-medium">Available Now</span>
-                          </div>
-                          <p className="text-[11px] text-zinc-300 line-clamp-2">
-                            {updateInfo.releaseName || "New features, bug fixes and performance improvements."}
-                          </p>
-                          <button
-                            onClick={() => openReleasePage(updateInfo.releaseUrl)}
-                            className="mt-1 w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                          >
-                            <Download size={13} />
-                            Download & Install Update
-                          </button>
-                        </motion.div>
-                      )}
-                    </div>
-                  </SettingRow>
-                </div>
-
-                <SectionHeader icon={<Globe size={16} />} title="Language & Vocabulary" />
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow label="Transcription Language" description="Language spoken during recording">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.language}
-                        onChange={(val) => updateSettings({ language: val })}
-                        options={LANGUAGES.map((lang) => ({
-                          value: lang.code,
-                          label: lang.name,
-                        }))}
-                      />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Custom Vocabulary" description="Comma-separated jargon, names, or code terms to improve accuracy.">
-                    <textarea
-                      placeholder="React, useEffect, Tauri, API..."
-                      value={settings.customVocabulary}
-                      onChange={(e) => updateSettings({ customVocabulary: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm resize-none border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      rows={3}
-                    />
-                  </SettingRow>
-                </div>
-
-                <div className="pt-6 border-t border-[var(--border-strong)] mt-10">
-                  <h3 className="text-sm font-bold text-red-400/90 mb-4 uppercase tracking-wider">Danger Zone</h3>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[14px] font-semibold text-[var(--text-primary)]">Clear All App Data</p>
-                      <p className="text-[13px] text-[var(--text-secondary)] mt-1">This deletes all settings and downloaded models, then uninstalls the app data.</p>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        const confirmed = await ask("Are you sure you want to completely clear all Murmur app data? This will delete all your settings, downloaded models, and close the app. You will need to start fresh next time.", {
-                          title: 'Clear All App Data',
-                          kind: 'warning',
-                        });
-                        if (confirmed) {
-                          invoke("clear_all_app_data");
-                        }
-                      }}
-                      className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-semibold rounded-xl transition-colors border border-red-500/20 whitespace-nowrap"
-                    >
-                      Clear Data & Quit
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "model" && (
-              <motion.div
-                key="model"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="max-w-3xl"
-              >
-                <SectionHeader icon={<Cpu size={16} />} title="Whisper Model" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-4">
-                  All models run 100% locally on your device with Whisper.cpp. No cloud or internet required during transcription.
-                </p>
-
-                {/* Notice Banner & Refresh Controls */}
-                <div className="mb-5 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3 text-xs text-indigo-300">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-base">⚡</span>
-                    <span>
-                      <strong>Background Downloads:</strong> Models download in the background. If you started a download, click <strong>Refresh Status</strong> to check completion.
-                    </span>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      setIsRefreshingModels(true);
-                      await state.refreshModelsStatus();
-                      setTimeout(() => setIsRefreshingModels(false), 800);
-                    }}
-                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
-                  >
-                    <RefreshCw size={12} className={isRefreshingModels ? "animate-spin" : ""} />
-                    <span>Refresh Status</span>
-                  </button>
-                </div>
-
-                {/* Filter Pills */}
-                <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-                  <div className="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl w-fit">
-                    <button
-                      onClick={() => setModelFilter("all")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        modelFilter === "all"
-                          ? "bg-[var(--accent-primary)] text-white shadow-sm"
-                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      All Models (9)
-                    </button>
-                    <button
-                      onClick={() => setModelFilter("multi")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        modelFilter === "multi"
-                          ? "bg-indigo-600 text-white shadow-sm"
-                          : "text-[var(--text-secondary)] hover:text-indigo-400"
-                      }`}
-                    >
-                      🌍 99 Languages & Urdu (5)
-                    </button>
-                    <button
-                      onClick={() => setModelFilter("en")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        modelFilter === "en"
-                          ? "bg-zinc-700 text-white shadow-sm"
-                          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      🇬🇧 English Only (4)
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  {(
-                    [
-                      "base",
-                      "base.en",
-                      "large-v3-turbo",
-                      "tiny",
-                      "tiny.en",
-                      "small",
-                      "small.en",
-                      "medium",
-                      "medium.en",
-                    ] as WhisperModel[]
-                  )
-                    .filter((m) => {
-                      const isMulti = MODEL_INFO[m].isMultilingual;
-                      if (modelFilter === "multi") return isMulti;
-                      if (modelFilter === "en") return !isMulti;
-                      return true;
-                    })
-                    .map((model) => {
-                      const info = MODEL_INFO[model];
-                      const downloaded = isModelDownloaded[model];
-                      const isSelected = settings.model === model;
-                      const isThisDownloading = isDownloading && (downloadingModel === model || downloadProgress.model === model);
-
-                      return (
-                        <motion.div
-                          key={model}
-                          whileHover={{ scale: 1.005 }}
-                          whileTap={{ scale: 0.995 }}
-                          onClick={() => downloaded && updateSettings({ model })}
-                          className={`relative rounded-xl p-4 cursor-pointer transition-all ${
-                            isSelected
-                              ? "ring-2 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10 bg-[var(--bg-surface-elevated)]"
-                              : "hover:border-[var(--border-strong)] bg-[var(--bg-surface)]"
-                          }`}
-                          style={{
-                            border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
-                          }}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide">
-                                  {model}
-                                </span>
-                                {info.isMultilingual ? (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-                                    🌍 99 Languages (Urdu / Roman Urdu)
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-zinc-700/40 text-zinc-300 border border-zinc-600/30">
-                                    🇬🇧 English Only
-                                  </span>
-                                )}
-                                {model === "base" && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                                    Recommended
-                                  </span>
-                                )}
-                                {model === "large-v3-turbo" && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                    Max Accuracy
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-[var(--text-secondary)] mb-2.5 leading-relaxed">
-                                {info.description}
-                              </p>
-                              <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
-                                <span className="font-mono" title="Disk Size">💾 {info.size}</span>
-                                <span>·</span>
-                                <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
-                                <span>·</span>
-                                <span title="Latency">⏱️ {info.speed}</span>
-                                <span>·</span>
-                                <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
-                              </div>
-                            </div>
-
-                            <div className="ml-4 flex-shrink-0 flex items-center gap-2">
-                              {downloaded ? (
-                                <>
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      const confirmed = await ask(
-                                        `Are you sure you want to delete the ${model} model file from your disk?`,
-                                        {
-                                          title: "Delete Model",
-                                          kind: "warning",
-                                        }
-                                      );
-                                      if (confirmed) {
-                                        deleteModel(model);
-                                      }
-                                    }}
-                                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
-                                    title="Delete Model"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                  <div
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                      isSelected
-                                        ? "bg-[var(--accent-primary)] text-white"
-                                        : "bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)]"
-                                    }`}
-                                  >
-                                    <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
-                                  </div>
-                                </>
-                              ) : isThisDownloading ? (
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs font-semibold text-indigo-400 shadow-sm">
-                                  <Loader2 size={13} className="animate-spin text-indigo-400" />
-                                  <span>Downloading...</span>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    downloadModel(model);
-                                  }}
-                                  className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
-                                >
-                                  <Download size={13} />
-                                  Get
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Background download status bar */}
-                          {isThisDownloading && (
-                            <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
-                              <span className="flex items-center gap-2 font-medium text-indigo-300">
-                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                                Downloading in background... Click Refresh Status when completed.
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  state.refreshModelsStatus();
-                                }}
-                                className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 hover:underline cursor-pointer"
-                              >
-                                <RefreshCw size={11} />
-                                <span>Check Status</span>
-                              </button>
-                            </div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={() => invoke("open_models_directory")}
-                      className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-surface-elevated)] px-4 py-2 rounded-lg border border-[var(--border-strong)] cursor-pointer"
-                    >
-                      <FolderOpen size={14} />
-                      Open Models Directory
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "assistant" && (
-              <motion.div
-                key="assistant"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="max-w-3xl"
-              >
-                <SectionHeader icon={<Bot size={16} />} title="Screen Assistant" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
-                  Configure the AI assistant that can see your screen and answer questions in the menu bar.
-                </p>
-                
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow label="Assistant Model" description="The model used for screen-aware answering.">
-                    <input
-                      type="text"
-                      value={settings.localAssistantModel}
-                      onChange={(e) => updateSettings({ localAssistantModel: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      placeholder="gemini-2.0-flash-lite-preview-02-05"
-                    />
-                  </SettingRow>
-
-                  <SettingRow label="System Prompt" description="Instructions given to the assistant before answering.">
-                    <textarea
-                      value={settings.systemPrompt}
-                      onChange={(e) => updateSettings({ systemPrompt: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm resize-y border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                      rows={5}
-                      placeholder="You are a helpful screen-aware assistant..."
-                    />
-                  </SettingRow>
-                </div>
-
-                <SectionHeader icon={<Cpu size={16} />} title="Local Assistant Models (Gemma)" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
-                  Download local LLMs to run the screen assistant entirely on-device without using cloud APIs.
-                </p>
-                <div className="flex flex-col gap-4 mb-10">
-                  {(["e2b", "e4b"] as GemmaModel[]).map((model) => {
-                    const info = GEMMA_MODEL_INFO[model];
-                    const downloaded = isGemmaModelDownloaded[model];
-                    const isSelected = settings.gemmaModel === model;
-                    const isThisDownloading = isDownloading && downloadingGemmaModel === model;
-
-                    return (
-                      <motion.div
-                        key={model}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => downloaded && updateSettings({ gemmaModel: model })}
-                        className={`relative rounded-xl p-4 cursor-pointer transition-all ${
-                          isSelected ? "ring-1 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10" : "hover:border-[var(--border-strong)]"
-                        }`}
-                        style={{
-                          background: isSelected ? "var(--bg-surface-elevated)" : "var(--bg-surface)",
-                          border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
-                        }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-semibold text-[var(--text-primary)]">Gemma 4 {model.toUpperCase()} IT Assistant</span>
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)] mb-2">{info.description}</p>
-                            <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
-                              <span className="font-mono" title="Disk Size">💾 {info.size}</span>
-                              <span>·</span>
-                              <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
-                              <span>·</span>
-                              <span title="Speed">⚡ {info.speed}</span>
-                              <span>·</span>
-                              <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
-                            </div>
-                          </div>
-
-                          <div className="ml-3 flex-shrink-0 flex items-center gap-2">
-                            {downloaded ? (
-                              <>
-                                <button
-                                  onClick={async (e) => { 
-                                    e.stopPropagation(); 
-                                    const confirmed = await ask(`Are you sure you want to delete the Gemma ${model} model file from your disk?`, {
-                                      title: 'Delete Model',
-                                      kind: 'warning',
-                                    });
-                                    if (confirmed) {
-                                      deleteGemmaModel(model); 
-                                    }
-                                  }}
-                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors"
-                                  title="Delete Model"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-[var(--accent-primary)]" : "bg-[var(--bg-surface-elevated)]"}`}>
-                                  <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
-                                </div>
-                              </>
-                            ) : isThisDownloading ? (
-                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs font-semibold text-indigo-400 shadow-sm">
-                                <Loader2 size={13} className="animate-spin text-indigo-400" />
-                                <span>Downloading...</span>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); downloadGemmaModel(model); }}
-                                className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
-                              >
-                                <Download size={13} />
-                                Get
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Background download status bar */}
-                        {isThisDownloading && (
-                          <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-2 font-medium text-indigo-300">
-                              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                              Downloading assistant weights in background... Click Refresh Status when completed.
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                state.refreshModelsStatus();
-                              }}
-                              className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 hover:underline cursor-pointer"
-                            >
-                              <RefreshCw size={11} />
-                              <span>Check Status</span>
-                            </button>
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "cloud" && (
-              <motion.div
-                key="cloud"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="max-w-3xl"
-              >
-                <SectionHeader icon={<Cloud size={16} />} title="Cloud Transcribers" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
-                  Use cloud APIs for perfect accuracy. Automatically falls back to Local if offline.
-                </p>
-                
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow label="Primary Engine" description="Choose which engine handles transcription first">
-                    <div className="w-full sm:w-64">
-                      <ModernSelect
-                        value={settings.cloudProvider}
-                        onChange={(val) => updateSettings({ cloudProvider: val as any })}
-                        options={[
-                          { value: "local", label: "Local (Whisper.cpp)", description: "100% offline, zero cloud latency & private" },
-                          { value: "gemini", label: "Google Gemini (Free Tier)", description: "Gemini 2.0 Flash cloud transcription" },
-                          { value: "groq", label: "Groq Whisper (Free Tier)", description: "Ultra-fast LPU cloud inference" },
-                          { value: "deepgram", label: "Deepgram (Live & Fast)", description: "Live real-time streaming audio transcription" },
-                        ]}
-                      />
-                    </div>
-                  </SettingRow>
-                </div>
-
-                <SectionHeader icon={<Key size={16} />} title="API Keys" />
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow label="Google Gemini API Key" description="Required for Gemini transcription">
-                    <input
-                      type="password"
-                      placeholder="AIzaSy..."
-                      value={settings.geminiApiKey}
-                      onChange={(e) => updateSettings({ geminiApiKey: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                    />
-                  </SettingRow>
-
-                  <SettingRow label="Groq API Key" description="Required for Groq Whisper transcription">
-                    <input
-                      type="password"
-                      placeholder="gsk_..."
-                      value={settings.groqApiKey}
-                      onChange={(e) => updateSettings({ groqApiKey: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                    />
-                  </SettingRow>
-
-                  <SettingRow label="Deepgram API Key" description="Required for Deepgram (Live Streaming) transcription">
-                    <input
-                      type="password"
-                      placeholder="dg_..."
-                      value={settings.deepgramApiKey}
-                      onChange={(e) => updateSettings({ deepgramApiKey: e.target.value })}
-                      className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
-                    />
-                  </SettingRow>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === "voxcoder" && (
-              <motion.div
-                key="voxcoder"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="max-w-3xl"
-              >
-                <SectionHeader icon={<Code2 size={16} />} title="VoxCoder Mode" />
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow
-                    label="Enable VoxCoder Mode"
-                    description="Smart formatting for coding dictation — converts spoken syntax to code symbols"
-                  >
-                    <Toggle enabled={settings.voxcoderMode} onChange={(v) => updateSettings({ voxcoderMode: v })} />
-                  </SettingRow>
-                </div>
-
-                <div className={`rounded-2xl p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] transition-opacity duration-300 shadow-sm ${!settings.voxcoderMode ? "opacity-50 pointer-events-none" : ""}`}>
-                  <p className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-6">Spoken → Output Examples</p>
-                  <div className="flex flex-col gap-4">
-                    {[
-                      { spoken: '"open curly brace"', output: '{' },
-                      { spoken: '"close curly brace"', output: '}' },
-                      { spoken: '"arrow function"', output: '=>' },
-                      { spoken: '"double equals"', output: '==' },
-                      { spoken: '"triple equals"', output: '===' },
-                      { spoken: '"camel case print hello"', output: 'printHello' },
-                      { spoken: '"snake case print hello"', output: 'print_hello' },
-                      { spoken: '"new line"', output: '↵ (Enter)' },
-                      { spoken: '"dot log open paren"', output: '.log(' },
-                      { spoken: '"back tick"', output: '`' },
-                    ].map(({ spoken, output }) => (
-                      <div key={spoken} className="flex items-center gap-4">
-                        <span className="text-[14px] text-[var(--text-secondary)] italic flex-1">{spoken}</span>
-                        <ChevronRight size={16} className="text-[var(--border-strong)] flex-shrink-0" />
-                        <code className="text-sm font-mono text-[var(--accent-primary)] px-3 py-1.5 rounded-lg bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 min-w-[5rem] text-center">
-                          {output}
-                        </code>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
+            {/* 2. HISTORY TAB */}
             {activeTab === "history" && (
               <motion.div
                 key="history"
@@ -1505,45 +826,764 @@ export default function SettingsPanel({ state }: Props) {
               </motion.div>
             )}
 
-            {activeTab === "experimental" && (
+            {/* 3. AI MODELS & APIS TAB */}
+            {activeTab === "models" && (
               <motion.div
-                key="experimental"
+                key="models"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
                 className="max-w-3xl"
               >
-                <SectionHeader icon={<Beaker size={16} />} title="Experimental Features" />
-                <p className="text-[13px] text-[var(--text-secondary)] mb-6">
-                  These features are currently in testing. They may be unstable or change in the future.
-                </p>
-                
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
-                  <SettingRow 
-                    label="Live Streaming Transcription" 
-                    description="Transcribe audio in real-time as you speak instead of waiting until the end. Uses Deepgram API or local VAD chunking."
-                  >
-                    <Toggle enabled={settings.liveStreaming} onChange={(v) => updateSettings({ liveStreaming: v })} />
-                  </SettingRow>
+                {/* SUBTAB 1: LOCAL WHISPER */}
+                {modelsSubTab === "local" && (
+                  <div>
+                    <SectionHeader icon={<Cpu size={16} />} title="Whisper Local Models" />
+                    <p className="text-[13px] text-[var(--text-secondary)] mb-4">
+                      All models run 100% locally on your device with Whisper.cpp. No cloud or internet required during transcription.
+                    </p>
 
-                  <SettingRow 
-                    label="AI Rewrite & Polisher" 
-                    description="Automatically use a free LLM (Groq/Llama 3) to polish the final transcript for better grammar and clarity."
-                  >
-                    <Toggle enabled={settings.aiRewrite} onChange={(v) => updateSettings({ aiRewrite: v })} />
-                  </SettingRow>
-                  
-                  <SettingRow 
-                    label="Wake Word (Experimental)" 
-                    description="Continuously listen for a wake word (e.g. 'Hey Murmur' or loud noise) to start recording without a hotkey."
-                  >
-                    <Toggle enabled={settings.experimentalWakeWord} onChange={(v) => updateSettings({ experimentalWakeWord: v })} />
-                  </SettingRow>
-                </div>
+                    {/* Notice Banner & Refresh Controls */}
+                    <div className="mb-5 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-3 text-xs text-indigo-300">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">⚡</span>
+                        <span>
+                          <strong>Background Downloads:</strong> Models download in the background. If you started a download, click <strong>Refresh Status</strong> to check completion.
+                        </span>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          setIsRefreshingModels(true);
+                          await state.refreshModelsStatus();
+                          setTimeout(() => setIsRefreshingModels(false), 800);
+                        }}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                      >
+                        <RefreshCw size={12} className={isRefreshingModels ? "animate-spin" : ""} />
+                        <span>Refresh Status</span>
+                      </button>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                      <div className="flex items-center gap-2 p-1 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl w-fit">
+                        <button
+                          onClick={() => setModelFilter("all")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            modelFilter === "all"
+                              ? "bg-[var(--accent-primary)] text-white shadow-sm"
+                              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                          }`}
+                        >
+                          All Models (9)
+                        </button>
+                        <button
+                          onClick={() => setModelFilter("multi")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            modelFilter === "multi"
+                              ? "bg-indigo-600 text-white shadow-sm"
+                              : "text-[var(--text-secondary)] hover:text-indigo-400"
+                          }`}
+                        >
+                          🌍 99 Languages & Urdu (5)
+                        </button>
+                        <button
+                          onClick={() => setModelFilter("en")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            modelFilter === "en"
+                              ? "bg-zinc-700 text-white shadow-sm"
+                              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                          }`}
+                        >
+                          🇬🇧 English Only (4)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      {(
+                        [
+                          "base",
+                          "base.en",
+                          "large-v3-turbo",
+                          "tiny",
+                          "tiny.en",
+                          "small",
+                          "small.en",
+                          "medium",
+                          "medium.en",
+                        ] as WhisperModel[]
+                      )
+                        .filter((m) => {
+                          const isMulti = MODEL_INFO[m].isMultilingual;
+                          if (modelFilter === "multi") return isMulti;
+                          if (modelFilter === "en") return !isMulti;
+                          return true;
+                        })
+                        .map((model) => {
+                          const info = MODEL_INFO[model];
+                          const downloaded = isModelDownloaded[model];
+                          const isSelected = settings.model === model;
+                          const isThisDownloading = isDownloading && (downloadingModel === model || downloadProgress.model === model);
+
+                          return (
+                            <motion.div
+                              key={model}
+                              whileHover={{ scale: 1.005 }}
+                              whileTap={{ scale: 0.995 }}
+                              onClick={() => downloaded && updateSettings({ model })}
+                              className={`relative rounded-xl p-4 cursor-pointer transition-all ${
+                                isSelected
+                                  ? "ring-2 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10 bg-[var(--bg-surface-elevated)]"
+                                  : "hover:border-[var(--border-strong)] bg-[var(--bg-surface)]"
+                              }`}
+                              style={{
+                                border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
+                              }}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide">
+                                      {model}
+                                    </span>
+                                    {info.isMultilingual ? (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                                        🌍 99 Languages (Urdu / Roman Urdu)
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-zinc-700/40 text-zinc-300 border border-zinc-600/30">
+                                        🇬🇧 English Only
+                                      </span>
+                                    )}
+                                    {model === "base" && (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                        Recommended
+                                      </span>
+                                    )}
+                                    {model === "large-v3-turbo" && (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                        Max Accuracy
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-[var(--text-secondary)] mb-2.5 leading-relaxed">
+                                    {info.description}
+                                  </p>
+                                  <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                                    <span className="font-mono" title="Disk Size">💾 {info.size}</span>
+                                    <span>·</span>
+                                    <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
+                                    <span>·</span>
+                                    <span title="Latency">⏱️ {info.speed}</span>
+                                    <span>·</span>
+                                    <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
+                                  </div>
+                                </div>
+
+                                <div className="ml-4 flex-shrink-0 flex items-center gap-2">
+                                  {downloaded ? (
+                                    <>
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          const confirmed = await ask(
+                                            `Are you sure you want to delete the ${model} model file from your disk?`,
+                                            {
+                                              title: "Delete Model",
+                                              kind: "warning",
+                                            }
+                                          );
+                                          if (confirmed) {
+                                            deleteModel(model);
+                                          }
+                                        }}
+                                        className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
+                                        title="Delete Model"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                      <div
+                                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                          isSelected
+                                            ? "bg-[var(--accent-primary)] text-white"
+                                            : "bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)]"
+                                        }`}
+                                      >
+                                        <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
+                                      </div>
+                                    </>
+                                  ) : isThisDownloading ? (
+                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs font-semibold text-indigo-400 shadow-sm">
+                                      <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                      <span>Downloading...</span>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadModel(model);
+                                      }}
+                                      className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+                                    >
+                                      <Download size={13} />
+                                      Get
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Background download status bar */}
+                              {isThisDownloading && (
+                                <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-2 font-medium text-indigo-300">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                                    Downloading in background... Click Refresh Status when completed.
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      state.refreshModelsStatus();
+                                    }}
+                                    className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 hover:underline cursor-pointer"
+                                  >
+                                    <RefreshCw size={11} />
+                                    <span>Check Status</span>
+                                  </button>
+                                </div>
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      <div className="mt-6 flex justify-center">
+                        <button
+                          onClick={() => invoke("open_models_directory")}
+                          className="flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-surface-elevated)] px-4 py-2 rounded-lg border border-[var(--border-strong)] cursor-pointer"
+                        >
+                          <FolderOpen size={14} />
+                          Open Models Directory
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBTAB 2: CLOUD APIS */}
+                {modelsSubTab === "cloud" && (
+                  <div>
+                    <SectionHeader icon={<Cloud size={16} />} title="Cloud Transcribers" />
+                    <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                      Use cloud APIs for ultra-fast and accurate transcription. Automatically falls back to Local if offline.
+                    </p>
+                    
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Primary Engine" description="Choose which engine handles transcription first">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.cloudProvider}
+                            onChange={(val) => updateSettings({ cloudProvider: val as any })}
+                            options={[
+                              { value: "local", label: "Local (Whisper.cpp)", description: "100% offline, zero cloud latency & private" },
+                              { value: "gemini", label: "Google Gemini (Free Tier)", description: "Gemini 2.0 Flash cloud transcription" },
+                              { value: "groq", label: "Groq Whisper (Free Tier)", description: "Ultra-fast LPU cloud inference" },
+                              { value: "deepgram", label: "Deepgram (Live & Fast)", description: "Live real-time streaming audio transcription" },
+                            ]}
+                          />
+                        </div>
+                      </SettingRow>
+                    </div>
+
+                    <SectionHeader icon={<Key size={16} />} title="API Keys" />
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Google Gemini API Key" description="Required for Gemini transcription">
+                        <input
+                          type="password"
+                          placeholder="AIzaSy..."
+                          value={settings.geminiApiKey}
+                          onChange={(e) => updateSettings({ geminiApiKey: e.target.value })}
+                          className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                        />
+                      </SettingRow>
+
+                      <SettingRow label="Groq API Key" description="Required for Groq Whisper transcription">
+                        <input
+                          type="password"
+                          placeholder="gsk_..."
+                          value={settings.groqApiKey}
+                          onChange={(e) => updateSettings({ groqApiKey: e.target.value })}
+                          className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                        />
+                      </SettingRow>
+
+                      <SettingRow label="Deepgram API Key" description="Required for Deepgram (Live Streaming) transcription">
+                        <input
+                          type="password"
+                          placeholder="dg_..."
+                          value={settings.deepgramApiKey}
+                          onChange={(e) => updateSettings({ deepgramApiKey: e.target.value })}
+                          className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                        />
+                      </SettingRow>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBTAB 3: SCREEN ASSISTANT */}
+                {modelsSubTab === "assistant" && (
+                  <div>
+                    <SectionHeader icon={<Bot size={16} />} title="Screen Assistant" />
+                    <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                      Configure the AI assistant that can see your screen and answer questions directly in the top notch.
+                    </p>
+                    
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Assistant Model" description="The model used for screen-aware answering">
+                        <input
+                          type="text"
+                          value={settings.localAssistantModel}
+                          onChange={(e) => updateSettings({ localAssistantModel: e.target.value })}
+                          className="w-full sm:w-64 text-sm rounded-xl px-4 py-2.5 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                          placeholder="gemini-2.0-flash-lite-preview-02-05"
+                        />
+                      </SettingRow>
+
+                      <SettingRow label="System Prompt" description="Instructions given to the assistant before answering">
+                        <textarea
+                          value={settings.systemPrompt}
+                          onChange={(e) => updateSettings({ systemPrompt: e.target.value })}
+                          className="w-full sm:w-64 text-sm rounded-xl px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm resize-y border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                          rows={5}
+                          placeholder="You are a helpful screen-aware assistant..."
+                        />
+                      </SettingRow>
+                    </div>
+
+                    <SectionHeader icon={<Cpu size={16} />} title="Local Assistant Models (Gemma)" />
+                    <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                      Download local LLMs to run the screen assistant entirely on-device without using cloud APIs.
+                    </p>
+                    <div className="flex flex-col gap-4 mb-10">
+                      {(["e2b", "e4b"] as GemmaModel[]).map((model) => {
+                        const info = GEMMA_MODEL_INFO[model];
+                        const downloaded = isGemmaModelDownloaded[model];
+                        const isSelected = settings.gemmaModel === model;
+                        const isThisDownloading = isDownloading && downloadingGemmaModel === model;
+
+                        return (
+                          <motion.div
+                            key={model}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            onClick={() => downloaded && updateSettings({ gemmaModel: model })}
+                            className={`relative rounded-xl p-4 cursor-pointer transition-all ${
+                              isSelected ? "ring-1 ring-[var(--accent-primary)] shadow-md shadow-indigo-500/10" : "hover:border-[var(--border-strong)]"
+                            }`}
+                            style={{
+                              background: isSelected ? "var(--bg-surface-elevated)" : "var(--bg-surface)",
+                              border: `1px solid ${isSelected ? "var(--accent-primary)" : "var(--border-subtle)"}`,
+                            }}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-semibold text-[var(--text-primary)]">Gemma 4 {model.toUpperCase()} IT Assistant</span>
+                                </div>
+                                <p className="text-xs text-[var(--text-secondary)] mb-2">{info.description}</p>
+                                <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                                  <span className="font-mono" title="Disk Size">💾 {info.size}</span>
+                                  <span>·</span>
+                                  <span className="font-mono text-[var(--text-primary)]" title="RAM Required">🧠 {info.ram} RAM</span>
+                                  <span>·</span>
+                                  <span title="Speed">⚡ {info.speed}</span>
+                                  <span>·</span>
+                                  <span className="text-[var(--accent-primary)] font-medium">{info.quality}</span>
+                                </div>
+                              </div>
+
+                              <div className="ml-3 flex-shrink-0 flex items-center gap-2">
+                                {downloaded ? (
+                                  <>
+                                    <button
+                                      onClick={async (e) => { 
+                                        e.stopPropagation(); 
+                                        const confirmed = await ask(`Are you sure you want to delete the Gemma ${model} model file from your disk?`, {
+                                          title: 'Delete Model',
+                                          kind: 'warning',
+                                        });
+                                        if (confirmed) {
+                                          deleteGemmaModel(model); 
+                                        }
+                                      }}
+                                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer"
+                                      title="Delete Model"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? "bg-[var(--accent-primary)]" : "bg-[var(--bg-surface-elevated)]"}`}>
+                                      <CheckCircle2 size={14} className={isSelected ? "text-white" : "text-[var(--text-secondary)]"} />
+                                    </div>
+                                  </>
+                                ) : isThisDownloading ? (
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs font-semibold text-indigo-400 shadow-sm">
+                                    <Loader2 size={13} className="animate-spin text-indigo-400" />
+                                    <span>Downloading...</span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); downloadGemmaModel(model); }}
+                                    className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+                                  >
+                                    <Download size={13} />
+                                    Get
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Background download status bar */}
+                            {isThisDownloading && (
+                              <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs">
+                                <span className="flex items-center gap-2 font-medium text-indigo-300">
+                                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                                  Downloading assistant weights in background... Click Refresh Status when completed.
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    state.refreshModelsStatus();
+                                  }}
+                                  className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 hover:underline cursor-pointer"
+                                >
+                                  <RefreshCw size={11} />
+                                  <span>Check Status</span>
+                                </button>
+                              </div>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
+            {/* 4. AGENTS & SKILLS TAB */}
+            {activeTab === "skills" && (
+              <motion.div
+                key="skills"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="h-full"
+              >
+                <SkillsTab state={state} />
+              </motion.div>
+            )}
+
+            {/* 5. SETTINGS TAB */}
+            {activeTab === "settings" && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="max-w-3xl"
+              >
+                {/* SUBTAB 1: GENERAL */}
+                {settingsSubTab === "general" && (
+                  <div>
+                    <SectionHeader icon={<Keyboard size={16} />} title="Input & Shortcuts" />
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Operating Mode" description="Choose how Murmur processes your voice">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.operatingMode}
+                            onChange={(val) => updateSettings({ operatingMode: val as any })}
+                            options={[
+                              { value: "dictation", label: "Dictation (Type Anywhere)", description: "Auto-pastes transcribed speech directly into your active window" },
+                              { value: "assistant", label: "Assistant (Chat UI)", description: "Opens interactive AI workspace in the top notch" },
+                              { value: "hybrid", label: "Hybrid (Contextual) — Coming Soon", description: "Intelligently routes based on spoken intent (In development)", disabled: true },
+                            ]}
+                          />
+                        </div>
+                      </SettingRow>
+
+                      {/* Note: Duplicate Visualizer Style stripped off as requested! */}
+
+                      <SettingRow label="Visibility Mode" description="Choose when the visualizer should be shown">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.visibilityMode ?? "autohidden"}
+                            onChange={(val) => updateSettings({ visibilityMode: val as any })}
+                            options={[
+                              { value: "autohidden", label: "Show Only When Active", description: "Auto-hide when idle (Default)" },
+                              { value: "alwayson", label: "Always Show", description: "Keep notch visible on screen" },
+                            ]}
+                          />
+                        </div>
+                      </SettingRow>
+
+                      {settings.widgetNotchEnabled && (
+                        <SettingRow label="Notch Style" description="Choose the appearance of the top notch">
+                          <div className="w-full sm:w-64">
+                            <ModernSelect
+                              value={settings.notchStyle ?? "dynamicisland"}
+                              onChange={(val) => updateSettings({ notchStyle: val as any })}
+                              options={[
+                                { value: "dynamicisland", label: "Dynamic Island", description: "Floating pill with smooth fluid animations (Default)" },
+                                { value: "macbook", label: "MacBook Style", description: "Classic MacBook top bezel attachment" },
+                              ]}
+                            />
+                          </div>
+                        </SettingRow>
+                      )}
+
+                      <SettingRow label="Activation Mode" description="Choose how your shortcut key triggers dictation">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.activationMode ?? "toggle"}
+                            onChange={(val) => updateSettings({ activationMode: val as any })}
+                            options={[
+                              { value: "toggle", label: "Toggle Mode", description: "Press shortcut once to start, press again to stop & paste (Recommended)" },
+                              { value: "hold", label: "Push-to-Talk (Hold)", description: "Hold shortcut down while speaking, release to transcribe & paste" },
+                            ]}
+                          />
+                        </div>
+                      </SettingRow>
+
+                      <SettingRow label="Visualizer Style" description="Choose the animated visualizer shown in the Notch">
+                        <div className="flex flex-col gap-2 w-full sm:w-72">
+                          <div className="grid grid-cols-2 gap-2 bg-zinc-950/80 p-1 rounded-xl border border-white/5">
+                            <button
+                              type="button"
+                              onClick={() => updateSettings({ visualizerStyle: "wave" })}
+                              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                (settings.visualizerStyle ?? "wave") === "wave"
+                                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/50"
+                                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                              }`}
+                            >
+                              <span>🌊</span>
+                              <span>Fluid AI Wave</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateSettings({ visualizerStyle: "bars" })}
+                              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                (settings.visualizerStyle ?? "wave") === "bars"
+                                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 border border-indigo-500/50"
+                                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                              }`}
+                            >
+                              <span>📊</span>
+                              <span>Equalizer Bars</span>
+                            </button>
+                          </div>
+                          <span className="text-[10px] text-zinc-500 px-1">
+                            {(settings.visualizerStyle ?? "wave") === "wave"
+                              ? "🌊 Multi-ribbon glowing sinusoidal wave (Apple Intelligence - Default)"
+                              : "📊 Dynamic dancing multi-bar equalizer (Handy / Freeflow)"}
+                          </span>
+                        </div>
+                      </SettingRow>
+
+                      <SettingRow label="Auto-Paste" description="Automatically type transcription into active window">
+                        <Toggle enabled={settings.autoPaste} onChange={(v) => updateSettings({ autoPaste: v })} />
+                      </SettingRow>
+
+                      <SettingRow label="Tray Icon Style" description="Choose the style of the menu bar icon">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.trayIconStyle || "color"}
+                            onChange={(val) => updateSettings({ trayIconStyle: val as "color" | "flat" })}
+                            options={[
+                              { value: "color", label: "Color Icon", description: "Vibrant gradient microphone icon" },
+                              { value: "flat", label: "Monochrome (Flat)", description: "Minimal monochrome menu bar icon" },
+                            ]}
+                          />
+                        </div>
+                      </SettingRow>
+
+                      {/* NEW: Auto Note Taking setting (greyed out / Coming Soon) */}
+                      <SettingRow
+                        label="Auto Note Taking"
+                        description="Automatically capture and organize spoken transcripts into smart categorized notes in the Notes tab"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Coming Soon
+                          </span>
+                          <Toggle enabled={false} disabled={true} onChange={() => {}} />
+                        </div>
+                      </SettingRow>
+                    </div>
+
+                    <div className="pt-6 border-t border-[var(--border-strong)] mt-10">
+                      <h3 className="text-sm font-bold text-red-400/90 mb-4 uppercase tracking-wider">Danger Zone</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <p className="text-[14px] font-semibold text-[var(--text-primary)]">Clear All App Data</p>
+                          <p className="text-[13px] text-[var(--text-secondary)] mt-1">This deletes all settings and downloaded models, then uninstalls the app data.</p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const confirmed = await ask("Are you sure you want to completely clear all Murmur app data? This will delete all your settings, downloaded models, and close the app. You will need to start fresh next time.", {
+                              title: 'Clear All App Data',
+                              kind: 'warning',
+                            });
+                            if (confirmed) {
+                              invoke("clear_all_app_data");
+                            }
+                          }}
+                          className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-semibold rounded-xl transition-colors border border-red-500/20 whitespace-nowrap cursor-pointer"
+                        >
+                          Clear Data & Quit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBTAB 2: ADVANCED */}
+                {settingsSubTab === "advanced" && (
+                  <div>
+                    <SectionHeader icon={<Keyboard size={16} />} title="Global Hotkey" />
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Global Hotkey" description="Custom shortcut to trigger voice transcription anywhere">
+                        <ShortcutBuilder
+                          hotkey={settings.hotkey}
+                          onChange={(val) => updateSettings({ hotkey: val })}
+                        />
+                      </SettingRow>
+                    </div>
+
+                    <SectionHeader icon={<Mic size={16} />} title="Audio & Hardware" />
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Microphone Device" description="Select which microphone to use">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.inputDevice}
+                            onChange={(val) => updateSettings({ inputDevice: val })}
+                            options={[
+                              { value: "default", label: "System Default Microphone", description: "Use macOS/Windows default input device" },
+                            ]}
+                          />
+                        </div>
+                      </SettingRow>
+
+                      <SettingRow label="Sound Effects" description="Play subtle chime on recording start/stop">
+                        <Toggle enabled={settings.soundEffects} onChange={(v) => updateSettings({ soundEffects: v })} />
+                      </SettingRow>
+
+                      <SettingRow label="Show App in Dock" description="Show the app icon in the macOS Dock (restart required)">
+                        <Toggle enabled={settings.showDockIcon} onChange={(v) => updateSettings({ showDockIcon: v })} />
+                      </SettingRow>
+                    </div>
+
+                    <SectionHeader icon={<Globe size={16} />} title="Language & Vocabulary" />
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow label="Transcription Language" description="Language spoken during recording">
+                        <div className="w-full sm:w-64">
+                          <ModernSelect
+                            value={settings.language}
+                            onChange={(val) => updateSettings({ language: val })}
+                            options={LANGUAGES.map((lang) => ({
+                              value: lang.code,
+                              label: lang.name,
+                            }))}
+                          />
+                        </div>
+                      </SettingRow>
+
+                      <SettingRow label="Custom Vocabulary" description="Comma-separated jargon, names, or code terms to improve accuracy.">
+                        <textarea
+                          placeholder="React, useEffect, Tauri, API..."
+                          value={settings.customVocabulary}
+                          onChange={(e) => updateSettings({ customVocabulary: e.target.value })}
+                          className="w-full sm:w-64 text-sm rounded-xl px-4 py-3 outline-none transition-all focus:ring-2 focus:ring-[var(--accent-primary)]/50 shadow-sm resize-none border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)]"
+                          rows={3}
+                        />
+                      </SettingRow>
+                    </div>
+
+                    <SectionHeader icon={<Code2 size={16} />} title="VoxCoder Mode" />
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-6 shadow-sm">
+                      <SettingRow
+                        label="Enable VoxCoder Mode"
+                        description="Smart formatting for coding dictation — converts spoken syntax to code symbols"
+                      >
+                        <Toggle enabled={settings.voxcoderMode} onChange={(v) => updateSettings({ voxcoderMode: v })} />
+                      </SettingRow>
+                    </div>
+
+                    <div className={`rounded-2xl p-6 bg-[var(--bg-surface)] border border-[var(--border-subtle)] transition-opacity duration-300 shadow-sm mb-10 ${!settings.voxcoderMode ? "opacity-50 pointer-events-none" : ""}`}>
+                      <p className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-6">Spoken → Output Examples</p>
+                      <div className="flex flex-col gap-4">
+                        {[
+                          { spoken: '"open curly brace"', output: '{' },
+                          { spoken: '"close curly brace"', output: '}' },
+                          { spoken: '"arrow function"', output: '=>' },
+                          { spoken: '"double equals"', output: '==' },
+                          { spoken: '"triple equals"', output: '===' },
+                          { spoken: '"camel case print hello"', output: 'printHello' },
+                          { spoken: '"snake case print hello"', output: 'print_hello' },
+                          { spoken: '"new line"', output: '↵ (Enter)' },
+                          { spoken: '"dot log open paren"', output: '.log(' },
+                          { spoken: '"back tick"', output: '`' },
+                        ].map(({ spoken, output }) => (
+                          <div key={spoken} className="flex items-center gap-4">
+                            <span className="text-[14px] text-[var(--text-secondary)] italic flex-1">{spoken}</span>
+                            <ChevronRight size={16} className="text-[var(--border-strong)] flex-shrink-0" />
+                            <code className="text-sm font-mono text-[var(--accent-primary)] px-3 py-1.5 rounded-lg bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 min-w-[5rem] text-center">
+                              {output}
+                            </code>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBTAB 3: EXPERIMENTAL */}
+                {settingsSubTab === "experimental" && (
+                  <div>
+                    <SectionHeader icon={<Beaker size={16} />} title="Experimental Features" />
+                    <p className="text-[13px] text-[var(--text-secondary)] mb-6">
+                      These features are currently in testing. They may be unstable or change in future updates.
+                    </p>
+                    
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-10 shadow-sm">
+                      <SettingRow 
+                        label="Live Streaming Transcription" 
+                        description="Transcribe audio in real-time as you speak instead of waiting until the end. Uses Deepgram API or local VAD chunking."
+                      >
+                        <Toggle enabled={settings.liveStreaming} onChange={(v) => updateSettings({ liveStreaming: v })} />
+                      </SettingRow>
+
+                      <SettingRow 
+                        label="AI Rewrite & Polisher" 
+                        description="Automatically use a free LLM (Groq/Llama 3) to polish the final transcript for better grammar and clarity."
+                      >
+                        <Toggle enabled={settings.aiRewrite} onChange={(v) => updateSettings({ aiRewrite: v })} />
+                      </SettingRow>
+                      
+                      <SettingRow 
+                        label="Wake Word (Experimental)" 
+                        description="Continuously listen for a wake word (e.g. 'Hey Murmur' or loud noise) to start recording without a hotkey."
+                      >
+                        <Toggle enabled={settings.experimentalWakeWord} onChange={(v) => updateSettings({ experimentalWakeWord: v })} />
+                      </SettingRow>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* 6. ABOUT TAB */}
             {activeTab === "about" && (
               <motion.div
                 key="about"
@@ -1551,37 +1591,93 @@ export default function SettingsPanel({ state }: Props) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="flex flex-col items-center text-center pt-10 max-w-3xl mx-auto"
+                className="flex flex-col items-center text-center pt-6 max-w-3xl mx-auto"
               >
                 {/* App Icon */}
                 <motion.div
-                  className="w-24 h-24 rounded-3xl bg-[var(--bg-surface-elevated)] border border-[var(--border-strong)] flex items-center justify-center shadow-lg mb-6 overflow-hidden"
+                  className="w-24 h-24 rounded-3xl bg-[var(--bg-surface-elevated)] border border-[var(--border-strong)] flex items-center justify-center shadow-lg mb-4 overflow-hidden"
                 >
                   <img src={murmurIcon} alt="Murmur Icon" className="w-full h-full object-cover" />
                 </motion.div>
 
                 <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1 tracking-tight">Murmur</h2>
-                <p className="text-sm text-[var(--text-secondary)] font-mono mb-6">v0.1.0</p>
-                <p className="text-base text-[var(--text-secondary)] mb-10 max-w-md leading-relaxed">
+                <p className="text-sm text-[var(--text-secondary)] font-mono mb-4">v{APP_VERSION}</p>
+                <p className="text-base text-[var(--text-secondary)] mb-8 max-w-md leading-relaxed">
                   Voice-to-text for AI coding tools. Local, private, free — forever.
                 </p>
+
+                {/* Software Updates Card in About */}
+                <div className="w-full max-w-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 text-left shadow-sm mb-6">
+                  <SettingRow 
+                    label="Software Updates" 
+                    description={`Installed version: v${APP_VERSION}${lastCheckedTime ? ` • Checked at ${lastCheckedTime}` : ""}`}
+                  >
+                    <div className="flex flex-col items-end gap-2.5">
+                      <div className="flex items-center gap-3">
+                        {updateInfo && !updateInfo.hasUpdate && !isCheckingUpdates && (
+                          <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                            <CheckCircle2 size={13} />
+                            Up to date
+                          </span>
+                        )}
+                        <button
+                          disabled={isCheckingUpdates}
+                          onClick={() => handleCheckUpdates(true)}
+                          className="px-4 py-2 text-xs font-semibold rounded-xl bg-[var(--bg-surface-elevated)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] border border-[var(--border-strong)] transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw size={13} className={`text-[var(--accent-primary)] ${isCheckingUpdates ? "animate-spin" : ""}`} />
+                          {isCheckingUpdates ? "Checking..." : "Check for Updates"}
+                        </button>
+                      </div>
+
+                      {updateInfo?.hasUpdate && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col gap-2 w-full"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-indigo-300 flex items-center gap-1">
+                              🚀 New Release: v{updateInfo.latestVersion}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 font-medium">Available Now</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-300 line-clamp-2">
+                            {updateInfo.releaseName || "New features, bug fixes and performance improvements."}
+                          </p>
+                          <button
+                            onClick={() => openReleasePage(updateInfo.releaseUrl)}
+                            className="mt-1 w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Download size={13} />
+                            Download & Install Update
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
+                  </SettingRow>
+
+                  <SettingRow label="Automatic Update Checks" description="Check for new Murmur releases on startup">
+                    <Toggle enabled={settings.autoUpdateCheck ?? true} onChange={(v) => updateSettings({ autoUpdateCheck: v })} />
+                  </SettingRow>
+                </div>
 
                 <div className="w-full max-w-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 text-left shadow-sm">
                   <SettingRow label="Engine" description="OpenAI Whisper (whisper.cpp)" interactive={false}>
                     <span className="text-xs text-[var(--text-secondary)] font-mono bg-[var(--bg-surface-elevated)] px-2 py-1 rounded-md">MIT</span>
                   </SettingRow>
-                  <SettingRow label="GPU Acceleration" description="Metal (macOS) / CUDA (Windows)" interactive={false}>
-                    <CheckCircle2 size={18} className="text-[var(--accent-primary)]" />
+                  <SettingRow label="Compute Target" description="CPU-first with AVX/NEON (Ultra-low resource mode)" interactive={false}>
+                    <CheckCircle2 size={18} className="text-emerald-400" />
                   </SettingRow>
                   <SettingRow label="Privacy" description="100% offline — zero telemetry" interactive={false}>
-                    <CheckCircle2 size={18} className="text-[var(--accent-primary)]" />
+                    <CheckCircle2 size={18} className="text-emerald-400" />
                   </SettingRow>
                   <SettingRow label="License" description="MIT Open Source" interactive={false}>
                     <span className="text-xs text-[var(--text-secondary)] bg-[var(--bg-surface-elevated)] px-2 py-1 rounded-md">Free</span>
                   </SettingRow>
                 </div>
 
-                <p className="text-sm text-[var(--text-secondary)] mt-10 opacity-60 font-medium">
+                <p className="text-sm text-[var(--text-secondary)] mt-8 opacity-60 font-medium pb-8">
                   Built with Tauri · Rust · React
                 </p>
               </motion.div>

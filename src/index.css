@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,18 +6,18 @@
 
 @layer base {
   :root {
-    --bg-base: #09090b;
-    --bg-surface: #18181b;
-    --bg-surface-elevated: #27272a;
-    --text-primary: #f4f4f5;
-    --text-secondary: #a1a1aa;
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --border-strong: rgba(255, 255, 255, 0.1);
+    --bg-base: #000000;
+    --bg-surface: #0a0a0a;
+    --bg-surface-elevated: #111111;
+    --text-primary: #ededed;
+    --text-secondary: #888888;
+    --text-dim: #555555;
+    --border-subtle: #222222;
+    --border-strong: #333333;
     
-    /* Minimal Accent */
-    --accent-primary: #6366f1; /* soft indigo */
-    --accent-gradient: linear-gradient(135deg, #818cf8, #6366f1);
-    --accent-glow: rgba(99, 102, 241, 0.2);
+    /* Vercel Accent */
+    --accent-emerald: #10b981;
+    --accent-blue: #0070f3;
   }
 
   * {
@@ -30,22 +30,23 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: transparent;
+    background: #000000;
   }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     user-select: none;
     color: var(--text-primary);
+    background-color: #000000;
   }
 
-  /* Sleek, simple modern scrollbars - hidden until hovered or scrolled */
+  /* Sleek, simple modern scrollbars */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
@@ -55,152 +56,93 @@
   ::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 9999px;
-    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.15s ease;
   }
 
-  /* Reveal thumb on hover over scrollable containers */
   .overflow-y-auto:hover::-webkit-scrollbar-thumb,
   .overflow-x-auto:hover::-webkit-scrollbar-thumb,
   .overflow-auto:hover::-webkit-scrollbar-thumb,
   [class*="overflow"]:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.18);
+    background: #262626;
   }
 
-  /* Reveal thumb dynamically when user is actively scrolling */
-  body.is-scrolling ::-webkit-scrollbar-thumb,
-  .is-scrolling::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
-  }
-
-  /* Hovering directly on the scrollbar thumb */
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.45) !important;
+    background: #3a3a3a !important;
   }
 }
 
 @layer components {
-  /* Apple Glassmorphism Panel */
-  .glass-panel {
-    background: rgba(20, 20, 20, 0.65);
-    backdrop-filter: blur(40px) saturate(200%);
-    -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid var(--border-subtle);
-    box-shadow:
-      0 24px 60px rgba(0, 0, 0, 0.6),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  /* Vercel Panel */
+  .liquid-glass-panel {
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
   }
 
-  /* Google Material Elevated Card */
-  .material-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Vercel Card */
+  .liquid-card {
+    background: #0f0f11;
+    border: 1px solid #222222;
+    border-radius: 8px;
+    transition: all 0.15s ease-in-out;
   }
   
-  .material-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    border-color: var(--border-strong);
+  .liquid-card:hover {
+    background: #141416;
+    border-color: #333333;
   }
 
-  /* Recording pulse ring */
-  .pulse-ring {
-    position: absolute;
-    inset: -8px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 71, 87, 0.5);
-    animation: pulseRing 1.5s cubic-bezier(0.2, 0, 0, 1) infinite;
+  /* Active Card */
+  .liquid-card-active {
+    background: #121214;
+    border: 1px solid #ededed;
   }
 
-  .pulse-ring:nth-child(2) {
-    animation-delay: 0.5s;
-  }
-
-  @keyframes pulseRing {
-    0% { transform: scale(0.8); opacity: 1; }
-    100% { transform: scale(1.5); opacity: 0; }
-  }
-
-  /* Wavy brush visualizer */
-  .wave-bar {
-    width: 3px;
-    border-radius: 3px;
-    animation: wave 1.2s ease-in-out infinite;
-    background: var(--accent-gradient);
-  }
-
-  @keyframes wave {
-    0%, 100% { transform: scaleY(0.5); }
-    50% { transform: scaleY(1.5); }
-  }
-
-  .wave-bar:nth-child(2) { animation-delay: 0.15s; }
-  .wave-bar:nth-child(3) { animation-delay: 0.3s; }
-  .wave-bar:nth-child(4) { animation-delay: 0.45s; }
-  .wave-bar:nth-child(5) { animation-delay: 0.6s; }
-  .wave-bar:nth-child(6) { animation-delay: 0.75s; }
-  .wave-bar:nth-child(7) { animation-delay: 0.6s; }
-  .wave-bar:nth-child(8) { animation-delay: 0.45s; }
-  .wave-bar:nth-child(9) { animation-delay: 0.3s; }
-  .wave-bar:nth-child(10) { animation-delay: 0.15s; }
-
-  /* Premium Shimmer Button */
-  .btn-primary {
+  /* Primary High-Contrast Vercel Button */
+  .btn-liquid-primary {
     position: relative;
-    overflow: hidden;
-    background: var(--accent-gradient);
-    color: white;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
+    background: #ededed;
+    color: #000000;
+    font-weight: 500;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #ffffff;
+    transition: all 0.15s ease-in-out;
   }
 
-  .btn-primary::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+  .btn-liquid-primary:hover {
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
   }
 
-  .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px var(--accent-glow);
-    filter: brightness(1.1);
+  .btn-liquid-primary:active {
+    transform: scale(0.98);
   }
 
-  .btn-primary:active {
-    transform: translateY(0);
-  }
-  
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-
-  /* Tab segmented control style */
-  .segmented-tab {
-    position: relative;
-    color: var(--text-secondary);
-    transition: color 0.2s;
-  }
-  
-  .segmented-tab.active {
-    color: var(--text-primary);
+  /* Secondary / Ghost Vercel Button */
+  .btn-liquid-ghost {
+    background: #0a0a0a;
+    color: #ededed;
+    border: 1px solid #262626;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all 0.15s ease-in-out;
   }
 
-  /* Glow text */
-  .glow-text {
-    text-shadow: 0 0 20px var(--accent-glow);
+  .btn-liquid-ghost:hover {
+    background: #171717;
+    border-color: #3a3a3a;
+    color: #ffffff;
   }
 
-  /* Transcript text with gradient */
-  .transcript-text {
-    background: linear-gradient(135deg, #FFFFFF 0%, #A0A0A0 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Compact FluidVoice Notch Container */
+  .liquid-notch-container {
+    background: #0a0a0a;
+    border-left: 1px solid #262626;
+    border-right: 1px solid #262626;
+    border-bottom: 1px solid #262626;
+    border-top: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
   }
 }
 
@@ -209,8 +151,8 @@
   cursor: move;
 }
 
-/* Custom selection */
+/* Selection */
 ::selection {
-  background: rgba(178, 80, 255, 0.3);
-  color: #FFF;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }

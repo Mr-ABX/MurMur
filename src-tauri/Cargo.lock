@@ -2691,6 +2691,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
+name = "liquid-voice"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "chrono",
+ "cpal",
+ "dirs 5.0.1",
+ "enigo",
+ "env_logger",
+ "futures-util",
+ "hound",
+ "image",
+ "log",
+ "num_cpus",
+ "objc2 0.6.4",
+ "rdev",
+ "regex",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-shell",
+ "tokio",
+ "tokio-tungstenite",
+ "url",
+ "uuid",
+ "whisper-rs",
+ "xcap",
+]
+
+[[package]]
 name = "litemap"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2855,42 +2891,6 @@ dependencies = [
  "serde",
  "thiserror 2.0.18",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "murmur"
-version = "0.3.1"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "chrono",
- "cpal",
- "dirs 5.0.1",
- "enigo",
- "env_logger",
- "futures-util",
- "hound",
- "image",
- "log",
- "num_cpus",
- "objc2 0.6.4",
- "rdev",
- "regex",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-dialog",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-shell",
- "tokio",
- "tokio-tungstenite",
- "url",
- "uuid",
- "whisper-rs",
- "xcap",
 ]
 
 [[package]]

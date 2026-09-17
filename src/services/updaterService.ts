@@ -1,7 +1,7 @@
 import { open } from "@tauri-apps/plugin-shell";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 
-export const APP_VERSION = "0.2.0";
+export const APP_VERSION = "0.3.2";
 const GITHUB_REPO = "Mr-ABX/MurMur";
 
 export interface UpdateInfo {

@@ -1,26 +1,25 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import OverlayWindow from "./components/OverlayWindow";
-import SettingsPanel from "./components/SettingsPanel";
+import { Dashboard } from "./components/layout/Dashboard";
+import { LiquidNotch } from "./components/overlay/LiquidNotch";
 import TrayMenu from "./components/TrayMenu";
 import MiniWidget from "./components/MiniWidget";
-import Notch from "./components/Notch";
 import { useAppState } from "./hooks/useAppState";
-
+import { useLiquidSync } from "./hooks/useLiquidSync";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 // Determine which view to show based on window label
-// Tauri uses different windows for different views
 const windowLabel = getCurrentWindow().label;
 
 function App() {
   const appState = useAppState();
-  const [view, setView] = useState<"tray" | "overlay" | "settings" | "widget" | "notch">(
+  useLiquidSync();
+  const [view] = useState<"dashboard" | "overlay" | "tray" | "widget" | "notch">(
     windowLabel === "overlay" ? "overlay" :
-    windowLabel === "settings" ? "settings" :
     windowLabel === "widget" ? "widget" :
     windowLabel === "notch" ? "notch" :
-    "tray"
+    windowLabel === "tray" ? "tray" :
+    "dashboard"
   );
 
   // Global scroll listener: shows sleek scrollbar only while actively scrolling
@@ -41,23 +40,25 @@ function App() {
     };
   }, []);
 
+  if (view === "notch" || view === "overlay") {
+    return (
+      <div className="w-screen h-screen bg-transparent overflow-hidden flex flex-col items-center">
+        <LiquidNotch />
+      </div>
+    );
+  }
+
+  if (view === "widget") {
+    return <MiniWidget />;
+  }
+
+  if (view === "tray") {
+    return <TrayMenu state={appState} onOpenSettings={() => {}} />;
+  }
+
   return (
     <AnimatePresence mode="wait">
-      {view === "overlay" && (
-        <OverlayWindow key="overlay" state={appState} />
-      )}
-      {view === "settings" && (
-        <SettingsPanel key="settings" state={appState} />
-      )}
-      {view === "tray" && (
-        <TrayMenu key="tray" state={appState} onOpenSettings={() => setView("settings")} />
-      )}
-      {view === "widget" && (
-        <MiniWidget key="widget" />
-      )}
-      {view === "notch" && (
-        <Notch key="notch" state={appState} />
-      )}
+      <Dashboard key="dashboard" />
     </AnimatePresence>
   );
 }

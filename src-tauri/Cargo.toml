@@ -1,16 +1,16 @@
 [package]
-name = "murmur"
-version = "0.3.2"
-description = "Murmur - Local voice-to-text for AI coding tools"
+name = "liquid-voice"
+version = "0.4.0"
+description = "Liquid Voice - Ultra-fast on-device ambient voice dictation & AI enhancement"
 authors = ["Murmur Team"]
 license = "MIT"
 repository = "https://github.com/yourusername/murmur"
 edition = "2021"
 rust-version = "1.75"
-default-run = "murmur"
+default-run = "liquid-voice"
 
 [lib]
-name = "murmur_lib"
+name = "liquid_voice_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

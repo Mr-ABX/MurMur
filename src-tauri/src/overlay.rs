@@ -149,11 +149,12 @@ pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
                 if let Some(monitor) = monitor {
                     let scale = monitor.scale_factor();
                     let screen_w = monitor.size().width as f64 / scale;
-                    let notch_w = 250.0_f64;
+                    let notch_w = 560.0_f64;
                     let x = (screen_w - notch_w) / 2.0;
 
                     let target_x = (x * scale) as i32;
                     let _ = window.set_position(tauri::PhysicalPosition::new(target_x, 0));
+                    let _ = window.set_always_on_top(true);
                 }
             }
         }
@@ -322,8 +323,8 @@ pub fn toggle_tray_popover(app: &AppHandle) {
 /// Resize the notch window dynamically between idle and expanded modes
 pub fn resize_notch(app: &AppHandle, expanded: bool) {
     if let Some(window) = app.get_webview_window("notch") {
-        let target_w = 460.0_f64;
-        let target_h = if expanded { 280.0_f64 } else { 48.0_f64 };
+        let target_w = 560.0_f64;
+        let target_h = if expanded { 320.0_f64 } else { 200.0_f64 };
 
         #[cfg(target_os = "macos")]
         {

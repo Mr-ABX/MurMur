@@ -29,14 +29,15 @@ impl TranscriberState {
             return Err(anyhow!("Model file not found: {:?}", model_path));
         }
 
-        let params = WhisperContextParameters::default();
+        let mut params = WhisperContextParameters::default();
+        params.use_gpu(false);
         let ctx = WhisperContext::new_with_params(
             model_path.to_str().ok_or_else(|| anyhow!("Invalid model path"))?,
             params,
         ).map_err(|e| anyhow!("Failed to load Whisper model: {}", e))?;
 
         self.context = Some(ctx);
-        log::info!("Whisper model loaded successfully");
+        log::info!("Whisper model loaded successfully on CPU");
         Ok(())
     }
 
@@ -45,15 +46,8 @@ impl TranscriberState {
         let ctx = self.context.as_ref()
             .ok_or_else(|| anyhow!("Whisper model not loaded"))?;
 
-        // Build inference parameters - use Beam Search for larger models to improve accuracy
-        let mut params = match self.model {
-            WhisperModel::Tiny | WhisperModel::TinyEn | WhisperModel::Base | WhisperModel::BaseEn => {
-                FullParams::new(SamplingStrategy::Greedy { best_of: 1 })
-            }
-            WhisperModel::Small | WhisperModel::SmallEn | WhisperModel::Medium | WhisperModel::MediumEn | WhisperModel::LargeV3Turbo => {
-                FullParams::new(SamplingStrategy::BeamSearch { beam_size: 5, patience: -1.0 })
-            }
-        };
+        // Use Greedy search (best_of: 1) across all models: 5x faster, CPU-friendly, low RAM usage
+        let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
 
         let lang_opt = if language.is_empty() || language == "auto" {
             None
