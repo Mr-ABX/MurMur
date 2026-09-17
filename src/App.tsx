@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Dashboard } from "./components/layout/Dashboard";
-import { LiquidNotch } from "./components/overlay/LiquidNotch";
+import { SuperNotch } from "./components/overlay/SuperNotch";
 import TrayMenu from "./components/TrayMenu";
 import MiniWidget from "./components/MiniWidget";
 import { useAppState } from "./hooks/useAppState";
@@ -43,7 +43,7 @@ function App() {
   if (view === "notch" || view === "overlay") {
     return (
       <div className="w-screen h-screen bg-transparent overflow-hidden flex flex-col items-center">
-        <LiquidNotch />
+        <SuperNotch />
       </div>
     );
   }

@@ -30,7 +30,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #000000;
+    background: transparent !important;
   }
 
   body {
@@ -40,7 +40,7 @@
     -moz-osx-font-smoothing: grayscale;
     user-select: none;
     color: var(--text-primary);
-    background-color: #000000;
+    background-color: transparent !important;
   }
 
   /* Sleek, simple modern scrollbars */

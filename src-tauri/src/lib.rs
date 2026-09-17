@@ -150,6 +150,7 @@ pub fn run() {
             screen_assistant::ask_screen_assistant,
             commands::set_notch_expanded,
             commands::preview_notch,
+            commands::paste_text_direct,
         ])
         .build(tauri::generate_context!())
         .expect("error while building murmur")

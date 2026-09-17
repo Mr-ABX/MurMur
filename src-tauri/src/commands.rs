@@ -468,6 +468,11 @@ fn paste_text(app: &AppHandle, text: &str) -> Result<()> {
 }
 
 #[tauri::command]
+pub async fn paste_text_direct(text: String, app: AppHandle) -> Result<(), String> {
+    paste_text(&app, &text).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn stop_recording(
     app: AppHandle,
     _state: State<'_, MurmurState>,

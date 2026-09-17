@@ -21,7 +21,9 @@ export function useLiquidSync() {
     setAudioLevel,
     setStreamingText,
     setLiveMetrics,
+    setSuperNotchMode,
     addTranscriptionRecord,
+    addClipboardItem,
     dictionaryEntries,
     typingWPM,
     selectedSpeechModel,
@@ -75,6 +77,7 @@ export function useLiquidSync() {
       // 1. Recording started
       const unlistenStart = await listen('murmur://recording-started', () => {
         setIsRecording(true);
+        setSuperNotchMode('recording');
         setStreamingText('');
         startTimeRef.current = Date.now();
         wordCountRef.current = 0;
@@ -84,6 +87,7 @@ export function useLiquidSync() {
       // 2. Recording stopped
       const unlistenStop = await listen('murmur://recording-stopped', () => {
         setIsRecording(false);
+        setSuperNotchMode('idle');
       });
       unlisteners.push(unlistenStop);
 
@@ -125,7 +129,8 @@ export function useLiquidSync() {
 
         // Apply Custom Dictionary & Spoken Punctuation
         const formattedText = applyDictionaryRules(rawText, dictionaryEntries);
-        const words = formattedText.trim().split(/\s+/).length;
+        const finalText = formattedText || rawText;
+        const words = finalText.trim().split(/\s+/).length;
         const durationSec = startTimeRef.current
           ? Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000))
           : 3;
@@ -144,6 +149,14 @@ export function useLiquidSync() {
         };
 
         addTranscriptionRecord(record);
+
+        // Also push to SuPaste Clipboard & Dictation History
+        addClipboardItem({
+          content: finalText,
+          category: 'dictation',
+          sourceApp: recordingMode === 'prompt' ? 'AI Assistant' : 'Liquid Voice',
+          isPinned: false,
+        });
       });
       unlisteners.push(unlistenDone);
 
@@ -174,7 +187,9 @@ export function useLiquidSync() {
     setAudioLevel,
     setStreamingText,
     setLiveMetrics,
+    setSuperNotchMode,
     addTranscriptionRecord,
+    addClipboardItem,
     dictionaryEntries,
     typingWPM,
     selectedSpeechModel,

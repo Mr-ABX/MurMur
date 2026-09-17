@@ -20,6 +20,20 @@ export type SidebarTab =
 
 export type OverlayStyle = 'notch' | 'minimal' | 'hidden';
 export type RecordingMode = 'dictate' | 'prompt' | 'rewrite' | 'command';
+export type SuperNotchMode = 'idle' | 'recording' | 'shelf';
+export type ClipboardCategory = 'all' | 'dictation' | 'clipboard' | 'pinned' | 'code' | 'link';
+
+export interface ClipboardItem {
+  id: string;
+  content: string;
+  category: 'dictation' | 'clipboard' | 'code' | 'link';
+  timestamp: string;
+  timestampRaw: number;
+  isPinned: boolean;
+  sourceApp?: string;
+  charCount: number;
+  wordCount: number;
+}
 
 export interface SpeechModelInfo {
   id: string;
@@ -144,18 +158,36 @@ interface AppState {
   addTranscriptionRecord: (record: TranscriptionRecord) => void;
   clearHistory: () => void;
 
-  // Live Recording & Notch State
+  // Live Recording & Notch
   isRecording: boolean;
   audioLevel: number;
   streamingText: string;
   recordingMode: RecordingMode;
+  superNotchMode: SuperNotchMode;
   liveWPM: number;
   liveLatencyMs: number;
   setIsRecording: (recording: boolean) => void;
   setAudioLevel: (level: number) => void;
   setStreamingText: (text: string) => void;
   setRecordingMode: (mode: RecordingMode) => void;
+  setSuperNotchMode: (mode: SuperNotchMode) => void;
   setLiveMetrics: (wpm: number, latencyMs: number) => void;
+
+  // SuPaste Clipboard Manager
+  clipboardItems: ClipboardItem[];
+  activeClipboardCategory: ClipboardCategory;
+  clipboardSearchQuery: string;
+  setActiveClipboardCategory: (category: ClipboardCategory) => void;
+  setClipboardSearchQuery: (query: string) => void;
+  addClipboardItem: (item: {
+    content: string;
+    category?: 'dictation' | 'clipboard' | 'code' | 'link';
+    sourceApp?: string;
+    isPinned?: boolean;
+  }) => void;
+  togglePinClipboardItem: (id: string) => void;
+  deleteClipboardItem: (id: string) => void;
+  clearClipboardItems: () => void;
 
   // Audio Devices
   inputDevices: Array<{ id: string; name: string }>;
@@ -350,6 +382,64 @@ const INITIAL_HISTORY: TranscriptionRecord[] = [
   }
 ];
 
+const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
+  {
+    id: 'clip-1',
+    content: 'Hello everyone! Welcome to Liquid Voice, the fastest dictation app.',
+    category: 'dictation',
+    timestamp: 'Just now',
+    timestampRaw: Date.now() - 1000 * 60 * 2,
+    isPinned: true,
+    sourceApp: 'Liquid Voice',
+    charCount: 66,
+    wordCount: 10,
+  },
+  {
+    id: 'clip-2',
+    content: 'const [isRecording, setIsRecording] = useState(false);',
+    category: 'code',
+    timestamp: '15m ago',
+    timestampRaw: Date.now() - 1000 * 60 * 15,
+    isPinned: true,
+    sourceApp: 'VS Code',
+    charCount: 54,
+    wordCount: 5,
+  },
+  {
+    id: 'clip-3',
+    content: 'https://github.com/yourusername/liquid-voice',
+    category: 'link',
+    timestamp: '1h ago',
+    timestampRaw: Date.now() - 1000 * 60 * 60,
+    isPinned: false,
+    sourceApp: 'Safari',
+    charCount: 44,
+    wordCount: 1,
+  },
+  {
+    id: 'clip-4',
+    content: 'Make sure to test the speech engine on both Mac and Windows.',
+    category: 'dictation',
+    timestamp: '2h ago',
+    timestampRaw: Date.now() - 1000 * 60 * 120,
+    isPinned: false,
+    sourceApp: 'Slack',
+    charCount: 60,
+    wordCount: 12,
+  },
+  {
+    id: 'clip-5',
+    content: 'git commit -m "feat(supernotch): implement SuPaste shelf with clipboard and dictation history"',
+    category: 'code',
+    timestamp: '3h ago',
+    timestampRaw: Date.now() - 1000 * 60 * 180,
+    isPinned: false,
+    sourceApp: 'Terminal',
+    charCount: 96,
+    wordCount: 10,
+  },
+];
+
 export const useAppStore = create<AppState>((set) => ({
   // Navigation
   activeTab: 'welcome',
@@ -449,12 +539,15 @@ export const useAppStore = create<AppState>((set) => ({
   ],
   historyRecords: INITIAL_HISTORY,
   addTranscriptionRecord: (record) =>
-    set((state) => ({
-      historyRecords: [record, ...state.historyRecords],
-      wordsToday: state.wordsToday + record.rawText.split(/\s+/).filter(Boolean).length,
-      totalWordsDictated: state.totalWordsDictated + record.rawText.split(/\s+/).filter(Boolean).length,
-      totalTranscriptions: state.totalTranscriptions + 1,
-    })),
+    set((state) => {
+      const words = record.rawText.split(/\s+/).filter(Boolean).length;
+      return {
+        historyRecords: [record, ...state.historyRecords],
+        wordsToday: state.wordsToday + words,
+        totalWordsDictated: state.totalWordsDictated + words,
+        totalTranscriptions: state.totalTranscriptions + 1,
+      };
+    }),
   clearHistory: () => set({ historyRecords: [] }),
 
   // Live Recording & Notch
@@ -462,13 +555,73 @@ export const useAppStore = create<AppState>((set) => ({
   audioLevel: 0,
   streamingText: '',
   recordingMode: 'dictate',
+  superNotchMode: 'idle',
   liveWPM: 150,
   liveLatencyMs: 65,
   setIsRecording: (isRecording) => set({ isRecording }),
   setAudioLevel: (audioLevel) => set({ audioLevel }),
   setStreamingText: (streamingText) => set({ streamingText }),
   setRecordingMode: (recordingMode) => set({ recordingMode }),
+  setSuperNotchMode: (superNotchMode) => set({ superNotchMode }),
   setLiveMetrics: (liveWPM, liveLatencyMs) => set({ liveWPM, liveLatencyMs }),
+
+  // SuPaste Clipboard Manager
+  clipboardItems: INITIAL_CLIPBOARD_ITEMS,
+  activeClipboardCategory: 'all',
+  clipboardSearchQuery: '',
+  setActiveClipboardCategory: (category) => set({ activeClipboardCategory: category }),
+  setClipboardSearchQuery: (query) => set({ clipboardSearchQuery: query }),
+  addClipboardItem: (item) =>
+    set((state) => {
+      const content = item.content.trim();
+      if (!content) return state;
+
+      // Auto-detect category if not specified
+      let category = item.category;
+      if (!category) {
+        if (/^https?:\/\//i.test(content)) {
+          category = 'link';
+        } else if (/[{};=><()[\]]/.test(content) && (content.includes('\n') || content.length > 25)) {
+          category = 'code';
+        } else {
+          category = 'clipboard';
+        }
+      }
+
+      // Check if already exists at top
+      if (state.clipboardItems.length > 0 && state.clipboardItems[0].content === content) {
+        return state;
+      }
+
+      const newItem: ClipboardItem = {
+        id: `clip-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        content,
+        category,
+        timestamp: 'Just now',
+        timestampRaw: Date.now(),
+        isPinned: item.isPinned ?? false,
+        sourceApp: item.sourceApp || 'Clipboard',
+        charCount: content.length,
+        wordCount: content.split(/\s+/).filter(Boolean).length,
+      };
+
+      // Filter out duplicate identical content so it bubbles to top
+      const filtered = state.clipboardItems.filter((c) => c.content !== content);
+      return {
+        clipboardItems: [newItem, ...filtered].slice(0, 300),
+      };
+    }),
+  togglePinClipboardItem: (id) =>
+    set((state) => ({
+      clipboardItems: state.clipboardItems.map((c) =>
+        c.id === id ? { ...c, isPinned: !c.isPinned } : c
+      ),
+    })),
+  deleteClipboardItem: (id) =>
+    set((state) => ({
+      clipboardItems: state.clipboardItems.filter((c) => c.id !== id),
+    })),
+  clearClipboardItems: () => set({ clipboardItems: [] }),
 
   // Audio Devices
   inputDevices: [
