@@ -299,6 +299,28 @@ async fn handle_transcription_result(
     let _ = app.emit_to("notch", "murmur://history-updated", &history);
     let _ = app.emit_to("settings", "murmur://history-updated", &history);
 
+    // Also auto-save to SuPaste Clipboard Vault
+    let clip_item = crate::clipboard_listener::ClipboardItemPayload {
+        id: format!("clip-{}", chrono::Utc::now().timestamp_millis()),
+        content: text.clone(),
+        category: "dictation".to_string(),
+        timestamp: "Just now".to_string(),
+        timestamp_raw: chrono::Utc::now().timestamp_millis(),
+        source_app: if settings.operating_mode == crate::settings::OperatingMode::Assistant { "AI Assistant".to_string() } else { "Liquid Voice".to_string() },
+        char_count: text.chars().count(),
+        word_count: text.split_whitespace().count(),
+        is_pinned: false,
+    };
+    let mut clips = crate::clipboard_listener::load_saved_clipboard();
+    clips.retain(|c| c.content != clip_item.content);
+    clips.insert(0, clip_item.clone());
+    if clips.len() > 300 {
+        clips.truncate(300);
+    }
+    crate::clipboard_listener::save_clipboard_to_disk(&clips);
+    let _ = app.emit("murmur://clipboard-changed", &clip_item);
+    let _ = app.emit_to("notch", "murmur://clipboard-changed", &clip_item);
+
     // If operating mode is Assistant, route transcript into Notch Assistant workspace
     if settings.operating_mode == crate::settings::OperatingMode::Assistant {
         overlay::show_visualizer(&app, &settings);
@@ -600,6 +622,44 @@ pub fn clear_voice_history(app: AppHandle) -> Result<(), String> {
     let empty: Vec<crate::settings::VoiceHistoryItem> = Vec::new();
     let _ = crate::settings::AppSettings::save_history(&empty);
     let _ = app.emit("murmur://history-updated", &empty);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_clipboard_history() -> Vec<crate::clipboard_listener::ClipboardItemPayload> {
+    crate::clipboard_listener::load_saved_clipboard()
+}
+
+#[tauri::command]
+pub fn delete_clipboard_item(id: String, app: AppHandle) -> Vec<crate::clipboard_listener::ClipboardItemPayload> {
+    let mut items = crate::clipboard_listener::load_saved_clipboard();
+    items.retain(|c| c.id != id);
+    crate::clipboard_listener::save_clipboard_to_disk(&items);
+    let _ = app.emit("murmur://clipboard-history-updated", &items);
+    let _ = app.emit_to("notch", "murmur://clipboard-history-updated", &items);
+    items
+}
+
+#[tauri::command]
+pub fn toggle_pin_clipboard_item(id: String, app: AppHandle) -> Vec<crate::clipboard_listener::ClipboardItemPayload> {
+    let mut items = crate::clipboard_listener::load_saved_clipboard();
+    for c in &mut items {
+        if c.id == id {
+            c.is_pinned = !c.is_pinned;
+        }
+    }
+    crate::clipboard_listener::save_clipboard_to_disk(&items);
+    let _ = app.emit("murmur://clipboard-history-updated", &items);
+    let _ = app.emit_to("notch", "murmur://clipboard-history-updated", &items);
+    items
+}
+
+#[tauri::command]
+pub fn clear_clipboard_history(app: AppHandle) -> Result<(), String> {
+    let empty: Vec<crate::clipboard_listener::ClipboardItemPayload> = Vec::new();
+    crate::clipboard_listener::save_clipboard_to_disk(&empty);
+    let _ = app.emit("murmur://clipboard-history-updated", &empty);
+    let _ = app.emit_to("notch", "murmur://clipboard-history-updated", &empty);
     Ok(())
 }
 

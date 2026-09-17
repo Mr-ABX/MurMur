@@ -24,6 +24,7 @@ export function useLiquidSync() {
     setSuperNotchMode,
     addTranscriptionRecord,
     addClipboardItem,
+    setClipboardItems,
     dictionaryEntries,
     typingWPM,
     selectedSpeechModel,
@@ -66,12 +67,32 @@ export function useLiquidSync() {
         }
       })
       .catch(() => {
-        // Fallback default
         setInputDevices([
           { id: 'default', name: 'System Default Microphone' },
           { id: 'built-in', name: 'Built-in Studio Microphone' },
         ]);
       });
+
+    // Load persisted clipboard history from backend
+    invoke<any[]>('get_clipboard_history')
+      .then((items) => {
+        if (Array.isArray(items)) {
+          setClipboardItems(
+            items.map((it) => ({
+              id: it.id,
+              content: it.content,
+              category: it.category,
+              timestamp: it.timestamp,
+              timestampRaw: it.timestamp_raw || Date.now(),
+              sourceApp: it.source_app || 'Clipboard',
+              charCount: it.char_count || it.content.length,
+              wordCount: it.word_count || it.content.split(/\s+/).filter(Boolean).length,
+              isPinned: it.is_pinned || false,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
 
     const setupListeners = async () => {
       // 1. Recording started
@@ -160,7 +181,40 @@ export function useLiquidSync() {
       });
       unlisteners.push(unlistenDone);
 
-      // 6. Download Progress
+      // 6. Real-time OS System Clipboard Copy Event
+      const unlistenClipboard = await listen<any>('murmur://clipboard-changed', (event) => {
+        if (event.payload && event.payload.content) {
+          addClipboardItem({
+            content: event.payload.content,
+            category: event.payload.category,
+            sourceApp: event.payload.source_app || 'Clipboard',
+            isPinned: event.payload.is_pinned || false,
+          });
+        }
+      });
+      unlisteners.push(unlistenClipboard);
+
+      // 7. Clipboard History Bulk Update Event
+      const unlistenClipHistory = await listen<any[]>('murmur://clipboard-history-updated', (event) => {
+        if (Array.isArray(event.payload)) {
+          setClipboardItems(
+            event.payload.map((it) => ({
+              id: it.id,
+              content: it.content,
+              category: it.category,
+              timestamp: it.timestamp,
+              timestampRaw: it.timestamp_raw || Date.now(),
+              sourceApp: it.source_app || 'Clipboard',
+              charCount: it.char_count || it.content.length,
+              wordCount: it.word_count || it.content.split(/\s+/).filter(Boolean).length,
+              isPinned: it.is_pinned || false,
+            }))
+          );
+        }
+      });
+      unlisteners.push(unlistenClipHistory);
+
+      // 8. Download Progress
       const unlistenProgress = await listen<DownloadProgressPayload>('murmur://download-progress', (event) => {
         if (event.payload.model) {
           setDownloadProgress(event.payload.model, event.payload.progress);
@@ -168,7 +222,7 @@ export function useLiquidSync() {
       });
       unlisteners.push(unlistenProgress);
 
-      // 7. Model Download Complete
+      // 9. Model Download Complete
       const unlistenDownloaded = await listen<string>('murmur://model-downloaded', (event) => {
         if (event.payload) {
           markModelInstalled(event.payload);
@@ -190,6 +244,7 @@ export function useLiquidSync() {
     setSuperNotchMode,
     addTranscriptionRecord,
     addClipboardItem,
+    setClipboardItems,
     dictionaryEntries,
     typingWPM,
     selectedSpeechModel,

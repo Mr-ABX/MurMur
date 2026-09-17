@@ -9,6 +9,7 @@ mod settings;
 mod transcriber;
 mod voxcoder;
 mod screen_assistant;
+pub mod clipboard_listener;
 
 use std::sync::{Arc, Mutex};
 use tauri::{
@@ -71,6 +72,9 @@ pub fn run() {
             if settings.visibility_mode == crate::settings::VisibilityMode::AlwaysOn {
                 overlay::show_visualizer(app.handle(), &settings);
             }
+
+            // Start live system clipboard background monitor
+            clipboard_listener::start_clipboard_monitor(app.handle().clone());
 
             // Build system tray menu
             let settings_item = MenuItem::with_id(app, "settings", "Murmur Dashboard", true, None::<&str>)?;
@@ -146,6 +150,10 @@ pub fn run() {
             commands::get_voice_history,
             commands::delete_voice_history_item,
             commands::clear_voice_history,
+            commands::get_clipboard_history,
+            commands::delete_clipboard_item,
+            commands::toggle_pin_clipboard_item,
+            commands::clear_clipboard_history,
             screen_assistant::capture_screen_base64,
             screen_assistant::ask_screen_assistant,
             commands::set_notch_expanded,

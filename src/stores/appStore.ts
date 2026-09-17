@@ -21,12 +21,12 @@ export type SidebarTab =
 export type OverlayStyle = 'notch' | 'minimal' | 'hidden';
 export type RecordingMode = 'dictate' | 'prompt' | 'rewrite' | 'command';
 export type SuperNotchMode = 'idle' | 'recording' | 'shelf';
-export type ClipboardCategory = 'all' | 'dictation' | 'clipboard' | 'pinned' | 'code' | 'link';
+export type ClipboardCategory = 'all' | 'dictation' | 'clipboard' | 'pinned' | 'code' | 'link' | 'color';
 
 export interface ClipboardItem {
   id: string;
   content: string;
-  category: 'dictation' | 'clipboard' | 'code' | 'link';
+  category: 'dictation' | 'clipboard' | 'code' | 'link' | 'color';
   timestamp: string;
   timestampRaw: number;
   isPinned: boolean;
@@ -179,9 +179,10 @@ interface AppState {
   clipboardSearchQuery: string;
   setActiveClipboardCategory: (category: ClipboardCategory) => void;
   setClipboardSearchQuery: (query: string) => void;
+  setClipboardItems: (items: ClipboardItem[]) => void;
   addClipboardItem: (item: {
     content: string;
-    category?: 'dictation' | 'clipboard' | 'code' | 'link';
+    category?: 'dictation' | 'clipboard' | 'code' | 'link' | 'color';
     sourceApp?: string;
     isPinned?: boolean;
   }) => void;
@@ -357,88 +358,9 @@ const INITIAL_DICTIONARY: CustomDictionaryEntry[] = [
   { id: '10', trigger: 'tauri', replacement: 'Tauri', category: 'word', isEnabled: true },
 ];
 
-const INITIAL_HISTORY: TranscriptionRecord[] = [
-  {
-    id: 'rec-1',
-    timestamp: 'Just now',
-    durationSeconds: 4.2,
-    rawText: 'hello everyone welcome to liquid voice the fastest dictation app',
-    enhancedText: 'Hello everyone! Welcome to Liquid Voice, the fastest dictation app.',
-    appName: 'Cursor',
-    speakingWPM: 148,
-    latencyMs: 82,
-    modelUsed: 'Parakeet Flash',
-  },
-  {
-    id: 'rec-2',
-    timestamp: '10 mins ago',
-    durationSeconds: 8.5,
-    rawText: 'make sure to test the speech engine on both mac and windows',
-    enhancedText: 'Make sure to test the speech engine on both Mac and Windows.',
-    appName: 'Slack',
-    speakingWPM: 152,
-    latencyMs: 95,
-    modelUsed: 'Whisper Base',
-  }
-];
+const INITIAL_HISTORY: TranscriptionRecord[] = [];
 
-const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [
-  {
-    id: 'clip-1',
-    content: 'Hello everyone! Welcome to Liquid Voice, the fastest dictation app.',
-    category: 'dictation',
-    timestamp: 'Just now',
-    timestampRaw: Date.now() - 1000 * 60 * 2,
-    isPinned: true,
-    sourceApp: 'Liquid Voice',
-    charCount: 66,
-    wordCount: 10,
-  },
-  {
-    id: 'clip-2',
-    content: 'const [isRecording, setIsRecording] = useState(false);',
-    category: 'code',
-    timestamp: '15m ago',
-    timestampRaw: Date.now() - 1000 * 60 * 15,
-    isPinned: true,
-    sourceApp: 'VS Code',
-    charCount: 54,
-    wordCount: 5,
-  },
-  {
-    id: 'clip-3',
-    content: 'https://github.com/yourusername/liquid-voice',
-    category: 'link',
-    timestamp: '1h ago',
-    timestampRaw: Date.now() - 1000 * 60 * 60,
-    isPinned: false,
-    sourceApp: 'Safari',
-    charCount: 44,
-    wordCount: 1,
-  },
-  {
-    id: 'clip-4',
-    content: 'Make sure to test the speech engine on both Mac and Windows.',
-    category: 'dictation',
-    timestamp: '2h ago',
-    timestampRaw: Date.now() - 1000 * 60 * 120,
-    isPinned: false,
-    sourceApp: 'Slack',
-    charCount: 60,
-    wordCount: 12,
-  },
-  {
-    id: 'clip-5',
-    content: 'git commit -m "feat(supernotch): implement SuPaste shelf with clipboard and dictation history"',
-    category: 'code',
-    timestamp: '3h ago',
-    timestampRaw: Date.now() - 1000 * 60 * 180,
-    isPinned: false,
-    sourceApp: 'Terminal',
-    charCount: 96,
-    wordCount: 10,
-  },
-];
+const INITIAL_CLIPBOARD_ITEMS: ClipboardItem[] = [];
 
 export const useAppStore = create<AppState>((set) => ({
   // Navigation
@@ -571,6 +493,7 @@ export const useAppStore = create<AppState>((set) => ({
   clipboardSearchQuery: '',
   setActiveClipboardCategory: (category) => set({ activeClipboardCategory: category }),
   setClipboardSearchQuery: (query) => set({ clipboardSearchQuery: query }),
+  setClipboardItems: (clipboardItems) => set({ clipboardItems }),
   addClipboardItem: (item) =>
     set((state) => {
       const content = item.content.trim();
@@ -579,7 +502,9 @@ export const useAppStore = create<AppState>((set) => ({
       // Auto-detect category if not specified
       let category = item.category;
       if (!category) {
-        if (/^https?:\/\//i.test(content)) {
+        if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(content) || /^rgba?\(/i.test(content)) {
+          category = 'color';
+        } else if (/^https?:\/\//i.test(content)) {
           category = 'link';
         } else if (/[{};=><()[\]]/.test(content) && (content.includes('\n') || content.length > 25)) {
           category = 'code';
