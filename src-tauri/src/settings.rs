@@ -253,19 +253,31 @@ impl Default for AppSettings {
 
 impl AppSettings {
     pub fn config_path() -> PathBuf {
-        let mut path = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("."));
-        path.push("Murmur");
-        path.push("settings.json");
-        path
+        let base = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
+        let dopenotch_cfg = base.join("DopeNotch").join("settings.json");
+        if dopenotch_cfg.exists() {
+            return dopenotch_cfg;
+        }
+        let murmur_cfg = base.join("Murmur").join("settings.json");
+        if murmur_cfg.exists() {
+            return murmur_cfg;
+        }
+        let _ = std::fs::create_dir_all(base.join("DopeNotch"));
+        dopenotch_cfg
     }
 
     pub fn models_dir() -> PathBuf {
-        let mut path = dirs::data_dir()
-            .unwrap_or_else(|| PathBuf::from("."));
-        path.push("Murmur");
-        path.push("models");
-        path
+        let base = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
+        let dopenotch_dir = base.join("DopeNotch").join("models");
+        if dopenotch_dir.exists() {
+            return dopenotch_dir;
+        }
+        let murmur_dir = base.join("Murmur").join("models");
+        if murmur_dir.exists() {
+            return murmur_dir;
+        }
+        let _ = std::fs::create_dir_all(&dopenotch_dir);
+        dopenotch_dir
     }
 
     pub fn load_or_default() -> Self {
