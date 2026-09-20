@@ -13,7 +13,7 @@ export const MeetingTranscriptionView: React.FC = () => {
     '# Product Strategy Review — 2026 Q3\n\n' +
       '**Attendees:** Product Lead, Lead Architect, Frontend Lead\n\n' +
       '### Key Discussion Points:\n' +
-      '1. **Liquid Voice Transition**: Migration to Tauri v2 + React complete. Achieved sub-80ms streaming latency.\n' +
+      '1. **DopeNotch Architecture**: Migration to Tauri v2 + React complete. Achieved sub-80ms streaming latency.\n' +
       '2. **Dynamic Island Top Notch**: Implemented sleek bezel dock with audio visualizer and live text.\n' +
       '3. **Hardware Acceleration**: Confirmed Intel AVX2 and Apple Metal acceleration for zero-lag CPU/GPU inference.\n\n' +
       '### Action Items:\n' +

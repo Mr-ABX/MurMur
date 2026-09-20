@@ -50,7 +50,7 @@ export const SettingsModal: React.FC = () => {
         <div className="h-14 border-b border-[#1e1e24] flex items-center justify-between px-6 bg-[#0a0a0c]">
           <div className="flex items-center gap-2">
             <SettingsIcon className="w-4 h-4 text-emerald-400" />
-            <h2 className="text-xs font-semibold text-[#ededed] uppercase tracking-wider">Liquid Voice Preferences</h2>
+            <h2 className="text-xs font-semibold text-[#ededed] uppercase tracking-wider">DopeNotch Preferences</h2>
           </div>
           <button
             onClick={() => setIsSettingsOpen(false)}

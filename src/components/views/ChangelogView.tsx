@@ -6,7 +6,7 @@ export const ChangelogView: React.FC = () => {
     <div className="flex-1 h-full overflow-y-auto p-8 space-y-6 bg-[#000000] text-[#ededed]">
       <div>
         <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-emerald-400" /> What's New in Liquid Voice
+          <Sparkles className="w-5 h-5 text-emerald-400" /> What's New in DopeNotch
         </h1>
         <p className="text-xs text-zinc-400 mt-1">
           Recent architecture updates, performance improvements, and model enhancements.
@@ -16,7 +16,7 @@ export const ChangelogView: React.FC = () => {
       <div className="p-6 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-5">
         <div className="flex items-center justify-between border-b border-[#1e1e24] pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-[#ededed]">Version 0.4.0 (SuPaste SuperNotch & On-Device Engine)</span>
+            <span className="text-sm font-bold text-[#ededed]">Version 0.4.0 (DopeNotch & SuPaste Shelf)</span>
             <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               Latest
             </span>

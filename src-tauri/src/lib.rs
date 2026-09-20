@@ -8,7 +8,6 @@ mod overlay;
 mod settings;
 mod transcriber;
 mod voxcoder;
-mod screen_assistant;
 pub mod clipboard_listener;
 
 use std::sync::{Arc, Mutex};
@@ -77,9 +76,9 @@ pub fn run() {
             clipboard_listener::start_clipboard_monitor(app.handle().clone());
 
             // Build system tray menu
-            let settings_item = MenuItem::with_id(app, "settings", "Murmur Dashboard", true, None::<&str>)?;
+            let settings_item = MenuItem::with_id(app, "settings", "DopeNotch Dashboard", true, None::<&str>)?;
             let separator = PredefinedMenuItem::separator(app)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Quit Murmur", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit DopeNotch", true, None::<&str>)?;
 
             let menu = Menu::with_items(app, &[&settings_item, &separator, &quit_item])?;
 
@@ -96,7 +95,7 @@ pub fn run() {
                 .icon(tray_icon)
                 .icon_as_template(settings.tray_icon_style == crate::settings::TrayIconStyle::Flat)
                 .menu(&menu)
-                .tooltip("Murmur — Press ⌘⇧Space to record")
+                .tooltip("DopeNotch — 'cause it's top-notch (Press ⌃⌥ to record)")
                 .on_menu_event(|app_handle, event| {
                     match event.id().as_ref() {
                         "settings" => {
@@ -154,8 +153,6 @@ pub fn run() {
             commands::delete_clipboard_item,
             commands::toggle_pin_clipboard_item,
             commands::clear_clipboard_history,
-            screen_assistant::capture_screen_base64,
-            screen_assistant::ask_screen_assistant,
             commands::set_notch_expanded,
             commands::preview_notch,
             commands::paste_text_direct,

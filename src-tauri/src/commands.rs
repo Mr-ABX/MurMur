@@ -306,7 +306,7 @@ async fn handle_transcription_result(
         category: "dictation".to_string(),
         timestamp: "Just now".to_string(),
         timestamp_raw: chrono::Utc::now().timestamp_millis(),
-        source_app: if settings.operating_mode == crate::settings::OperatingMode::Assistant { "AI Assistant".to_string() } else { "Liquid Voice".to_string() },
+        source_app: if settings.operating_mode == crate::settings::OperatingMode::Assistant { "AI Assistant".to_string() } else { "DopeNotch".to_string() },
         char_count: text.chars().count(),
         word_count: text.split_whitespace().count(),
         is_pinned: false,

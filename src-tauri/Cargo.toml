@@ -1,16 +1,16 @@
 [package]
-name = "liquid-voice"
+name = "dopenotch"
 version = "0.4.0"
-description = "Liquid Voice - Ultra-fast on-device ambient voice dictation & AI enhancement"
-authors = ["Murmur Team"]
+description = "DopeNotch - 'cause it's top-notch. Ultra-fast on-device voice dictation & clipboard shelf"
+authors = ["DopeNotch Team"]
 license = "MIT"
-repository = "https://github.com/yourusername/murmur"
+repository = "https://github.com/yourusername/dopenotch"
 edition = "2021"
 rust-version = "1.75"
-default-run = "liquid-voice"
+default-run = "dopenotch"
 
 [lib]
-name = "liquid_voice_lib"
+name = "dopenotch_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -70,8 +70,6 @@ uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-dialog = "2"
-xcap = "0.3.3"
-image = "0.25"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"

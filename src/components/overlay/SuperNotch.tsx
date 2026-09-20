@@ -426,7 +426,7 @@ export const SuperNotch: React.FC = () => {
                     <div className="w-full py-8 text-center text-xs text-zinc-500 flex flex-col items-center justify-center gap-1">
                       <p className="font-medium text-zinc-400">No clips yet</p>
                       <p className="text-[11px] text-zinc-600">
-                        Copy any text or speak with Liquid Voice to see clips appear here in real time.
+                        Copy any text or speak with DopeNotch to see clips appear here in real time.
                       </p>
                     </div>
                   ) : (

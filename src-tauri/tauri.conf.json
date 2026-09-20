@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Liquid Voice",
+  "productName": "DopeNotch",
   "version": "0.4.0",
-  "identifier": "com.liquidvoice.desktop",
+  "identifier": "com.dopenotch.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -17,23 +17,8 @@
     },
     "windows": [
       {
-        "label": "widget",
-        "title": "Liquid Voice Widget",
-        "url": "/",
-        "width": 350,
-        "height": 250,
-        "resizable": true,
-        "decorations": false,
-        "transparent": true,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "visible": false,
-        "shadow": false,
-        "focus": false
-      },
-      {
         "label": "tray",
-        "title": "Liquid Voice Menu",
+        "title": "DopeNotch Menu",
         "url": "/",
         "width": 300,
         "height": 450,
@@ -47,24 +32,8 @@
         "focus": true
       },
       {
-        "label": "overlay",
-        "title": "Liquid Voice Overlay",
-        "url": "/",
-        "width": 560,
-        "height": 200,
-        "resizable": false,
-        "decorations": false,
-        "transparent": true,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "visible": false,
-        "center": true,
-        "shadow": false,
-        "focus": false
-      },
-      {
         "label": "settings",
-        "title": "Liquid Voice Dashboard",
+        "title": "DopeNotch Dashboard",
         "url": "/",
         "width": 960,
         "height": 700,
@@ -77,7 +46,7 @@
       },
       {
         "label": "notch",
-        "title": "Liquid Voice Dynamic Island",
+        "title": "DopeNotch Shelf",
         "url": "/",
         "width": 560,
         "height": 480,

@@ -39,16 +39,16 @@ export const Sidebar: React.FC = () => {
       <div>
         <div className="flex items-center gap-3 px-3 py-3 mb-2" data-tauri-drag-region>
           <div className="w-7 h-7 rounded-md bg-[#171717] border border-[#2e2e2e] flex items-center justify-center">
-            <span className="text-white font-bold text-xs tracking-tight">LV</span>
+            <span className="text-white font-bold text-xs tracking-tight">DN</span>
           </div>
           <div>
             <h1 className="text-xs font-semibold text-[#ededed] tracking-tight flex items-center gap-1.5">
-              Liquid Voice
+              DopeNotch
               <span className="text-[9px] uppercase font-mono font-medium px-1 py-0.2 rounded bg-[#1c1c1c] text-zinc-300 border border-[#2e2e2e]">
-                PRO
+                TOP-NOTCH
               </span>
             </h1>
-            <p className="text-[11px] text-zinc-500">On-Device Dictation</p>
+            <p className="text-[11px] text-zinc-500">Dictation & Clipboard</p>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer info */}
       <div className="px-3 py-2 border-t border-[#1f1f1f] text-[11px] text-zinc-500 flex items-center justify-between">
-        <span>LiquidVoice v0.4.0</span>
+        <span>DopeNotch v0.4.0</span>
         <span className="flex items-center gap-1.5 text-zinc-400 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           On-Device Ready

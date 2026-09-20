@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capability for all Liquid Voice windows",
+  "description": "Default capability for all DopeNotch windows",
   "windows": ["*"],
   "permissions": [
     "core:default",

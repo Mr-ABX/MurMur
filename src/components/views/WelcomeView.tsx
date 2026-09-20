@@ -19,7 +19,7 @@ export const WelcomeView: React.FC = () => {
 
   const [isLocalTesting, setIsLocalTesting] = useState(false);
   const [testTranscript, setTestTranscript] = useState(
-    'Press your global shortcut (⌘⇧Space) or click Test Speech Input below...'
+    'Press your global shortcut (⌃⌥ or Option+Space) or click Test Speech Input below...'
   );
 
   const activeModel = models.find((m) => m.id === selectedSpeechModel) || models[0];
@@ -29,10 +29,10 @@ export const WelcomeView: React.FC = () => {
       setIsLocalTesting(true);
       setTestTranscript('Listening... Speak a sentence clearly into your microphone.');
       setTimeout(() => {
-        setTestTranscript('Liquid Voice is listening and capturing high-fidelity speech...');
+        setTestTranscript('DopeNotch is listening and capturing high-fidelity speech...');
       }, 1000);
       setTimeout(() => {
-        setTestTranscript('This is a live test of Liquid Voice on-device speech dictation.');
+        setTestTranscript('This is a live test of DopeNotch on-device speech dictation.');
         setIsLocalTesting(false);
       }, 3200);
     } else {
@@ -47,11 +47,11 @@ export const WelcomeView: React.FC = () => {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
           <Sparkles className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-semibold tracking-wide uppercase">Liquid Voice</span>
+          <span className="text-[11px] font-semibold tracking-wide uppercase">DopeNotch • Top-Notch Dictation</span>
         </div>
-        <h1 className="text-2xl font-bold text-[#ededed] tracking-tight">Talk anywhere. Liquid Voice types for you.</h1>
+        <h1 className="text-2xl font-bold text-[#ededed] tracking-tight">Talk anywhere. DopeNotch types for you.</h1>
         <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
-          Ultra-fast, on-device AI speech-to-text with 1:1 SuPaste dynamic top notch, smart clipboard synchronization, and contextual rewrite.
+          Ultra-fast, on-device Whisper voice dictation with 1:1 Apple-style top notch, live clipboard synchronization shelf, and auto-prompt injection.
         </p>
       </div>
 

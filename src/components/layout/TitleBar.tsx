@@ -78,7 +78,7 @@ export const TitleBar: React.FC = () => {
           data-tauri-drag-region
           className="text-zinc-100 font-medium pointer-events-none select-none tracking-wide text-xs"
         >
-          Liquid Voice
+          DopeNotch
         </span>
       </div>
 

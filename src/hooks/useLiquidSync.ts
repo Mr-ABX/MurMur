@@ -192,7 +192,7 @@ export function useLiquidSync() {
         addClipboardItem({
           content: finalText,
           category: 'dictation',
-          sourceApp: recordingMode === 'prompt' ? 'AI Assistant' : 'Liquid Voice',
+          sourceApp: recordingMode === 'prompt' ? 'AI Assistant' : 'DopeNotch',
           isPinned: false,
         });
       });

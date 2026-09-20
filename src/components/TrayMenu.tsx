@@ -1,60 +1,90 @@
-import { motion } from "framer-motion";
-import { Mic, Settings, Power } from "lucide-react";
-import type { AppState } from "../hooks/useAppState";
-import { invoke } from "@tauri-apps/api/core";
-import { useState } from "react";
+import React from 'react';
+import { Mic, Sliders, Power, Copy } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
+import { useAppStore } from '../stores/appStore';
 
 interface Props {
-  state: AppState;
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
 }
 
-export default function TrayMenu({ state, onOpenSettings }: Props) {
-  const { recordingState, settings } = state;
-  const [assistantPrompt, setAssistantPrompt] = useState("");
-  const [isAsking, setIsAsking] = useState(false);
-  const [assistantResponse, setAssistantResponse] = useState("");
+export const TrayMenu: React.FC<Props> = () => {
+  const { isRecording, hotkey, setSuperNotchMode } = useAppStore();
 
-  const isRecording = recordingState === "recording";
+  const handleToggleRecord = async () => {
+    try {
+      if (isRecording) {
+        await invoke('stop_recording');
+      } else {
+        await invoke('start_recording');
+      }
+    } catch (err) {
+      console.error('Failed to toggle recording from tray:', err);
+    }
+  };
+
+  const handleOpenDashboard = async () => {
+    try {
+      await invoke('open_settings');
+    } catch (err) {
+      console.error('Failed to open dashboard:', err);
+    }
+  };
+
+  const handleOpenShelf = async () => {
+    try {
+      await invoke('preview_notch');
+      setSuperNotchMode('shelf');
+    } catch (err) {
+      console.error('Failed to open shelf:', err);
+    }
+  };
 
   const handleQuit = async () => {
-    await invoke("quit_app");
+    await invoke('quit_app');
   };
+
+  // Format hotkey for display (e.g., Control+Option -> ⌃ ⌥)
+  const hotkeyParts = (hotkey || 'Control+Option')
+    .replace(/CommandOrControl|Control/g, '⌃')
+    .replace(/Option|Alt/g, '⌥')
+    .replace(/Shift/g, '⇧')
+    .replace(/Space/g, 'Space')
+    .split('+')
+    .filter(Boolean);
 
   return (
     <div
-      className="flex flex-col py-1 min-w-[200px] rounded-xl overflow-hidden animate-fade-in"
+      className="w-full h-full flex flex-col justify-between p-2 rounded-2xl overflow-hidden select-none"
       style={{
-        background: "var(--bg-surface)",
-        border: "1px solid var(--border-subtle)",
-        backdropFilter: "blur(24px) saturate(180%)",
-        WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.5), 0 0 1px var(--border-strong)",
+        background: '#0a0a0a',
+        border: '1px solid #222222',
+        boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.8), 0 0 1px #333333',
       }}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-murmur-border/30">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center shadow-sm">
-            <Mic size={14} className="text-zinc-300" strokeWidth={1.5} />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-murmur-text leading-none">Murmur</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className={`status-dot ${isRecording ? "bg-red-500 animate-pulse" : "bg-murmur-accent"}`} />
-              <p className="text-xs text-murmur-muted">{isRecording ? "Recording..." : "Ready"}</p>
+      <div className="px-3 py-2.5 border-b border-[#1f1f1f]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-[#141414] border border-[#2a2a2a] flex items-center justify-center shadow-inner">
+              <span className="text-[11px] font-black text-white tracking-tighter">DN</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-[#ededed] leading-none">DopeNotch</p>
+                <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-[#1e1e1e] text-zinc-400 border border-[#333333]">
+                  TOP-NOTCH
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1">
+                <div className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
+                <p className="text-[10px] text-zinc-400">{isRecording ? 'Dictating...' : 'Ready on-device'}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Hotkey reminder */}
-      <div className="px-4 py-2.5 border-b border-murmur-border/20">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-murmur-muted">Start recording</span>
           <div className="flex items-center gap-1">
-            {["⌘", "⇧", "Space"].map((k) => (
-              <kbd key={k} className="px-1.5 py-0.5 text-xs rounded font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">
+            {hotkeyParts.map((k, i) => (
+              <kbd key={i} className="px-1.5 py-0.5 text-[10px] rounded font-mono bg-[#171717] text-zinc-300 border border-[#2e2e2e]">
                 {k}
               </kbd>
             ))}
@@ -62,100 +92,61 @@ export default function TrayMenu({ state, onOpenSettings }: Props) {
         </div>
       </div>
 
-      {/* VoxCoder toggle */}
-      <div className="px-4 py-2.5 border-b border-murmur-border/20">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-murmur-muted">VoxCoder Mode</span>
-          <button
-            onClick={() => state.updateSettings({ voxcoderMode: !settings.voxcoderMode })}
-            className={`text-xs px-2 py-0.5 rounded-full font-medium transition-all ${
-              settings.voxcoderMode
-                ? "bg-zinc-800 text-zinc-200 border border-zinc-600"
-                : "bg-zinc-900/50 text-zinc-500 border border-zinc-800"
-            }`}
-          >
-            {settings.voxcoderMode ? "ON" : "OFF"}
-          </button>
-        </div>
-      </div>
-
-      {/* Screen Assistant */}
-      <div className="px-4 py-3 border-b border-murmur-border/20">
-        <span className="text-xs text-murmur-muted block mb-2">Screen Assistant</span>
-        <form 
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!assistantPrompt.trim() || isAsking) return;
-            
-            setIsAsking(true);
-            setAssistantResponse("");
-            try {
-              const b64 = await invoke<string>("capture_screen_base64");
-              
-              // Find and show widget window
-              const { Window } = await import('@tauri-apps/api/window');
-              const widgetWindow = await Window.getByLabel("widget");
-              if (widgetWindow) {
-                await widgetWindow.show();
-                await widgetWindow.setFocus();
-              }
-
-              const res = await invoke<string>("ask_screen_assistant", { 
-                prompt: assistantPrompt, 
-                imageBase64: b64 
-              });
-              setAssistantResponse(res);
-              setAssistantPrompt("");
-
-              // Emit event to trigger widget
-              const { emit } = await import('@tauri-apps/api/event');
-              await emit("assistant_response", res);
-
-            } catch (err: any) {
-              setAssistantResponse("Error: " + err);
-            } finally {
-              setIsAsking(false);
-            }
-          }}
-          className="flex flex-col gap-2"
+      {/* Quick Action Buttons */}
+      <div className="py-1.5 space-y-1">
+        <button
+          onClick={handleToggleRecord}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            isRecording
+              ? 'bg-red-500/10 text-red-400 border border-red-500/30'
+              : 'text-zinc-300 hover:text-white hover:bg-[#161616]'
+          }`}
         >
-          <input 
-            type="text" 
-            placeholder="Ask about your screen..." 
-            value={assistantPrompt}
-            onChange={(e) => setAssistantPrompt(e.target.value)}
-            disabled={isAsking}
-            className="w-full bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 px-3 py-1.5 rounded-md focus:outline-none focus:border-zinc-500 placeholder-zinc-500"
-          />
-        </form>
-        {isAsking && <p className="text-xs text-zinc-400 mt-2 animate-pulse">Thinking...</p>}
-        {assistantResponse && (
-          <div className="mt-2 p-2 bg-zinc-900 border border-zinc-800 rounded-md max-h-40 overflow-y-auto">
-            <p className="text-xs text-zinc-300 whitespace-pre-wrap">{assistantResponse}</p>
+          <div className="flex items-center gap-2.5">
+            <Mic size={14} className={isRecording ? 'text-red-400 animate-pulse' : 'text-zinc-400'} />
+            <span>{isRecording ? 'Stop Dictation' : 'Start Dictation'}</span>
           </div>
-        )}
+          <span className="text-[10px] text-zinc-500 font-mono">Press & Speak</span>
+        </button>
+
+        <button
+          onClick={handleOpenShelf}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#161616] transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <Copy size={14} className="text-zinc-400" />
+            <span>Clipboard Shelf</span>
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">SuPaste Notch</span>
+        </button>
+
+        <button
+          onClick={handleOpenDashboard}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#161616] transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <Sliders size={14} className="text-zinc-400" />
+            <span>Open Dashboard</span>
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">Models & Rules</span>
+        </button>
       </div>
 
-      {/* Menu Items */}
-      <div className="py-1">
-        <motion.button
-          whileHover={{ background: "var(--bg-surface-elevated)" }}
-          onClick={onOpenSettings}
-          className="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
-        >
-          <Settings size={14} className="text-murmur-muted" />
-          <span className="text-sm text-murmur-text">Dashboard</span>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ background: "rgba(239, 68, 68, 0.1)" }}
+      {/* Footer / Quit */}
+      <div className="pt-1.5 border-t border-[#1f1f1f]">
+        <button
           onClick={handleQuit}
-          className="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors"
+          className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-red-400/80 hover:text-red-300 hover:bg-red-500/10 transition-colors"
         >
-          <Power size={14} className="text-murmur-danger/70" />
-          <span className="text-sm text-murmur-danger/80">Quit Murmur</span>
-        </motion.button>
+          <div className="flex items-center gap-2.5">
+            <Power size={13} />
+            <span>Quit DopeNotch</span>
+          </div>
+          <span className="text-[10px] text-zinc-600 font-mono">⌘Q</span>
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default TrayMenu;

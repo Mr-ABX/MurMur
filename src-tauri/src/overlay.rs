@@ -3,203 +3,148 @@
 use tauri::{AppHandle, Manager};
 use crate::settings::AppSettings;
 
-/// Show the appropriate visualizer window based on settings
-pub fn show_visualizer(app: &AppHandle, settings: &AppSettings) {
-    // We don't want to hide if AlwaysOn, but we might be switching visualizer types.
-    // For now, let's just forcefully hide the others that are NOT the active one.
-    if settings.widget_pet_enabled {
-        if let Some(w) = app.get_webview_window("overlay") { let _ = w.hide(); }
-        if let Some(w) = app.get_webview_window("notch") { let _ = w.hide(); }
-    } else if settings.widget_notch_enabled {
-        if let Some(w) = app.get_webview_window("overlay") { let _ = w.hide(); }
-        if let Some(w) = app.get_webview_window("widget") { let _ = w.hide(); }
-    } else {
-        if let Some(w) = app.get_webview_window("notch") { let _ = w.hide(); }
-        if let Some(w) = app.get_webview_window("widget") { let _ = w.hide(); }
-    }
+/// Show the top notch visualizer window
+pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
+    if let Some(window) = app.get_webview_window("notch") {
+        // Show window first so window is initialized by Tauri
+        let _ = window.show();
 
-    if settings.widget_pet_enabled {
-        if let Some(window) = app.get_webview_window("widget") {
-            let _ = window.show();
-        }
-    } else if settings.widget_notch_enabled {
-        if let Some(window) = app.get_webview_window("notch") {
-            // We manage Z-index and spaces manually via Objective-C below,
-            // so we don't call Tauri's set_always_on_top / set_visible_on_all_workspaces
-            // which would accidentally reset our levels to a lower priority.
+        #[cfg(target_os = "macos")]
+        {
+            use objc2::msg_send;
+            use objc2::runtime::{AnyObject, AnyClass, Sel};
+            use objc2::ffi::{class_replaceMethod, object_setClass, objc_getClass};
 
-            // Show window first so window is initialized by Tauri
-            let _ = window.show();
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            struct NSPoint { x: f64, y: f64 }
 
-            #[cfg(target_os = "macos")]
-            {
-                use objc2::msg_send;
-                use objc2::runtime::{AnyObject, AnyClass, Sel};
-                use objc2::ffi::{class_replaceMethod, object_setClass, objc_getClass};
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            struct NSSize { width: f64, height: f64 }
 
-                #[repr(C)]
-                #[derive(Clone, Copy)]
-                struct NSPoint { x: f64, y: f64 }
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            struct NSRect { origin: NSPoint, size: NSSize }
 
-                #[repr(C)]
-                #[derive(Clone, Copy)]
-                struct NSSize { width: f64, height: f64 }
+            unsafe impl objc2::Encode for NSPoint {
+                const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                    "CGPoint",
+                    &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
+                );
+            }
+            unsafe impl objc2::Encode for NSSize {
+                const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                    "CGSize",
+                    &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
+                );
+            }
+            unsafe impl objc2::Encode for NSRect {
+                const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
+                    "CGRect",
+                    &[<NSPoint as objc2::Encode>::ENCODING, <NSSize as objc2::Encode>::ENCODING],
+                );
+            }
 
-                #[repr(C)]
-                #[derive(Clone, Copy)]
-                struct NSRect { origin: NSPoint, size: NSSize }
+            unsafe extern "C" fn unconstrained_constrain_frame_rect(
+                _this: *mut AnyObject,
+                _cmd: Sel,
+                frame_rect: NSRect,
+                _screen: *mut AnyObject,
+            ) -> NSRect {
+                frame_rect
+            }
 
-                unsafe impl objc2::Encode for NSPoint {
-                    const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
-                        "CGPoint",
-                        &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
-                    );
-                }
-                unsafe impl objc2::Encode for NSSize {
-                    const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
-                        "CGSize",
-                        &[<f64 as objc2::Encode>::ENCODING, <f64 as objc2::Encode>::ENCODING],
-                    );
-                }
-                unsafe impl objc2::Encode for NSRect {
-                    const ENCODING: objc2::Encoding = objc2::Encoding::Struct(
-                        "CGRect",
-                        &[<NSPoint as objc2::Encode>::ENCODING, <NSSize as objc2::Encode>::ENCODING],
-                    );
-                }
-
-                unsafe extern "C" fn unconstrained_constrain_frame_rect(
-                    _this: *mut AnyObject,
-                    _cmd: Sel,
-                    frame_rect: NSRect,
-                    _screen: *mut AnyObject,
-                ) -> NSRect {
-                    frame_rect
-                }
-
-                let window_clone = window.clone();
-                let _ = app.run_on_main_thread(move || {
-                    if let Ok(ns_win) = window_clone.ns_window() {
-                        let ns_win = ns_win as *mut AnyObject;
-                        unsafe {
-                            // Turn the NSWindow into an NSPanel
-                            let panel_class = objc_getClass(b"NSPanel\0".as_ptr() as *const _);
-                            if !panel_class.is_null() {
-                                object_setClass(ns_win as *mut _, panel_class as *mut _);
-                                
-                                // NSPanel specific behaviors
-                                let _: () = msg_send![ns_win, setFloatingPanel: true];
-                                let _: () = msg_send![ns_win, setWorksWhenModal: true];
-                            }
-
-                            // Level 2147483647 = CGShieldingWindowLevel (maximum possible window level to float ON TOP of everything, including menu bar)
-                            let _: () = msg_send![ns_win, setLevel: 2147483647i64];
+            let window_clone = window.clone();
+            let _ = app.run_on_main_thread(move || {
+                if let Ok(ns_win) = window_clone.ns_window() {
+                    let ns_win = ns_win as *mut AnyObject;
+                    unsafe {
+                        // Turn the NSWindow into an NSPanel
+                        let panel_class = objc_getClass(b"NSPanel\0".as_ptr() as *const _);
+                        if !panel_class.is_null() {
+                            object_setClass(ns_win as *mut _, panel_class as *mut _);
                             
-                            // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
-                            let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
+                            // NSPanel specific behaviors
+                            let _: () = msg_send![ns_win, setFloatingPanel: true];
+                            let _: () = msg_send![ns_win, setWorksWhenModal: true];
+                        }
 
-                            // 128 = NSWindowStyleMaskNonactivatingPanel (acts like a HUD/Panel)
-                            let _: () = msg_send![ns_win, setStyleMask: 128u64];
-                            
-                            // Bring it to the absolute front
-                            let _: () = msg_send![ns_win, orderFrontRegardless];
+                        // Level 2147483647 = CGShieldingWindowLevel (maximum possible window level to float ON TOP of everything, including menu bar)
+                        let _: () = msg_send![ns_win, setLevel: 2147483647i64];
+                        
+                        // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
+                        let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
 
-                            // Override constrainFrameRect:toScreen: so Cocoa won't clamp Y to visibleFrame (below menu bar)
-                            let class: *const AnyClass = msg_send![ns_win, class];
-                            let sel_name = b"constrainFrameRect:toScreen:\0";
-                            let sel_ptr = objc2::ffi::sel_registerName(sel_name.as_ptr() as *const _);
-                            let types = b"{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}@\0";
-                            let imp: unsafe extern "C-unwind" fn() = std::mem::transmute(
-                                unconstrained_constrain_frame_rect as unsafe extern "C" fn(*mut AnyObject, Sel, NSRect, *mut AnyObject) -> NSRect
-                            );
-                            class_replaceMethod(
-                                class as *mut _,
-                                sel_ptr.unwrap(),
-                                imp,
-                                types.as_ptr() as *const _,
-                            );
+                        // 128 = NSWindowStyleMaskNonactivatingPanel (acts like a HUD/Panel)
+                        let _: () = msg_send![ns_win, setStyleMask: 128u64];
+                        
+                        // Bring it to the absolute front
+                        let _: () = msg_send![ns_win, orderFrontRegardless];
 
-                            // Get full screen frame (NOT visibleFrame — visibleFrame excludes menu bar)
-                            let screen: *mut AnyObject = msg_send![ns_win, screen];
-                            if !screen.is_null() {
-                                let screen_frame: NSRect = msg_send![screen, frame];
-                                let win_frame: NSRect = msg_send![ns_win, frame];
+                        // Override constrainFrameRect:toScreen: so Cocoa won't clamp Y to visibleFrame (below menu bar)
+                        let class: *const AnyClass = msg_send![ns_win, class];
+                        let sel_name = b"constrainFrameRect:toScreen:\0";
+                        let sel_ptr = objc2::ffi::sel_registerName(sel_name.as_ptr() as *const _);
+                        let types = b"{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}@\0";
+                        let imp: unsafe extern "C-unwind" fn() = std::mem::transmute(
+                            unconstrained_constrain_frame_rect as unsafe extern "C" fn(*mut AnyObject, Sel, NSRect, *mut AnyObject) -> NSRect
+                        );
+                        class_replaceMethod(
+                            class as *mut _,
+                            sel_ptr.unwrap(),
+                            imp,
+                            types.as_ptr() as *const _,
+                        );
 
-                                // Target frame: centered horizontally, flush against top edge of physical screen
-                                let target_frame = NSRect {
-                                    origin: NSPoint {
-                                        x: screen_frame.origin.x + (screen_frame.size.width - win_frame.size.width) / 2.0,
-                                        y: screen_frame.origin.y + screen_frame.size.height - win_frame.size.height,
-                                    },
-                                    size: win_frame.size,
-                                };
+                        // Get full screen frame (NOT visibleFrame — visibleFrame excludes menu bar)
+                        let screen: *mut AnyObject = msg_send![ns_win, screen];
+                        if !screen.is_null() {
+                            let screen_frame: NSRect = msg_send![screen, frame];
+                            let win_frame: NSRect = msg_send![ns_win, frame];
 
-                                let _: () = msg_send![ns_win, setFrame: target_frame, display: true];
-                            }
+                            // Target frame: centered horizontally, flush against top edge of physical screen
+                            let target_frame = NSRect {
+                                origin: NSPoint {
+                                    x: screen_frame.origin.x + (screen_frame.size.width - win_frame.size.width) / 2.0,
+                                    y: screen_frame.origin.y + screen_frame.size.height - win_frame.size.height,
+                                },
+                                size: win_frame.size,
+                            };
+
+                            let _: () = msg_send![ns_win, setFrame: target_frame, display: true];
                         }
                     }
-                });
-            }
-
-            #[cfg(not(target_os = "macos"))]
-            {
-                let monitor = app.primary_monitor().ok().flatten()
-                    .or_else(|| window.primary_monitor().ok().flatten());
-
-                if let Some(monitor) = monitor {
-                    let scale = monitor.scale_factor();
-                    let screen_w = monitor.size().width as f64 / scale;
-                    let notch_w = 560.0_f64;
-                    let x = (screen_w - notch_w) / 2.0;
-
-                    let target_x = (x * scale) as i32;
-                    let _ = window.set_position(tauri::PhysicalPosition::new(target_x, 0));
-                    let _ = window.set_always_on_top(true);
                 }
-            }
+            });
         }
 
-    } else {
-        // Fallback to overlay
-        if let Some(window) = app.get_webview_window("overlay") {
+        #[cfg(not(target_os = "macos"))]
+        {
             let monitor = app.primary_monitor().ok().flatten()
                 .or_else(|| window.primary_monitor().ok().flatten());
 
             if let Some(monitor) = monitor {
-                let screen_size = monitor.size();
                 let scale = monitor.scale_factor();
-                let screen_w = screen_size.width as f64 / scale;
-                let screen_h = screen_size.height as f64 / scale;
+                let screen_w = monitor.size().width as f64 / scale;
+                let notch_w = 560.0_f64;
+                let x = (screen_w - notch_w) / 2.0;
 
-                let overlay_w = 500.0;
-                let overlay_h = 160.0;
-
-                let x = (screen_w - overlay_w) / 2.0;
-                let y = screen_h - overlay_h - 100.0;
-
-                let _ = window.set_position(tauri::PhysicalPosition::new(
-                    (x * scale) as i32,
-                    (y * scale) as i32,
-                ));
+                let target_x = (x * scale) as i32;
+                let _ = window.set_position(tauri::PhysicalPosition::new(target_x, 0));
+                let _ = window.set_always_on_top(true);
             }
-            let _ = window.show();
         }
     }
 }
 
-/// Hide all visualizer windows if the setting is AutoHidden
+/// Hide the notch visualizer window if the setting is AutoHidden
 pub fn hide_visualizers(app: &AppHandle, settings: &AppSettings) {
     if settings.visibility_mode == crate::settings::VisibilityMode::AlwaysOn {
-        return; // Do not hide windows if always on
+        return; // Do not hide window if always on
     }
 
-    if let Some(window) = app.get_webview_window("overlay") {
-        let _ = window.hide();
-    }
     if let Some(window) = app.get_webview_window("notch") {
-        let _ = window.hide();
-    }
-    if let Some(window) = app.get_webview_window("widget") {
         let _ = window.hide();
     }
 }

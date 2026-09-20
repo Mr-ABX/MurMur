@@ -20,7 +20,7 @@ export const FeedbackView: React.FC = () => {
           <MessageSquareHeart className="w-5 h-5 text-emerald-400" /> Community & Feedback
         </h1>
         <p className="text-xs text-zinc-400 mt-1">
-          Have an idea or spotted a glitch? Your feedback shapes the future of Liquid Voice.
+          Have an idea or spotted a glitch? Your feedback shapes the future of DopeNotch.
         </p>
       </div>
 
