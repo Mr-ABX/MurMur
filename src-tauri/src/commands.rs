@@ -7,7 +7,7 @@ use anyhow::Result;
 
 use crate::audio::AudioCapture;
 use crate::model_manager;
-use crate::settings::{AppSettings, WhisperModel, CloudProvider};
+use crate::settings::{AppSettings, WhisperModel};
 use crate::transcriber::{self, TranscriberState};
 use crate::voxcoder;
 use crate::overlay;
@@ -67,24 +67,6 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
             return;
         }
 
-        let is_live = settings.live_streaming;
-        let is_deepgram = settings.cloud_provider == CloudProvider::Deepgram;
-        
-        let (tx_audio, rx_audio) = tokio::sync::mpsc::unbounded_channel::<Vec<f32>>();
-        let final_ws_text = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
-        let final_ws_text_clone = final_ws_text.clone();
-
-        if is_live && is_deepgram {
-            let app_cl = app_clone.clone();
-            let key = settings.deepgram_api_key.clone();
-            tauri::async_runtime::spawn(async move {
-                if let Err(e) = deepgram_ws_loop(app_cl.clone(), key, rx_audio, final_ws_text_clone).await {
-                    log::error!("Deepgram WS error: {}", e);
-                }
-            });
-        }
-
-        let mut last_processed_len = 0;
         let mut frame_count: u64 = 0;
 
         // Wait until recording is stopped (60 FPS Native Audio Snapshot loop)
@@ -103,17 +85,6 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
                 if frame_count % 90 == 0 {
                     log::info!("[audio_level] emitting level={:.4}", snapshot.level);
                 }
-
-                if is_live && is_deepgram {
-                    if let Ok(samples) = audio.get_samples() {
-                        let current_len = samples.len();
-                        if current_len > last_processed_len {
-                            let new_samples = &samples[last_processed_len..];
-                            let _ = tx_audio.send(new_samples.to_vec());
-                            last_processed_len = current_len;
-                        }
-                    }
-                }
             } else {
                 // Recording stopped! Drop lock, stop audio capture, and trigger transcription
                 drop(recording);
@@ -124,18 +95,8 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
                         let _ = app_clone.emit("murmur://recording-stopped", ());
                         let _ = app_clone.emit_to("notch", "murmur://recording-stopped", ());
                         
-                        // Close tx_audio to end the WS loop
-                        drop(tx_audio);
-                        
                         tauri::async_runtime::spawn(async move {
-                            if is_live && is_deepgram {
-                                // Wait a bit for final WS result
-                                tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-                                let text = final_ws_text.lock().unwrap().clone();
-                                handle_transcription_result(app_clone, text, settings).await;
-                            } else {
-                                handle_transcription(app_clone, samples, settings, transcriber).await;
-                            }
+                            handle_transcription(app_clone, samples, settings, transcriber).await;
                         });
                     }
                     Err(e) => {
@@ -146,82 +107,6 @@ pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
             }
         }
     });
-
-    Ok(())
-}
-
-async fn deepgram_ws_loop(
-    app: AppHandle,
-    api_key: String,
-    mut rx_audio: tokio::sync::mpsc::UnboundedReceiver<Vec<f32>>,
-    final_ws_text: std::sync::Arc<std::sync::Mutex<String>>,
-) -> Result<()> {
-    use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
-    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-    use futures_util::{SinkExt, StreamExt};
-    use serde_json::Value;
-
-    let mut request = "wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=16000&channels=1&interim_results=true".into_client_request()?;
-    request.headers_mut().insert("Authorization", format!("Token {}", api_key).parse()?);
-    
-    let (ws_stream, _) = connect_async(request).await?;
-    let (mut write, mut read) = ws_stream.split();
-
-    let mut cumulative_transcript = String::new();
-
-    loop {
-        tokio::select! {
-            audio_chunk = rx_audio.recv() => {
-                match audio_chunk {
-                    Some(samples) => {
-                        // Convert f32 to i16 bytes
-                        let mut pcm_data = Vec::with_capacity(samples.len() * 2);
-                        for &sample in &samples {
-                            let s = (sample * 32767.0).clamp(-32768.0, 32767.0) as i16;
-                            pcm_data.extend_from_slice(&s.to_le_bytes());
-                        }
-                        if let Err(e) = write.send(Message::Binary(pcm_data)).await {
-                            log::error!("WS send error: {}", e);
-                            break;
-                        }
-                    }
-                    None => {
-                        // Channel closed (recording stopped)
-                        let _ = write.send(Message::Binary(Vec::new())).await;
-                        break;
-                    }
-                }
-            }
-            msg = read.next() => {
-                match msg {
-                    Some(Ok(Message::Text(t))) => {
-                        if let Ok(json) = serde_json::from_str::<Value>(&t) {
-                            if let Some(is_final) = json["is_final"].as_bool() {
-                                if let Some(transcript) = json["channel"]["alternatives"][0]["transcript"].as_str() {
-                                    if !transcript.is_empty() {
-                                        if is_final {
-                                            cumulative_transcript.push_str(transcript);
-                                            cumulative_transcript.push(' ');
-                                            *final_ws_text.lock().unwrap() = cumulative_transcript.clone();
-                                        }
-                                        
-                                        let partial = format!("{}{}", cumulative_transcript, if is_final { "" } else { transcript });
-                                        let _ = app.emit("murmur://transcript-partial", partial);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Some(Ok(_)) => {}
-                    Some(Err(e)) => {
-                        log::error!("WS read error: {}", e);
-                        break;
-                    }
-                    None => break,
-                }
-            }
-        }
-    }
 
     Ok(())
 }
