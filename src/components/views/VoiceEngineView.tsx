@@ -9,6 +9,7 @@ import {
   Filter,
   FolderOpen,
   HardDrive,
+  Mic,
 } from 'lucide-react';
 import { useAppStore, SpeechModelInfo } from '../../stores/appStore';
 import { invoke } from '@tauri-apps/api/core';
@@ -21,6 +22,11 @@ export const VoiceEngineView: React.FC = () => {
     downloadProgress,
     setDownloadProgress,
     markModelInstalled,
+    isRecording,
+    audioLevel,
+    streamingText,
+    historyRecords,
+    hotkey,
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,6 +52,15 @@ export const VoiceEngineView: React.FC = () => {
   }, []);
 
   const activeModel = models.find((m) => m.id === selectedSpeechModel) || models[0];
+  const latestTranscript = historyRecords[0]?.enhancedText || historyRecords[0]?.rawText;
+
+  const handleToggleTestRecording = async () => {
+    try {
+      await invoke('toggle_recording');
+    } catch (e) {
+      console.error('Failed to toggle recording:', e);
+    }
+  };
 
   const filteredModels = models.filter((m) => {
     const matchesSearch =
@@ -137,6 +152,58 @@ export const VoiceEngineView: React.FC = () => {
           <FolderOpen className="w-4 h-4 text-emerald-400" />
           <span>Open Models Folder</span>
         </button>
+      </div>
+
+      {/* Interactive Speech Test Sandbox */}
+      <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-semibold text-[#ededed] flex items-center gap-1.5">
+              <Mic className="w-3.5 h-3.5 text-emerald-400" /> Live Dictation Test
+            </h2>
+            <p className="text-[11px] text-zinc-400 mt-0.5">
+              Press shortcut <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-mono text-[10px]">{hotkey || '⌥Space'}</kbd> or click the test button below.
+            </p>
+          </div>
+          <button
+            onClick={handleToggleTestRecording}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
+              isRecording
+                ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                : 'bg-emerald-500 text-black hover:bg-emerald-400'
+            }`}
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span>{isRecording ? 'Stop & Transcribe' : 'Test Mic & Dictation'}</span>
+          </button>
+        </div>
+
+        {isRecording ? (
+          <div className="rounded-xl bg-[#09090b] border border-emerald-500/30 p-4 space-y-2.5">
+            <div className="flex items-center gap-2 text-emerald-400 font-medium text-xs">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Recording microphone input in real-time...</span>
+            </div>
+            <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-zinc-800">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-75"
+                style={{ width: `${Math.min(100, Math.max(8, audioLevel * 100 * 2.5))}%` }}
+              />
+            </div>
+            {streamingText && (
+              <p className="text-zinc-200 font-mono text-xs bg-zinc-900/60 p-2 rounded-md border border-zinc-800">
+                {streamingText}
+              </p>
+            )}
+          </div>
+        ) : latestTranscript ? (
+          <div className="rounded-xl bg-[#09090b] border border-[#1e1e24] p-3.5 space-y-1">
+            <span className="text-[10px] uppercase font-mono text-emerald-400 font-semibold">Latest Transcription Output:</span>
+            <p className="text-zinc-100 font-medium text-xs leading-relaxed">
+              "{latestTranscript}"
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {/* Local Storage Info Callout */}

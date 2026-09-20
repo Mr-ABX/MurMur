@@ -8,6 +8,7 @@ import {
   Sliders,
 } from 'lucide-react';
 import { useAppStore, OverlayStyle } from '../../stores/appStore';
+import { invoke } from '@tauri-apps/api/core';
 
 export const PreferencesView: React.FC = () => {
   const {
@@ -32,6 +33,18 @@ export const PreferencesView: React.FC = () => {
     setSelectedInputDevice,
     clearHistory,
   } = useAppStore();
+
+  const syncBackend = async (updates: Partial<any>) => {
+    try {
+      const current = await invoke<any>('get_settings');
+      if (current) {
+        const merged = { ...current, ...updates };
+        await invoke('save_settings', { settings: merged });
+      }
+    } catch (e) {
+      console.error('Failed to sync backend settings:', e);
+    }
+  };
 
   const SECTIONS = [
     { id: 'general', label: 'General', icon: SettingsIcon },
@@ -138,7 +151,10 @@ export const PreferencesView: React.FC = () => {
                   <input
                     type="text"
                     value={hotkey}
-                    onChange={(e) => setHotkey(e.target.value)}
+                    onChange={(e) => {
+                      setHotkey(e.target.value);
+                      syncBackend({ hotkey: e.target.value });
+                    }}
                     className="w-40 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-center font-mono font-semibold"
                   />
                 </div>
@@ -155,7 +171,10 @@ export const PreferencesView: React.FC = () => {
                   <input
                     type="text"
                     value={secondaryHotkey}
-                    onChange={(e) => setSecondaryHotkey(e.target.value)}
+                    onChange={(e) => {
+                      setSecondaryHotkey(e.target.value);
+                      syncBackend({ assistantHotkey: e.target.value });
+                    }}
                     className="w-40 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-center font-mono font-semibold"
                   />
                 </div>
@@ -163,15 +182,20 @@ export const PreferencesView: React.FC = () => {
 
               <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
-                  <p className="text-xs font-medium text-[#ededed]">Push-to-Talk Mode</p>
+                  <p className="text-xs font-medium text-[#ededed]">Push-to-Talk (Hold Key)</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Hold key down while speaking; release to finish and paste.
+                    {pushToTalk
+                      ? 'Push-to-Talk: Hold key down while speaking; release to paste.'
+                      : 'Toggle Mode: Press once to start, press again to stop & paste.'}
                   </p>
                 </div>
                 <input
                   type="checkbox"
                   checked={pushToTalk}
-                  onChange={(e) => setPushToTalk(e.target.checked)}
+                  onChange={(e) => {
+                    setPushToTalk(e.target.checked);
+                    syncBackend({ activationMode: e.target.checked ? 'hold' : 'toggle' });
+                  }}
                   className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
                 />
               </div>
@@ -186,7 +210,10 @@ export const PreferencesView: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={autoPaste}
-                  onChange={(e) => setAutoPaste(e.target.checked)}
+                  onChange={(e) => {
+                    setAutoPaste(e.target.checked);
+                    syncBackend({ autoPaste: e.target.checked });
+                  }}
                   className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
                 />
               </div>

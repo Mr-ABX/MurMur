@@ -1,13 +1,9 @@
 import {
-  Home,
+  PlayCircle,
+  Mic,
+  ClipboardList,
   Sparkles,
-  Terminal,
-  Pen,
-  FileText,
-  BarChart3,
-  Clock,
   Sliders,
-  MessageSquare,
 } from 'lucide-react';
 import { useAppStore, SidebarTab } from '../../stores/appStore';
 
@@ -19,15 +15,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'welcome', label: 'Welcome', icon: Home },
-  { id: 'aiSettings', label: 'AI Settings', icon: Sparkles },
-  { id: 'commandMode', label: 'Command Mode', icon: Terminal },
-  { id: 'writeMode', label: 'Write Mode', icon: Pen },
-  { id: 'fileTranscription', label: 'File Transcription', icon: FileText },
-  { id: 'stats', label: 'Stats', icon: BarChart3 },
-  { id: 'history', label: 'History', icon: Clock },
+  { id: 'welcome', label: 'Welcome & Test', icon: PlayCircle },
+  { id: 'voiceEngine', label: 'Voice & Whisper', icon: Mic, badge: 'On-Device' },
+  { id: 'history', label: 'SuPaste Clipboard', icon: ClipboardList },
+  { id: 'commandMode', label: 'Prompt Injection', icon: Sparkles },
   { id: 'preferences', label: 'Preferences', icon: Sliders },
-  { id: 'feedback', label: 'Feedback', icon: MessageSquare },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -58,9 +50,9 @@ export const Sidebar: React.FC = () => {
             const Icon = item.icon;
             const isActive =
               activeTab === item.id ||
-              (item.id === 'aiSettings' && (activeTab === 'voiceEngine' || activeTab === 'aiEnhancements')) ||
-              (item.id === 'writeMode' && (activeTab === 'rewriteMode' || activeTab === 'cleanupStyles')) ||
-              (item.id === 'fileTranscription' && activeTab === 'meetingTools');
+              (item.id === 'voiceEngine' && (activeTab === 'aiSettings' || activeTab === 'aiEnhancements')) ||
+              (item.id === 'history' && (activeTab === 'fileTranscription' || activeTab === 'meetingTools')) ||
+              (item.id === 'commandMode' && (activeTab === 'writeMode' || activeTab === 'rewriteMode' || activeTab === 'cleanupStyles'));
 
             return (
               <button

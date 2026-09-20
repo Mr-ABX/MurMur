@@ -3,15 +3,9 @@ import { useAppStore } from '../../stores/appStore';
 import { Sidebar } from './Sidebar';
 import { TitleBar } from './TitleBar';
 import { WelcomeView } from '../views/WelcomeView';
-import { AIEnhancementsView } from '../views/AIEnhancementsView';
-import { RewriteModeView } from '../views/RewriteModeView';
+import { VoiceEngineView } from '../views/VoiceEngineView';
 import { CommandModeView } from '../views/CommandModeView';
-import { MeetingTranscriptionView } from '../views/MeetingTranscriptionView';
-import { CustomDictionaryView } from '../views/CustomDictionaryView';
-import { StatsView } from '../views/StatsView';
 import { TranscriptionHistoryView } from '../views/TranscriptionHistoryView';
-import { ChangelogView } from '../views/ChangelogView';
-import { FeedbackView } from '../views/FeedbackView';
 import { PreferencesView } from '../views/PreferencesView';
 import { SettingsModal } from '../settings/SettingsModal';
 
@@ -22,31 +16,25 @@ export const Dashboard: React.FC = () => {
     switch (activeTab) {
       case 'welcome':
         return <WelcomeView />;
+      case 'voiceEngine':
       case 'aiSettings':
       case 'aiEnhancements':
-      case 'voiceEngine':
-        return <AIEnhancementsView />;
+        return <VoiceEngineView />;
+      case 'history':
+      case 'fileTranscription':
+      case 'meetingTools':
+        return <TranscriptionHistoryView />;
       case 'commandMode':
-        return <CommandModeView />;
       case 'writeMode':
       case 'rewriteMode':
       case 'cleanupStyles':
-        return <RewriteModeView />;
-      case 'fileTranscription':
-      case 'meetingTools':
-        return <MeetingTranscriptionView />;
       case 'customDictionary':
-        return <CustomDictionaryView />;
-      case 'stats':
-        return <StatsView />;
-      case 'history':
-        return <TranscriptionHistoryView />;
+        return <CommandModeView />;
       case 'preferences':
-        return <PreferencesView />;
+      case 'stats':
       case 'changelog':
-        return <ChangelogView />;
       case 'feedback':
-        return <FeedbackView />;
+        return <PreferencesView />;
       default:
         return <WelcomeView />;
     }

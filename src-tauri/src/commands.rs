@@ -25,6 +25,21 @@ pub async fn start_recording(
     start_recording_internal(&app).await.map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub async fn toggle_recording(
+    app: AppHandle,
+    state: State<'_, MurmurState>,
+) -> Result<bool, String> {
+    let is_rec = *state.is_recording.lock().unwrap();
+    if is_rec {
+        stop_recording_internal(&app).await.map_err(|e| e.to_string())?;
+        Ok(false)
+    } else {
+        start_recording_internal(&app).await.map_err(|e| e.to_string())?;
+        Ok(true)
+    }
+}
+
 pub async fn start_recording_internal(app: &AppHandle) -> Result<()> {
     let state = app.state::<MurmurState>();
 

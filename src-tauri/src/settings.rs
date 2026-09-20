@@ -217,7 +217,7 @@ pub struct VoiceHistoryItem {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            hotkey: "CommandOrControl+Shift+Space".to_string(),
+            hotkey: "Option+Space".to_string(),
             model: WhisperModel::Base,
             voxcoder_mode: false,
             auto_paste: true,
@@ -233,11 +233,11 @@ impl Default for AppSettings {
             ai_rewrite: false,
             custom_vocabulary: "".to_string(),
             tray_icon_style: TrayIconStyle::Color,
-            system_prompt: "You are a helpful screen-aware assistant. Be extremely concise. Only answer what is asked. Do not output markdown unless required.".to_string(),
-            local_assistant_model: "gemini-2.0-flash-lite-preview-02-05".to_string(),
+            system_prompt: "You are a helpful assistant. Be concise.".to_string(),
+            local_assistant_model: "".to_string(),
             experimental_wake_word: false,
             operating_mode: OperatingMode::Dictation,
-            assistant_hotkey: "CommandOrControl+Shift+A".to_string(),
+            assistant_hotkey: "Control+Option+Space".to_string(),
             wake_word: "hey murmur".to_string(),
             widget_notch_enabled: true,
             widget_pet_enabled: false,
@@ -285,7 +285,11 @@ impl AppSettings {
         if path.exists() {
             match std::fs::read_to_string(&path) {
                 Ok(contents) => {
-                    serde_json::from_str(&contents).unwrap_or_default()
+                    let mut s: AppSettings = serde_json::from_str(&contents).unwrap_or_default();
+                    if s.hotkey.trim().is_empty() {
+                        s.hotkey = "Option+Space".to_string();
+                    }
+                    s
                 }
                 Err(_) => Self::default(),
             }
@@ -305,9 +309,31 @@ impl AppSettings {
     }
 
     pub fn model_path(&self, model: &WhisperModel) -> PathBuf {
-        let mut path = Self::models_dir();
-        path.push(model.filename());
-        path
+        let base = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
+        let filename = model.filename();
+        
+        let dopenotch_path = base.join("DopeNotch").join("models").join(filename);
+        if dopenotch_path.exists() {
+            return dopenotch_path;
+        }
+        
+        let murmur_path = base.join("Murmur").join("models").join(filename);
+        if murmur_path.exists() {
+            return murmur_path;
+        }
+
+        let config_base = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
+        let dopenotch_cfg = config_base.join("DopeNotch").join("models").join(filename);
+        if dopenotch_cfg.exists() {
+            return dopenotch_cfg;
+        }
+
+        let murmur_cfg = config_base.join("Murmur").join("models").join(filename);
+        if murmur_cfg.exists() {
+            return murmur_cfg;
+        }
+
+        dopenotch_path
     }
 
     pub fn is_model_downloaded(&self, model: &WhisperModel) -> bool {

@@ -135,6 +135,7 @@ pub fn run() {
             commands::open_settings,
             commands::start_recording,
             commands::stop_recording,
+            commands::toggle_recording,
             commands::get_settings,
             commands::save_settings,
             commands::get_downloaded_models,
@@ -158,7 +159,7 @@ pub fn run() {
             commands::paste_text_direct,
         ])
         .build(tauri::generate_context!())
-        .expect("error while building murmur")
+        .expect("error while building dopenotch")
         .run(|app_handle, event| {
             match event {
                 #[cfg(target_os = "macos")]
@@ -170,70 +171,89 @@ pub fn run() {
         });
 }
 
-pub fn setup_global_shortcut(app: &AppHandle, hotkey: &str) {
+pub fn setup_global_shortcut(app: &AppHandle, primary_hotkey: &str) {
     let _ = app.global_shortcut().unregister_all();
     let app_clone = app.clone();
 
-    if let Err(e) = app.global_shortcut().on_shortcut(hotkey, move |_app, _shortcut, event| {
-        let state = app_clone.state::<MurmurState>();
-        let settings = state.settings.lock().unwrap().clone();
-        let is_hold_mode = settings.activation_mode == crate::settings::ActivationMode::Hold;
+    let mut shortcuts = Vec::new();
+    let clean_primary = primary_hotkey.trim().to_string();
+    if !clean_primary.is_empty() {
+        shortcuts.push(clean_primary.clone());
+    }
 
-        match event.state() {
-            ShortcutState::Pressed => {
-                let is_rec = *state.is_recording.lock().unwrap();
-                let app_c = app_clone.clone();
+    // Always register standard aliases so user can trigger via Option+Space or Control+Option+Space or Cmd+Shift+Space
+    let aliases = [
+        "Option+Space",
+        "Alt+Space",
+        "Control+Option+Space",
+        "CommandOrControl+Shift+Space",
+    ];
+    for alias in &aliases {
+        if !shortcuts.iter().any(|s| s.eq_ignore_ascii_case(alias)) {
+            shortcuts.push(alias.to_string());
+        }
+    }
 
-                if is_hold_mode {
-                    // Push-to-Talk (Hold): Start recording when key is pressed down
-                    if !is_rec {
-                        tauri::async_runtime::spawn(async move {
-                            if let Err(e) = commands::start_recording_internal(&app_c).await {
-                                log::error!("Failed to start recording: {}", e);
-                            }
-                        });
-                    }
-                } else {
-                    // Toggle Mode: Press once to Start, Press again to Stop & Paste
-                    tauri::async_runtime::spawn(async move {
-                        if is_rec {
-                            if let Err(e) = commands::stop_recording_internal(&app_c).await {
-                                log::error!("Failed to stop recording: {}", e);
-                            }
-                        } else {
-                            if let Err(e) = commands::start_recording_internal(&app_c).await {
-                                log::error!("Failed to start recording: {}", e);
-                            }
+    for sc in shortcuts {
+        let app_c = app_clone.clone();
+        let sc_name = sc.clone();
+
+        let result = app.global_shortcut().on_shortcut(sc.as_str(), move |_app, _shortcut, event| {
+            let state = app_c.state::<MurmurState>();
+            let settings = state.settings.lock().unwrap().clone();
+            let is_hold = settings.activation_mode == crate::settings::ActivationMode::Hold;
+            let is_rec = *state.is_recording.lock().unwrap();
+
+            log::info!("[global_shortcut] Key event for '{}': {:?}, hold_mode={}, is_rec={}", sc_name, event.state(), is_hold, is_rec);
+
+            let app_h = app_c.clone();
+            match event.state() {
+                ShortcutState::Pressed => {
+                    if is_hold {
+                        if !is_rec {
+                            tauri::async_runtime::spawn(async move {
+                                if let Err(e) = commands::start_recording_internal(&app_h).await {
+                                    log::error!("Failed to start recording: {}", e);
+                                }
+                            });
                         }
-                    });
-                }
-            }
-            ShortcutState::Released => {
-                if is_hold_mode {
-                    // Push-to-Talk (Hold): Stop and paste when key is released
-                    let is_rec = *state.is_recording.lock().unwrap();
-                    if is_rec {
-                        let app_c = app_clone.clone();
+                    } else {
+                        // Toggle Mode (Press once to Start, Press once to Stop & Auto-Paste)
                         tauri::async_runtime::spawn(async move {
-                            if let Err(e) = commands::stop_recording_internal(&app_c).await {
-                                log::error!("Failed to stop recording on release: {}", e);
+                            if is_rec {
+                                log::info!("Toggle: stopping recording & transcribing...");
+                                if let Err(e) = commands::stop_recording_internal(&app_h).await {
+                                    log::error!("Failed to stop recording: {}", e);
+                                }
+                            } else {
+                                log::info!("Toggle: starting recording...");
+                                if let Err(e) = commands::start_recording_internal(&app_h).await {
+                                    log::error!("Failed to start recording: {}", e);
+                                }
                             }
                         });
                     }
                 }
-                // In Toggle mode: do nothing on key release!
+                ShortcutState::Released => {
+                    if is_hold {
+                        tauri::async_runtime::spawn(async move {
+                            std::thread::sleep(std::time::Duration::from_millis(200));
+                            let currently_recording = *app_h.state::<MurmurState>().is_recording.lock().unwrap();
+                            if currently_recording {
+                                if let Err(e) = commands::stop_recording_internal(&app_h).await {
+                                    log::error!("Failed to stop recording on release: {}", e);
+                                }
+                            }
+                        });
+                    }
+                }
             }
+        });
+
+        match result {
+            Ok(_) => log::info!("Successfully registered global shortcut: '{}'", sc),
+            Err(e) => log::debug!("Could not register shortcut '{}': {}", sc, e),
         }
-    }) {
-        log::error!("Failed to register global shortcut '{}': {}", hotkey, e);
-        let fallback = "CommandOrControl+Shift+Space";
-        if hotkey != fallback {
-            log::info!("Falling back to default global shortcut '{}'", fallback);
-            let _ = app.global_shortcut().unregister_all();
-            setup_global_shortcut(app, fallback);
-        }
-    } else {
-        log::info!("Registered global shortcut: {}", hotkey);
     }
 }
 

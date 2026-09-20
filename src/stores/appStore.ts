@@ -372,11 +372,11 @@ export const useAppStore = create<AppState>((set) => ({
   setSettingsSection: (section) => set({ settingsSection: section }),
 
   // General Preferences
-  hotkey: 'Control+Option',
-  secondaryHotkey: 'Option+Space',
+  hotkey: 'Option+Space',
+  secondaryHotkey: 'Control+Option+Space',
   rewriteHotkey: 'Option+R',
   commandHotkey: 'Option+C',
-  pushToTalk: true,
+  pushToTalk: false,
   autoPaste: true,
   soundEffects: true,
   launchAtStartup: false,

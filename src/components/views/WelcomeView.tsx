@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   CheckCircle2,
   Mic,
   Play,
-  RotateCcw,
   Sparkles,
   Zap,
 } from 'lucide-react';
 import { useAppStore } from '../../stores/appStore';
+import { invoke } from '@tauri-apps/api/core';
 
 export const WelcomeView: React.FC = () => {
   const {
@@ -15,29 +15,19 @@ export const WelcomeView: React.FC = () => {
     selectedSpeechModel,
     models,
     audioLevel,
+    isRecording,
+    streamingText,
+    historyRecords,
   } = useAppStore();
 
-  const [isLocalTesting, setIsLocalTesting] = useState(false);
-  const [testTranscript, setTestTranscript] = useState(
-    'Press your global shortcut (⌃⌥ or Option+Space) or click Test Speech Input below...'
-  );
-
   const activeModel = models.find((m) => m.id === selectedSpeechModel) || models[0];
+  const latestTranscript = historyRecords[0]?.enhancedText || historyRecords[0]?.rawText;
 
-  const handleToggleLocalTest = () => {
-    if (!isLocalTesting) {
-      setIsLocalTesting(true);
-      setTestTranscript('Listening... Speak a sentence clearly into your microphone.');
-      setTimeout(() => {
-        setTestTranscript('DopeNotch is listening and capturing high-fidelity speech...');
-      }, 1000);
-      setTimeout(() => {
-        setTestTranscript('This is a live test of DopeNotch on-device speech dictation.');
-        setIsLocalTesting(false);
-      }, 3200);
-    } else {
-      setIsLocalTesting(false);
-      setTestTranscript('Test finished. Speech-to-text is fully functional on-device.');
+  const handleToggleLocalTest = async () => {
+    try {
+      await invoke('toggle_recording');
+    } catch (e) {
+      console.error('Failed to toggle recording:', e);
     }
   };
 
@@ -186,53 +176,63 @@ export const WelcomeView: React.FC = () => {
               Test your microphone and voice latency right inside this card.
             </p>
           </div>
-          <button
-            onClick={() => setTestTranscript('')}
-            className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
-          >
-            <RotateCcw className="w-3 h-3" /> Clear
-          </button>
         </div>
 
-        <div className="rounded-xl bg-[#09090b] border border-[#1e1e24] p-4 min-h-[100px] flex flex-col justify-between">
+        <div className="rounded-xl bg-[#09090b] border border-[#1e1e24] p-4 min-h-[110px] flex flex-col justify-between">
           <div className="text-xs text-zinc-300 leading-relaxed font-sans">
-            {isLocalTesting ? (
-              <div className="space-y-2">
+            {isRecording ? (
+              <div className="space-y-2.5">
                 <div className="flex items-center gap-2 text-emerald-400 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{testTranscript}</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Recording voice input... (Speak into your mic)</span>
                 </div>
-                {/* Visualizer bar */}
-                <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                {/* 60 FPS Visualizer bar */}
+                <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-zinc-800">
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-75"
-                    style={{ width: `${Math.min(100, Math.max(15, audioLevel * 100))}%` }}
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-75"
+                    style={{ width: `${Math.min(100, Math.max(8, audioLevel * 100 * 2.5))}%` }}
                   />
                 </div>
+                {streamingText && (
+                  <p className="text-zinc-200 font-mono text-xs bg-zinc-900/60 p-2 rounded-md border border-zinc-800">
+                    {streamingText}
+                  </p>
+                )}
               </div>
             ) : (
-              <p className="text-zinc-400">
-                {testTranscript || 'Press your global shortcut or click Test Speech Input...'}
-              </p>
+              <div>
+                {latestTranscript ? (
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-mono text-emerald-400 font-semibold">Latest On-Device Transcription:</span>
+                    <p className="text-zinc-100 font-medium text-xs bg-zinc-900/50 p-2.5 rounded-lg border border-zinc-800/80">
+                      "{latestTranscript}"
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-zinc-400">
+                    Press <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-mono text-[10px]">{hotkey || '⌥Space'}</kbd> or click "Test Speech Input" below to start speaking.
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-[#1a1a1c] mt-3">
             <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>Engine: {activeModel.name}</span>
+              <span>Active: {activeModel.name}</span>
             </div>
 
             <button
               onClick={handleToggleLocalTest}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                isLocalTesting
-                  ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
+                isRecording
+                  ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
                   : 'bg-white text-black hover:bg-zinc-200'
               }`}
             >
               <Mic className="w-3.5 h-3.5" />
-              <span>{isLocalTesting ? 'Stop Recording' : 'Test Speech Input'}</span>
+              <span>{isRecording ? 'Stop & Transcribe' : 'Test Speech Input'}</span>
             </button>
           </div>
         </div>
