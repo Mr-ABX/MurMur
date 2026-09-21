@@ -29,25 +29,25 @@ export const InteractiveNotchDemo: React.FC = () => {
     setTimeout(() => setMorphing(false), 450);
   };
 
-  // Parallax transform calculation for 3D depth floating effect
-  const depthTranslateY = Math.max(-20, Math.min(scrollY * 0.05, 30));
-  const depthScale = Math.min(1.02, Math.max(0.98, 1 + scrollY * 0.00005));
+  // Parallax transform calculation for 3D spatial depth floating effect
+  const depthTranslateY = Math.max(-25, Math.min(scrollY * 0.06, 35));
+  const depthScale = Math.min(1.02, Math.max(0.98, 1 + scrollY * 0.00004));
 
   return (
     <div id="notch-demo" className="w-full relative pt-2 pb-0 flex flex-col items-center select-none bg-transparent">
       
       {/* Background Sonoma Rolling Hills Landscape with transparent sky above */}
       <div 
-        className="w-full relative bg-bottom bg-no-repeat bg-cover flex flex-col items-center px-4 pt-6 pb-24"
+        className="w-full relative bg-bottom bg-no-repeat bg-cover flex flex-col items-center px-4 pt-6 pb-28 sm:pb-36 overflow-hidden"
         style={{
           backgroundImage: `url('/sonoma_wallpaper.webp')`,
-          minHeight: '620px'
+          minHeight: '680px'
         }}
       >
         
-        {/* FROSTED GLASS MAC SCREEN (1:1 with media_1789956698808.png) */}
+        {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Behind Foreground Dunes) */}
         <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[38px] frosted-glass-mac relative shadow-2xl overflow-hidden aspect-[16/10] sm:aspect-[16/9.5] flex flex-col justify-between transition-transform duration-300 ease-out"
+          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10] sm:aspect-[16/9.5] flex flex-col justify-between transition-transform duration-300 ease-out mb-[-50px] sm:mb-[-70px]"
           style={{
             transform: `translateY(${depthTranslateY}px) scale(${depthScale})`,
             willChange: 'transform'
@@ -307,17 +307,26 @@ export const InteractiveNotchDemo: React.FC = () => {
           </div>
 
           {/* Bottom Clear Blur Area (Overlapping the Green Hills with 0 Fake Dock) */}
-          <div className="h-12 pointer-events-none select-none"></div>
+          <div className="h-14 sm:h-20 pointer-events-none select-none"></div>
 
         </div>
 
+        {/* FOREGROUND GOLDEN DUNES IMAGE (In Front of the Glass Screen: z-30) */}
+        <div className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden">
+          <img 
+            src="/foreground_hills.png" 
+            alt="DopeNotch Golden Dunes Landscape" 
+            className="w-full min-w-[1040px] max-w-[2000px] h-auto object-cover object-bottom translate-y-1 sm:translate-y-3 drop-shadow-2xl" 
+          />
+        </div>
+
         {/* Soft Bottom Fade into White Section */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-b from-transparent via-white/80 to-white pointer-events-none"></div>
+        <div className="w-full absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/80 to-white z-35 pointer-events-none"></div>
 
       </div>
 
-      {/* CIRCULAR AWARDS BADGES ROW AT BOTTOM OF WALLPAPER (1:1 Screenshot 3) */}
-      <div className="w-full bg-white flex justify-center py-6 border-b border-black/5">
+      {/* CIRCULAR AWARDS BADGES ROW AT BOTTOM OF WALLPAPER (Grounding Layer: z-40) */}
+      <div className="w-full bg-white flex justify-center py-6 border-b border-black/5 relative z-40">
         <div className="flex items-center justify-center gap-6 sm:gap-10 overflow-hidden px-4 opacity-70 grayscale hover:grayscale-0 transition-all">
           <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
             <span>Product Hunt</span>
