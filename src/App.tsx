@@ -1,6 +1,5 @@
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { InteractiveNotchDemo } from './components/InteractiveNotchDemo';
 import { ValueProp } from './components/ValueProp';
 import { Pricing } from './components/Pricing';
 import { FAQ } from './components/FAQ';
@@ -13,11 +12,8 @@ export function App() {
       <Navbar />
 
       <main className="relative">
-        {/* Sky-Blue Hero Section */}
+        {/* Unified Continuous Hero & Frosted Glass Mac Showcase */}
         <Hero />
-
-        {/* Mac Sonoma Wallpaper & Notch Shelf Showcase */}
-        <InteractiveNotchDemo />
 
         {/* 1:1 Apple Light Mode "Wherever you need it" Section */}
         <ValueProp />
