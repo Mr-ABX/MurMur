@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Apple, Search, Star, LayoutGrid, Maximize2, Check, Plus, Wifi, Minimize2, Sparkles } from 'lucide-react';
+import { Search, Star, LayoutGrid, Maximize2, Check, Plus, Wifi, Minimize2, Sparkles } from 'lucide-react';
+import { AppleLogo } from './AppleLogo';
 
 export const InteractiveNotchDemo: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('Voice Dictations');
@@ -8,7 +9,7 @@ export const InteractiveNotchDemo: React.FC = () => {
   const [morphing, setMorphing] = useState<boolean>(false);
   const [scrollY, setScrollY] = useState<number>(0);
 
-  // Scroll depth parallax effect matching Supaste
+  // Scroll-driven zoom & gentle parallax applied strictly to the foreground landscape (matching Supaste)
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
@@ -29,29 +30,26 @@ export const InteractiveNotchDemo: React.FC = () => {
     setTimeout(() => setMorphing(false), 450);
   };
 
-  // Parallax transform calculation for 3D spatial depth floating effect
-  const depthTranslateY = Math.max(-25, Math.min(scrollY * 0.06, 35));
-  const depthScale = Math.min(1.02, Math.max(0.98, 1 + scrollY * 0.00004));
+  // Foreground landscape zoom calculation (matches Supaste's foreground scroll-zoom)
+  const duneScale = 1 + Math.min(scrollY * 0.00045, 0.16);
+  const duneTranslateY = Math.min(scrollY * 0.035, 24);
 
   return (
     <div id="notch-demo" className="w-full relative pt-2 pb-0 flex flex-col items-center select-none bg-transparent">
       
-      {/* Background Sonoma Rolling Hills Landscape with transparent sky above */}
+      {/* Continuous Golden Landscape Container with warm ambient atmosphere */}
       <div 
-        className="w-full relative bg-bottom bg-no-repeat bg-cover flex flex-col items-center px-4 pt-6 pb-28 sm:pb-36 overflow-hidden"
+        className="w-full relative flex flex-col items-center px-4 pt-4 sm:pt-8 pb-36 sm:pb-48 overflow-hidden"
         style={{
-          backgroundImage: `url('/sonoma_wallpaper.webp')`,
-          minHeight: '680px'
+          minHeight: '840px'
         }}
       >
+        {/* Soft Ambient Golden Light behind Frosted Glass */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[720px] h-[520px] bg-amber-400/20 blur-[130px] rounded-full pointer-events-none -z-10" />
         
         {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Behind Foreground Dunes) */}
         <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10] sm:aspect-[16/9.5] flex flex-col justify-between transition-transform duration-300 ease-out mb-[-50px] sm:mb-[-70px]"
-          style={{
-            transform: `translateY(${depthTranslateY}px) scale(${depthScale})`,
-            willChange: 'transform'
-          }}
+          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10.5] sm:aspect-[16/9.5] flex flex-col justify-between mb-8 sm:mb-16"
         >
           
           {/* Mac Top Bar inside the Frosted Glass Window */}
@@ -59,7 +57,7 @@ export const InteractiveNotchDemo: React.FC = () => {
             
             {/* Left:  DopeNotch */}
             <div className="flex items-center gap-1.5 drop-shadow">
-              <Apple className="w-3.5 h-3.5 fill-white" />
+              <AppleLogo className="w-3.5 h-3.5 text-white" />
               <span className="font-semibold text-[13px] tracking-tight">DopeNotch</span>
             </div>
 
@@ -306,22 +304,37 @@ export const InteractiveNotchDemo: React.FC = () => {
 
           </div>
 
-          {/* Bottom Clear Blur Area (Overlapping the Green Hills with 0 Fake Dock) */}
-          <div className="h-14 sm:h-20 pointer-events-none select-none"></div>
+          {/* Bottom Clear Blur Area (Visible through the frosted glass above the dunes) */}
+          <div className="h-28 sm:h-40 pointer-events-none select-none"></div>
 
         </div>
 
-        {/* FOREGROUND GOLDEN DUNES IMAGE (In Front of the Glass Screen: z-30) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden">
-          <img 
-            src="/foreground_hills.png" 
-            alt="DopeNotch Golden Dunes Landscape" 
-            className="w-full min-w-[1040px] max-w-[2000px] h-auto object-cover object-bottom translate-y-1 sm:translate-y-3 drop-shadow-2xl" 
-          />
+        {/* FOREGROUND GOLDEN DUNES IMAGE (In Front of the Glass Screen: z-30 with Scroll Zoom) */}
+        <div 
+          className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.85) 68%, transparent 96%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.85) 68%, transparent 96%)',
+          }}
+        >
+          <div 
+            className="w-full flex justify-center items-end transition-transform duration-150 ease-out"
+            style={{
+              transform: `scale(${duneScale}) translateY(${duneTranslateY}px)`,
+              transformOrigin: 'bottom center',
+              willChange: 'transform'
+            }}
+          >
+            <img 
+              src="/foreground_hills.png" 
+              alt="DopeNotch Golden Dunes Landscape" 
+              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom translate-y-[22%] sm:translate-y-[26%] md:translate-y-[30%] drop-shadow-2xl" 
+            />
+          </div>
         </div>
 
-        {/* Soft Bottom Fade into White Section */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent via-white/80 to-white z-35 pointer-events-none"></div>
+        {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Zero Hard Edges) */}
+        <div className="w-full absolute bottom-0 left-0 right-0 h-48 sm:h-64 bg-gradient-to-t from-white via-white/85 to-transparent z-35 pointer-events-none" />
 
       </div>
 

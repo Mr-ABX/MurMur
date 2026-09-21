@@ -1,5 +1,6 @@
 import React from 'react';
-import { Apple, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
+import { AppleLogo } from './AppleLogo';
 
 export const Footer: React.FC = () => {
   return (
@@ -73,7 +74,7 @@ export const Footer: React.FC = () => {
               href="#pricing"
               className="mt-2 flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-amber-400 transition-all hover:scale-105 active:scale-95 shadow-xl"
             >
-              <Apple className="w-4 h-4 fill-black" />
+              <AppleLogo className="w-4 h-4 text-black" />
               <span>Download for macOS</span>
             </a>
 

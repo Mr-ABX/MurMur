@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Apple, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import { AppleLogo } from './AppleLogo';
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -52,7 +53,7 @@ export const Navbar: React.FC = () => {
             href="#pricing"
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[8px] text-[12px] font-semibold bg-white text-black hover:bg-zinc-100 transition-all hover:scale-105 active:scale-95 shadow-sm flex-none"
           >
-            <Apple className="w-3.5 h-3.5 fill-black" />
+            <AppleLogo className="w-3 h-3 text-black" />
             <span>Download</span>
           </a>
 

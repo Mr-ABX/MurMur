@@ -1,5 +1,5 @@
 import React from 'react';
-import { Apple } from 'lucide-react';
+import { AppleLogo } from './AppleLogo';
 import { InteractiveNotchDemo } from './InteractiveNotchDemo';
 
 export const Hero: React.FC = () => {
@@ -8,7 +8,7 @@ export const Hero: React.FC = () => {
       
       {/* Top Translucent Pill Badge */}
       <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 hover:bg-white/20 border border-white/25 text-white text-xs font-semibold mb-6 backdrop-blur-md transition-all shadow-sm">
-        <Apple className="w-3.5 h-3.5 fill-white" />
+        <AppleLogo className="w-3.5 h-3.5 text-white" />
         <span>Voice & Clipboard Superpowers</span>
       </div>
 
@@ -31,7 +31,7 @@ export const Hero: React.FC = () => {
           href="#pricing"
           className="px-7 py-3 rounded-full text-xs sm:text-sm font-bold bg-black text-white hover:bg-zinc-900 border border-white/15 transition-all hover:scale-105 active:scale-95 shadow-2xl flex items-center gap-2.5"
         >
-          <Apple className="w-4 h-4 fill-white" />
+          <AppleLogo className="w-4 h-4 text-white" />
           <span>Download for macOS</span>
         </a>
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Apple, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { AppleLogo } from './AppleLogo';
 
 export const Pricing: React.FC = () => {
   const [devices, setDevices] = useState<1 | 2 | 3>(1);
@@ -123,7 +124,7 @@ export const Pricing: React.FC = () => {
           href="#"
           className="w-full py-4 rounded-full text-xs sm:text-sm font-bold bg-black text-white hover:bg-zinc-800 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl flex items-center justify-center gap-2"
         >
-          <Apple className="w-4 h-4 fill-white" />
+          <AppleLogo className="w-4 h-4 text-white" />
           <span>Download for macOS</span>
         </a>
 
