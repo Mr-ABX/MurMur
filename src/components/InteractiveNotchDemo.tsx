@@ -39,9 +39,9 @@ export const InteractiveNotchDemo: React.FC = () => {
       
       {/* Continuous Golden Landscape Container with warm ambient atmosphere */}
       <div 
-        className="w-full relative flex flex-col items-center px-4 pt-4 sm:pt-8 pb-36 sm:pb-48 overflow-hidden"
+        className="w-full relative flex flex-col items-center px-4 pt-4 sm:pt-8 pb-28 sm:pb-36 overflow-hidden"
         style={{
-          minHeight: '840px'
+          minHeight: '800px'
         }}
       >
         {/* Soft Ambient Golden Light behind Frosted Glass */}
@@ -49,7 +49,7 @@ export const InteractiveNotchDemo: React.FC = () => {
         
         {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Behind Foreground Dunes) */}
         <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10.5] sm:aspect-[16/9.5] flex flex-col justify-between mb-8 sm:mb-16"
+          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10.5] sm:aspect-[16/9.5] flex flex-col justify-between mb-0 sm:mb-2"
         >
           
           {/* Mac Top Bar inside the Frosted Glass Window */}
@@ -328,13 +328,13 @@ export const InteractiveNotchDemo: React.FC = () => {
             <img 
               src="/foreground_hills.png" 
               alt="DopeNotch Golden Dunes Landscape" 
-              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom translate-y-[22%] sm:translate-y-[26%] md:translate-y-[30%] drop-shadow-2xl" 
+              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom translate-y-[6%] sm:translate-y-[8%] md:translate-y-[10%] drop-shadow-2xl" 
             />
           </div>
         </div>
 
         {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Zero Hard Edges) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-48 sm:h-64 bg-gradient-to-t from-white via-white/85 to-transparent z-35 pointer-events-none" />
+        <div className="w-full absolute bottom-0 left-0 right-0 h-40 sm:h-56 bg-gradient-to-t from-white via-white/80 to-transparent z-35 pointer-events-none" />
 
       </div>
 

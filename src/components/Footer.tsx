@@ -72,16 +72,39 @@ export const Footer: React.FC = () => {
 
             <a 
               href="#pricing"
-              className="mt-2 flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-amber-400 transition-all hover:scale-105 active:scale-95 shadow-xl"
+              className="mt-2 flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-amber-400 transition-all hover:scale-105 active:scale-95 shadow-xl w-fit"
             >
               <AppleLogo className="w-4 h-4 text-black" />
               <span>Download for macOS</span>
             </a>
 
-            <div className="text-[11px] text-zinc-500 pt-3">
+            {/* Creator Profile Badge: Abdulrahman-T */}
+            <a 
+              href="https://x.com/Mr_AbdulrahmanT" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-500/40 transition-all group w-fit"
+            >
+              <img 
+                src="/abdulrahman.jpg" 
+                alt="Abdulrahman-T" 
+                className="w-7 h-7 rounded-full object-cover ring-1 ring-white/20 group-hover:ring-amber-400 transition-all" 
+              />
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] text-zinc-400 leading-tight">Crafted by</span>
+                <span className="text-xs font-semibold text-white group-hover:text-amber-400 transition-colors flex items-center gap-1">
+                  Abdulrahman-T
+                  <svg className="w-3 h-3 fill-current text-zinc-400 group-hover:text-amber-400 ml-0.5" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </span>
+              </div>
+            </a>
+
+            <div className="text-[11px] text-zinc-500 pt-2">
               <p>© {new Date().getFullYear()} DopeNotch.com - All rights reserved</p>
               <p className="flex items-center gap-1 mt-1 text-zinc-400">
-                Built with <Heart className="w-3 h-3 text-amber-500 fill-amber-500 inline" /> by ABX
+                Built with <Heart className="w-3 h-3 text-amber-500 fill-amber-500 inline" /> by Abdulrahman-T
               </p>
             </div>
           </div>
