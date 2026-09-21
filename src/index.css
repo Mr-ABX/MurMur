@@ -26,25 +26,25 @@
   font-weight: 400;
 }
 
-/* Exact Supaste Sky-Blue Gradient sampled from screenshot */
-.supaste-hero-sky {
-  background: radial-gradient(130% 90% at 50% 20%, #38a5ff 0%, #1c62f2 42%, #143bc4 75%, #0d2899 100%);
+/* Signature Warm Brand Amber & Sunset Orange Atmospheric Gradients */
+.brand-hero-sky {
+  background: radial-gradient(135% 95% at 50% 20%, #f59e0b 0%, #ea580c 38%, #9a3412 70%, #431407 100%);
 }
 
-.supaste-pricing-sky {
-  background: radial-gradient(130% 95% at 50% 30%, #46a8ff 0%, #2068f5 45%, #153bc6 80%, #0c2692 100%);
+.brand-pricing-sky {
+  background: radial-gradient(130% 95% at 50% 30%, #fbbf24 0%, #f59e0b 35%, #ea580c 70%, #7c2d12 100%);
 }
 
-/* Frosted Glass Mac Window (Screenshot 2, 4, 5) */
+/* Frosted Glass Mac Window Pane (Screenshots 2, 4, 5) */
 .frosted-glass-mac {
   background: rgba(255, 255, 255, 0.28);
   -webkit-backdrop-filter: blur(40px);
   backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow: 
-    inset 0 2px 4px rgba(255, 255, 255, 0.5), 
+    inset 0 2px 5px rgba(255, 255, 255, 0.6), 
     inset 0 -20px 25px rgba(255, 255, 255, 0.2), 
-    0 30px 70px -15px rgba(0, 0, 0, 0.35);
+    0 30px 70px -15px rgba(0, 0, 0, 0.4);
 }
 
 /* Light Mode Pill Badges */
@@ -57,9 +57,9 @@
 }
 
 .light-badge-pill:hover {
-  border-color: #d1d1d6;
+  border-color: #f59e0b;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.12);
 }
 
 /* Custom Scrollbar */
@@ -70,9 +70,9 @@
   background: #f5f5f7;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c7c7cc;
+  background: #f59e0b;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #8e8e93;
+  background: #d97706;
 }

@@ -3,27 +3,43 @@ import { Apple, Heart } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="relative bg-black text-white pt-0 pb-16 overflow-hidden">
+    <footer className="relative bg-black text-white pt-0 pb-16 overflow-hidden select-none">
       
-      {/* INVERTED NOTCH TOP CURVE (1:1 Screenshot 1) */}
-      <div className="w-full h-12 bg-white flex justify-center items-end relative z-10">
-        <div className="w-[320px] sm:w-[480px] h-10 bg-black rounded-t-[28px] border-t border-x border-white/10 flex items-center justify-center">
-          <div className="w-12 h-1 bg-zinc-800 rounded-full"></div>
-        </div>
+      {/* 1:1 NOTCH SEPARATOR FROM SUPASTE (media_1789954748879.png) */}
+      <div className="w-full overflow-hidden leading-none relative -top-px">
+        <svg 
+          viewBox="0 0 1000 50" 
+          className="w-full h-9 sm:h-12 block" 
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {/* Top section white background */}
+          <rect width="1000" height="50" fill="white" />
+          {/* Black footer notch path dipping down into center bay */}
+          <path 
+            d="M 0,50 L 0,10 L 160,10 C 185,10 185,42 210,42 L 790,42 C 815,42 815,10 840,10 L 1000,10 L 1000,50 Z" 
+            fill="black" 
+          />
+        </svg>
       </div>
 
       {/* Main Footer Container */}
-      <div className="max-w-6xl mx-auto px-6 pt-16 relative z-10">
+      <div className="max-w-6xl mx-auto px-6 pt-12 sm:pt-16 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-16">
           
           {/* Left Column (Logo, Headline, Description, Download Button) */}
           <div className="lg:col-span-6 flex flex-col items-start gap-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xl overflow-hidden border border-white/20 shadow-md">
-                <img src="/logo.jpg" alt="DopeNotch" className="w-full h-full object-cover" />
+            {/* Direct Transparent Squircle Logo - Bigger, No Container Box */}
+            <div className="flex items-center gap-3">
+              <img 
+                src="/logo.png" 
+                alt="DopeNotch" 
+                className="w-10 h-10 object-contain drop-shadow-md" 
+              />
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold text-base text-white tracking-tight">DopeNotch</span>
+                <span className="text-[11px] text-zinc-500">macOS app</span>
               </div>
-              <span className="font-bold text-sm text-white">DopeNotch</span>
-              <span className="text-xs text-zinc-500">macOS app</span>
             </div>
 
             <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
@@ -39,7 +55,7 @@ export const Footer: React.FC = () => {
 
             <a 
               href="#pricing"
-              className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95 shadow-xl"
+              className="mt-2 flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold bg-white text-black hover:bg-amber-400 transition-all hover:scale-105 active:scale-95 shadow-xl"
             >
               <Apple className="w-4 h-4 fill-black" />
               <span>Download for macOS</span>
@@ -48,7 +64,7 @@ export const Footer: React.FC = () => {
             <div className="text-[11px] text-zinc-500 pt-3">
               <p>© {new Date().getFullYear()} DopeNotch.com - All rights reserved</p>
               <p className="flex items-center gap-1 mt-1 text-zinc-400">
-                Built with <Heart className="w-3 h-3 text-amber-500 fill-amber-500 inline" /> by Solt & ABX
+                Built with <Heart className="w-3 h-3 text-amber-500 fill-amber-500 inline" /> by ABX
               </p>
             </div>
           </div>
@@ -84,6 +100,10 @@ export const Footer: React.FC = () => {
               <a href="#" className="text-zinc-400 hover:text-white transition-colors">Macapp.Supply</a>
               <a href="#" className="text-zinc-400 hover:text-white transition-colors">Runey.app</a>
               <a href="#" className="text-zinc-400 hover:text-white transition-colors">Revone.app</a>
+              <a href="#" className="text-zinc-400 hover:text-white transition-colors">Icoon.co</a>
+              <a href="#" className="text-zinc-400 hover:text-white transition-colors">Selected.site</a>
+              <a href="#" className="text-zinc-400 hover:text-white transition-colors">Supaframe.io</a>
+              <a href="#" className="text-zinc-400 hover:text-white transition-colors">Frameblox.com</a>
             </div>
 
           </div>

@@ -13,36 +13,60 @@ export const Pricing: React.FC = () => {
   const current = priceMap[devices];
 
   return (
-    <section id="pricing" className="supaste-pricing-gradient py-28 px-4 flex flex-col items-center text-center text-white relative">
+    <section id="pricing" className="relative py-24 sm:py-32 px-4 flex flex-col items-center text-center bg-white overflow-hidden select-none">
       
-      {/* 1:1 Headline & Subtitle (Screenshot 3) */}
-      <div className="max-w-2xl mx-auto mb-14">
-        <h2 className="text-4xl sm:text-6xl font-black tracking-tight text-white mb-4">
+      {/* Brand Radiant Atmospheric Glow behind the card */}
+      <div 
+        className="absolute inset-x-0 top-36 bottom-0 brand-pricing-sky opacity-95 pointer-events-none"
+        aria-hidden="true"
+      />
+      {/* Soft Top & Bottom Fades */}
+      <div 
+        className="absolute inset-x-0 top-36 h-28 bg-gradient-to-b from-white to-transparent pointer-events-none" 
+        aria-hidden="true" 
+      />
+      <div 
+        className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" 
+        aria-hidden="true" 
+      />
+
+      {/* 1:1 Headline & Subtitle (media_1789954748940.png) */}
+      <div className="max-w-2xl mx-auto mb-14 relative z-10">
+        <h2 className="text-4xl sm:text-6xl font-black tracking-tight text-black mb-4">
           One price.<br />
           Lifetime access.
         </h2>
-        <p className="text-white/90 text-sm sm:text-base font-medium mb-2">
+        <p className="text-zinc-700 text-sm sm:text-base font-medium mb-2">
           One-time payment. No subscription.<br />
           Get lifetime access to DopeNotch on your Mac.
         </p>
-        <p className="text-white/60 text-xs max-w-md mx-auto leading-relaxed">
+        <p className="text-zinc-500 text-xs max-w-md mx-auto leading-relaxed">
           Try it risk-free. If DopeNotch doesn't fit your workflow, email us within 14 days and we'll refund your purchase.
         </p>
       </div>
 
-      {/* SIGNATURE NOTCHED WHITE PRICING CARD (Screenshot 3) */}
-      <div className="w-full max-w-md bg-white rounded-[36px] shadow-2xl p-7 sm:p-9 text-black relative flex flex-col items-center border border-white/40">
+      {/* SIGNATURE NOTCHED WHITE PRICING CARD (1:1 Screenshot 3) */}
+      <div className="w-full max-w-md bg-white rounded-[36px] shadow-2xl p-7 sm:p-9 text-black relative flex flex-col items-center border border-black/5 z-10">
         
-        {/* Card's Top Hardware Notch Cutout */}
-        <div className="w-48 h-8 bg-black rounded-b-2xl absolute -top-0.5 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 text-white text-[11px] font-bold shadow-md">
-          <div className="w-3.5 h-3.5 rounded-md overflow-hidden border border-white/20">
-            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+        {/* Card's Top Hardware Notch with Curved Concave Ears */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-start z-20">
+          {/* Left concave ear */}
+          <svg className="w-3.5 h-3.5 text-black -mr-[0.5px] fill-current flex-none" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M0,0 C10,0 20,10 20,20 L20,0 Z" />
+          </svg>
+          {/* Black Notch Body */}
+          <div className="bg-black text-white h-8 px-4 rounded-b-[16px] flex items-center justify-center gap-2 shadow-md">
+            <img src="/logo.png" alt="DopeNotch" className="w-4 h-4 object-contain" />
+            <span className="text-[11px] font-bold tracking-tight">DopeNotch app for macOS</span>
           </div>
-          <span>DopeNotch app for macOS</span>
+          {/* Right concave ear */}
+          <svg className="w-3.5 h-3.5 text-black -ml-[0.5px] fill-current flex-none" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M20,0 C10,0 0,10 0,20 L0,0 Z" />
+          </svg>
         </div>
 
         {/* Device Selector Tabs */}
-        <div className="w-full grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#f5f5f7] border border-black/5 mt-9 mb-6">
+        <div className="w-full grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#f5f5f7] border border-black/5 mt-7 mb-6">
           {[1, 2, 3].map((num) => (
             <button
               key={num}
@@ -71,7 +95,7 @@ export const Pricing: React.FC = () => {
             <span className="text-[11px] text-zinc-400 font-mono">5 spots left</span>
           </div>
           <div className="w-full h-2 rounded-full bg-zinc-200 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-sky-400 rounded-full w-[85%]"></div>
+            <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full w-[85%]"></div>
           </div>
         </div>
 
@@ -87,7 +111,7 @@ export const Pricing: React.FC = () => {
           ].map((feat, idx) => (
             <div key={idx} className="flex items-center gap-2.5">
               <div className="w-4 h-4 rounded-full bg-[#f5f5f7] border border-zinc-300 flex items-center justify-center flex-none text-zinc-600">
-                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                <Check className="w-2.5 h-2.5 stroke-[2.5]" />
               </div>
               <span>{feat}</span>
             </div>
@@ -97,7 +121,7 @@ export const Pricing: React.FC = () => {
         {/* Download for macOS Button */}
         <a 
           href="#"
-          className="w-full py-4 rounded-full text-xs sm:text-sm font-bold bg-black text-white hover:bg-zinc-800 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-full text-xs sm:text-sm font-bold bg-black text-white hover:bg-zinc-800 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl flex items-center justify-center gap-2"
         >
           <Apple className="w-4 h-4 fill-white" />
           <span>Download for macOS</span>
