@@ -10,7 +10,7 @@
   }
 
   body {
-    background-color: #0b1120;
+    background-color: #ffffff;
     color: #111827;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -26,35 +26,25 @@
   font-weight: 400;
 }
 
-/* Atmospheric Gradients matching Supaste */
-.supaste-hero-gradient {
-  background: radial-gradient(120% 120% at 50% 10%, #4382ff 0%, #1e5cd9 35%, #0d2c74 70%, #06112c 100%);
+/* Exact Supaste Sky-Blue Gradient sampled from screenshot */
+.supaste-hero-sky {
+  background: radial-gradient(130% 90% at 50% 20%, #38a5ff 0%, #1c62f2 42%, #143bc4 75%, #0d2899 100%);
 }
 
-.supaste-pricing-gradient {
-  background: radial-gradient(120% 100% at 50% 40%, #5294ff 0%, #2563eb 45%, #17387d 85%, #0a1329 100%);
+.supaste-pricing-sky {
+  background: radial-gradient(130% 95% at 50% 30%, #46a8ff 0%, #2068f5 45%, #153bc6 80%, #0c2692 100%);
 }
 
-/* Inverted Notch Footer Curve */
-.inverted-notch-top {
-  position: relative;
-  background-color: #000000;
-}
-
-.inverted-notch-cutout {
-  width: 100%;
-  height: 48px;
-  background-color: #ffffff;
-  mask-image: radial-gradient(circle 24px at 50% 0, transparent 0, transparent 24px, black 25px);
-}
-
-/* Glassmorphic Navbar */
-.floating-notch-nav {
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+/* Frosted Glass Mac Window (Screenshot 2, 4, 5) */
+.frosted-glass-mac {
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.5), 
+    inset 0 -20px 25px rgba(255, 255, 255, 0.2), 
+    0 30px 70px -15px rgba(0, 0, 0, 0.35);
 }
 
 /* Light Mode Pill Badges */
