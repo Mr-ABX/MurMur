@@ -31,8 +31,8 @@ export const Sidebar: React.FC = () => {
       {/* App Logo & Header */}
       <div>
         <div className="flex items-center gap-3 px-3 py-3 mb-2" data-tauri-drag-region>
-          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
-            <span className="text-black font-black text-xs tracking-tight">DN</span>
+          <div className="w-7 h-7 rounded-xl overflow-hidden shadow-sm border border-white/10 flex-none">
+            <img src="/logo.jpg" alt="DopeNotch" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-xs font-semibold text-[#ededed] tracking-tight flex items-center gap-1.5">
