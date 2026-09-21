@@ -5,22 +5,38 @@ export const Footer: React.FC = () => {
   return (
     <footer className="relative bg-black text-white pt-0 pb-16 overflow-hidden select-none">
       
-      {/* 1:1 NOTCH SEPARATOR FROM SUPASTE (media_1789954748879.png) */}
-      <div className="w-full overflow-hidden leading-none relative -top-px">
-        <svg 
-          viewBox="0 0 1000 50" 
-          className="w-full h-9 sm:h-12 block" 
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          {/* Top section white background */}
-          <rect width="1000" height="50" fill="white" />
-          {/* Black footer notch path dipping down into center bay */}
-          <path 
-            d="M 0,50 L 0,10 L 160,10 C 185,10 185,42 210,42 L 790,42 C 815,42 815,10 840,10 L 1000,10 L 1000,50 Z" 
-            fill="black" 
-          />
-        </svg>
+      {/* 1:1 IDENTICAL NOTCH SEPARATOR MATCHING HEADER NOTCH GEOMETRY */}
+      <div className="relative w-full h-11 sm:h-12 flex justify-center items-start overflow-visible pointer-events-none select-none -top-px">
+        {/* The white top notch that hangs down into the black footer, flanked by two white ears */}
+        <div className="relative flex items-start w-[88%] sm:w-[82%] md:w-[76%] lg:w-[70%] max-w-5xl justify-center pointer-events-auto">
+          
+          {/* Left White Ear (Identical Apple Concave Curve) */}
+          <div className="w-5 h-5 flex-none relative overflow-visible -mr-[0.5px]">
+            <svg 
+              viewBox="0 0 20 20" 
+              className="w-5 h-5 fill-white flex-none" 
+              style={{ transform: 'scaleX(-1)' }}
+              aria-hidden="true"
+            >
+              <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
+            </svg>
+          </div>
+
+          {/* Center White Notch Body hanging down into black footer */}
+          <div className="flex-1 bg-white h-10 sm:h-11 rounded-b-[18px]"></div>
+
+          {/* Right White Ear (Identical Apple Concave Curve) */}
+          <div className="w-5 h-5 flex-none relative overflow-visible -ml-[0.5px]">
+            <svg 
+              viewBox="0 0 20 20" 
+              className="w-5 h-5 fill-white flex-none" 
+              aria-hidden="true"
+            >
+              <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
+            </svg>
+          </div>
+
+        </div>
       </div>
 
       {/* Main Footer Container */}
