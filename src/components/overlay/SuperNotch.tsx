@@ -117,6 +117,18 @@ export const SuperNotch: React.FC = () => {
     }
   }, [activeMode, setClipboardItems]);
 
+  // Auto-close shelf on blur (window losing focus)
+  useEffect(() => {
+    if (activeMode !== 'shelf') return;
+
+    const handleBlur = () => {
+      setSuperNotchMode('idle');
+    };
+
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, [activeMode, setSuperNotchMode]);
+
   // Keyboard navigation
   useEffect(() => {
     if (activeMode !== 'shelf') return;
@@ -263,7 +275,7 @@ export const SuperNotch: React.FC = () => {
                               ? 'bg-red-500'
                               : isRewrite
                               ? 'bg-blue-400'
-                              : 'bg-emerald-400'
+                              : 'bg-amber-400'
                           }`}
                           style={{ height: `${heightPercent}%` }}
                         />
@@ -277,7 +289,7 @@ export const SuperNotch: React.FC = () => {
                         ? 'text-red-400'
                         : isRewrite
                         ? 'text-blue-400'
-                        : 'text-emerald-400'
+                        : 'text-amber-400'
                     }`}
                   >
                     {isCommand ? 'Command' : isRewrite ? 'Rewrite' : 'Dictate'}
@@ -306,14 +318,20 @@ export const SuperNotch: React.FC = () => {
         {/* 3. EXPANDED SHELF: 1:1 SuPaste Horizontal Shelf (Clean Apple Cutout)       */}
         {/* ========================================================================= */}
         {activeMode === 'shelf' && (
-          <motion.div
-            key="notch-shelf"
-            initial={{ y: -100, opacity: 0, scale: 0.98 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -100, opacity: 0, scale: 0.98 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 400 }}
-            className="pointer-events-auto flex flex-col items-center w-[760px] max-w-[96vw]"
-          >
+          <>
+            {/* Click-outside backdrop to auto-close shelf without clicking cross button */}
+            <div
+              className="fixed inset-0 pointer-events-auto z-0"
+              onClick={() => setSuperNotchMode('idle')}
+            />
+            <motion.div
+              key="notch-shelf"
+              initial={{ y: -100, opacity: 0, scale: 0.98 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -100, opacity: 0, scale: 0.98 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 400 }}
+              className="pointer-events-auto relative z-10 flex flex-col items-center w-[760px] max-w-[96vw]"
+            >
             <div className="relative w-full">
               {/* Apple Notch Expanded Cutout Shell */}
               <svg
@@ -491,8 +509,8 @@ export const SuperNotch: React.FC = () => {
                             <div className="flex-1 overflow-hidden pr-2">
                               {item.category === 'dictation' && (
                                 <div className="flex items-center gap-1 mb-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                  <span className="text-[10px] font-semibold text-emerald-400">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                  <span className="text-[10px] font-semibold text-amber-400">
                                     Dictation
                                   </span>
                                 </div>
@@ -543,6 +561,7 @@ export const SuperNotch: React.FC = () => {
               </div>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

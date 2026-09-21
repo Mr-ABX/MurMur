@@ -58,10 +58,10 @@ export const RewriteModeView: React.FC = () => {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-          <Pencil className="w-5 h-5 text-emerald-400" /> Write & Rewrite Mode
+          <Pencil className="w-5 h-5 text-amber-400" /> Write & Rewrite Mode
         </h1>
         <p className="text-xs text-zinc-400 mt-1">
-          Select text in any app (VS Code, Chrome, Slack, Word) and press <kbd className="px-2 py-0.5 rounded-md bg-[#18181c] text-white font-mono border border-[#2a2a32] font-semibold">{rewriteHotkey}</kbd> to instantly transform inline.
+          Select text in any app (VS Code, Chrome, Slack, Word) and press <kbd className="px-2 py-0.5 rounded-md bg-[#18181c] text-amber-400 font-mono border border-[#2a2a32] font-semibold">{rewriteHotkey}</kbd> to instantly transform inline.
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export const RewriteModeView: React.FC = () => {
             onClick={() => setSelectedTone(tone.id as any)}
             className={`p-3.5 rounded-2xl text-left transition-all border ${
               selectedTone === tone.id
-                ? 'bg-[#18181e] border-white/40 ring-1 ring-white/10'
+                ? 'bg-[#18181e] border-amber-400/50 ring-1 ring-amber-400/20'
                 : 'bg-[#121215] border-[#1e1e24] hover:border-[#2a2a32]'
             }`}
           >
@@ -100,21 +100,21 @@ export const RewriteModeView: React.FC = () => {
             rows={6}
             value={originalText}
             onChange={(e) => setOriginalText(e.target.value)}
-            className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 resize-none font-sans leading-relaxed"
+            className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 resize-none font-sans leading-relaxed"
           />
         </div>
 
         {/* Rewritten Text Preview */}
         <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-2 flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center text-xs font-semibold text-emerald-400">
+            <div className="flex justify-between items-center text-xs font-semibold text-amber-400">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" /> AI Rewritten Output
               </span>
               {rewrittenText && (
                 <button
                   onClick={handleCopy}
-                  className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1"
+                  className="text-[11px] text-amber-400 hover:underline flex items-center gap-1"
                 >
                   {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   {copied ? 'Copied' : 'Copy'}
@@ -124,7 +124,7 @@ export const RewriteModeView: React.FC = () => {
 
             <div className="mt-2 min-h-[140px] p-3.5 rounded-xl bg-[#09090b] border border-[#1e1e24]">
               {isProcessing ? (
-                <p className="text-xs text-emerald-400 font-medium animate-pulse">
+                <p className="text-xs text-amber-400 font-medium animate-pulse">
                   Transforming selected text...
                 </p>
               ) : rewrittenText ? (

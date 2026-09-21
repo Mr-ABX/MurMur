@@ -138,7 +138,7 @@ export const VoiceEngineView: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-            <Zap className="w-5 h-5 text-emerald-400" /> Speech Engines & Local Whisper
+            <Zap className="w-5 h-5 text-amber-400" /> Speech Engines & Local Whisper
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
             Choose your on-device Whisper model. 100% offline, zero latency, runs directly on CPU / Apple Metal.
@@ -147,9 +147,9 @@ export const VoiceEngineView: React.FC = () => {
 
         <button
           onClick={handleOpenFolder}
-          className="btn-liquid-ghost px-3.5 py-1.5 text-xs font-medium flex items-center gap-2"
+          className="btn-swift-ghost px-3.5 py-1.5 text-xs font-medium flex items-center gap-2"
         >
-          <FolderOpen className="w-4 h-4 text-emerald-400" />
+          <FolderOpen className="w-4 h-4 text-amber-400" />
           <span>Open Models Folder</span>
         </button>
       </div>
@@ -159,7 +159,7 @@ export const VoiceEngineView: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xs font-semibold text-[#ededed] flex items-center gap-1.5">
-              <Mic className="w-3.5 h-3.5 text-emerald-400" /> Live Dictation Test
+              <Mic className="w-3.5 h-3.5 text-amber-400" /> Live Dictation Test
             </h2>
             <p className="text-[11px] text-zinc-400 mt-0.5">
               Press shortcut <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 font-mono text-[10px]">{hotkey || '⌥Space'}</kbd> or click the test button below.
@@ -170,7 +170,7 @@ export const VoiceEngineView: React.FC = () => {
             className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
               isRecording
                 ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
-                : 'bg-emerald-500 text-black hover:bg-emerald-400'
+                : 'bg-amber-500 text-black hover:bg-amber-400'
             }`}
           >
             <Mic className="w-3.5 h-3.5" />
@@ -179,14 +179,14 @@ export const VoiceEngineView: React.FC = () => {
         </div>
 
         {isRecording ? (
-          <div className="rounded-xl bg-[#09090b] border border-emerald-500/30 p-4 space-y-2.5">
-            <div className="flex items-center gap-2 text-emerald-400 font-medium text-xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="rounded-xl bg-[#09090b] border border-amber-500/30 p-4 space-y-2.5">
+            <div className="flex items-center gap-2 text-amber-400 font-medium text-xs">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
               <span>Recording microphone input in real-time...</span>
             </div>
             <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-zinc-800">
               <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-75"
+                className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 rounded-full transition-all duration-75"
                 style={{ width: `${Math.min(100, Math.max(8, audioLevel * 100 * 2.5))}%` }}
               />
             </div>
@@ -198,7 +198,7 @@ export const VoiceEngineView: React.FC = () => {
           </div>
         ) : latestTranscript ? (
           <div className="rounded-xl bg-[#09090b] border border-[#1e1e24] p-3.5 space-y-1">
-            <span className="text-[10px] uppercase font-mono text-emerald-400 font-semibold">Latest Transcription Output:</span>
+            <span className="text-[10px] uppercase font-mono text-amber-400 font-semibold">Latest Transcription Output:</span>
             <p className="text-zinc-100 font-medium text-xs leading-relaxed">
               "{latestTranscript}"
             </p>
@@ -207,28 +207,28 @@ export const VoiceEngineView: React.FC = () => {
       </div>
 
       {/* Local Storage Info Callout */}
-      <div className="p-3.5 rounded-lg bg-[#0f0f11] border border-[#222222] flex items-center justify-between text-xs">
+      <div className="p-3.5 rounded-2xl bg-[#121215] border border-[#1e1e24] flex items-center justify-between text-xs">
         <div className="flex items-center gap-2.5 text-zinc-300">
-          <HardDrive className="w-4 h-4 text-emerald-400" />
+          <HardDrive className="w-4 h-4 text-amber-400" />
           <span>
-            Local Models Path: <code className="text-zinc-200 font-mono text-[11px] bg-[#1a1a1a] px-2 py-0.5 rounded border border-[#2e2e2e]">{modelDirStatus}</code>
+            Local Models Path: <code className="text-zinc-200 font-mono text-[11px] bg-[#09090b] px-2 py-0.5 rounded border border-[#1e1e24]">{modelDirStatus}</code>
           </span>
         </div>
-        <span className="text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+        <span className="text-[11px] text-amber-400 font-medium bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
           whisper.cpp Engine
         </span>
       </div>
 
       {/* Dynamic Model Comparison Benchmark Card */}
-      <div className="p-5 rounded-lg bg-[#0f0f11] border border-[#222222] space-y-4">
+      <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-emerald-400" />
+            <Zap className="w-4 h-4 text-amber-400" />
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[#ededed]">
               Active Benchmark ({activeModel.name})
             </h2>
           </div>
-          <span className="text-xs text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-medium">
+          <span className="text-xs text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20 font-medium">
             Active Engine
           </span>
         </div>
@@ -236,10 +236,10 @@ export const VoiceEngineView: React.FC = () => {
         {/* 3 Benchmark Metric Bars */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
           {/* Speed */}
-          <div className="p-3.5 rounded-md bg-[#0a0a0a] border border-[#222222] space-y-2">
+          <div className="p-3.5 rounded-xl bg-[#09090b] border border-[#1e1e24] space-y-2">
             <div className="flex justify-between items-center text-xs">
               <span className="text-zinc-400 flex items-center gap-1.5 font-medium">
-                <Zap className="w-3.5 h-3.5 text-emerald-400" /> Latency / Speed
+                <Zap className="w-3.5 h-3.5 text-amber-400" /> Latency / Speed
               </span>
               <span className="text-white font-mono font-bold">
                 {Math.round(activeModel.speedPercent * 100)}%
@@ -247,17 +247,17 @@ export const VoiceEngineView: React.FC = () => {
             </div>
             <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] overflow-hidden">
               <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                className="h-full bg-amber-500 rounded-full transition-all duration-500"
                 style={{ width: `${activeModel.speedPercent * 100}%` }}
               />
             </div>
           </div>
 
           {/* Accuracy */}
-          <div className="p-3.5 rounded-md bg-[#0a0a0a] border border-[#222222] space-y-2">
+          <div className="p-3.5 rounded-xl bg-[#09090b] border border-[#1e1e24] space-y-2">
             <div className="flex justify-between items-center text-xs">
               <span className="text-zinc-400 flex items-center gap-1.5 font-medium">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Precision
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Precision
               </span>
               <span className="text-white font-mono font-bold">
                 {Math.round(activeModel.accuracyPercent * 100)}%
@@ -265,7 +265,7 @@ export const VoiceEngineView: React.FC = () => {
             </div>
             <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] overflow-hidden">
               <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                className="h-full bg-amber-500 rounded-full transition-all duration-500"
                 style={{ width: `${activeModel.accuracyPercent * 100}%` }}
               />
             </div>
@@ -310,9 +310,9 @@ export const VoiceEngineView: React.FC = () => {
             <button
               key={p}
               onClick={() => setProviderFilter(p)}
-              className={`px-2.5 py-1 rounded transition-all capitalize font-medium ${
+              className={`px-2.5 py-1 rounded-full transition-all capitalize font-medium ${
                 providerFilter === p
-                  ? 'bg-[#1a1a1a] text-emerald-400 border border-[#2e2e2e]'
+                  ? 'bg-white text-black font-semibold'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -332,18 +332,18 @@ export const VoiceEngineView: React.FC = () => {
           return (
             <div
               key={model.id}
-              className={`p-4 rounded-lg bg-[#0f0f11] border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
-                isSelected ? 'border-[#ededed] bg-[#121214]' : 'border-[#222222] hover:border-[#333333]'
+              className={`p-4 rounded-2xl bg-[#121215] border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+                isSelected ? 'border-amber-400/50 bg-[#16161a] ring-1 ring-amber-400/20' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="space-y-1.5 flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-semibold text-white">{model.name}</h3>
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#1a1a1a] text-zinc-400 border border-[#2e2e2e]">
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#18181c] text-zinc-400 border border-[#2a2a32]">
                     {model.provider}
                   </span>
                   {model.isDefault && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                       Default
                     </span>
                   )}
@@ -362,14 +362,14 @@ export const VoiceEngineView: React.FC = () => {
                   isSelected ? (
                     <button
                       disabled
-                      className="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5"
+                      className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5"
                     >
                       <Check className="w-3.5 h-3.5" /> Active Model
                     </button>
                   ) : (
                     <button
                       onClick={() => handleSelectModel(model.id)}
-                      className="btn-liquid-ghost px-3.5 py-1.5 text-xs font-semibold hover:border-[#444444]"
+                      className="btn-swift-ghost px-3.5 py-1.5 text-xs font-semibold hover:border-[#444444]"
                     >
                       Select Model
                     </button>
@@ -382,7 +382,7 @@ export const VoiceEngineView: React.FC = () => {
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                       <div
-                        className="h-full bg-emerald-500 rounded-full transition-all"
+                        className="h-full bg-amber-500 rounded-full transition-all"
                         style={{ width: `${downloadProgress[model.id]}%` }}
                       />
                     </div>
@@ -390,7 +390,7 @@ export const VoiceEngineView: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => handleDownload(model)}
-                    className="btn-liquid-primary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5"
+                    className="btn-swift-primary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" /> Download
                   </button>

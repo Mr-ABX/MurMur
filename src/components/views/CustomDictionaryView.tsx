@@ -34,7 +34,7 @@ export const CustomDictionaryView: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-            <BookA className="w-5 h-5 text-emerald-400" /> Custom Dictionary & Vocabulary Boosting
+            <BookA className="w-5 h-5 text-amber-400" /> Custom Dictionary & Vocabulary Boosting
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
             Ensure proper names, specialized jargon, and spoken punctuation commands (like "period" → ".") are transcribed with 100% accuracy.
@@ -64,7 +64,7 @@ export const CustomDictionaryView: React.FC = () => {
                 placeholder="e.g. k8s, new line, postgres"
                 value={trigger}
                 onChange={(e) => setTrigger(e.target.value)}
-                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50"
               />
             </div>
             <div>
@@ -74,7 +74,7 @@ export const CustomDictionaryView: React.FC = () => {
                 placeholder="e.g. Kubernetes, \n, PostgreSQL"
                 value={replacement}
                 onChange={(e) => setReplacement(e.target.value)}
-                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50"
               />
             </div>
             <div>
@@ -82,7 +82,7 @@ export const CustomDictionaryView: React.FC = () => {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as any)}
-                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-white/30"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400/50"
               >
                 <option value="word">Technical Word</option>
                 <option value="punctuation">Spoken Punctuation</option>
@@ -119,7 +119,7 @@ export const CustomDictionaryView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-white font-mono">"{entry.trigger}"</span>
                 <span className="text-zinc-500">→</span>
-                <span className="text-xs font-bold text-emerald-400 font-mono">
+                <span className="text-xs font-bold text-amber-400 font-mono">
                   {entry.replacement === '\n'
                     ? '[New Line]'
                     : entry.replacement === '\n\n'
@@ -139,7 +139,7 @@ export const CustomDictionaryView: React.FC = () => {
                 onChange={(e) =>
                   updateDictionaryEntry(entry.id, { isEnabled: e.target.checked })
                 }
-                className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
               />
               <button
                 onClick={() => deleteDictionaryEntry(entry.id)}

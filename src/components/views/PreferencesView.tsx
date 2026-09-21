@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Settings as SettingsIcon,
   Keyboard,
@@ -6,6 +6,9 @@ import {
   Layers,
   Database,
   Sliders,
+  Sparkles,
+  Command,
+  Check,
 } from 'lucide-react';
 import { useAppStore, OverlayStyle } from '../../stores/appStore';
 import { invoke } from '@tauri-apps/api/core';
@@ -34,6 +37,9 @@ export const PreferencesView: React.FC = () => {
     clearHistory,
   } = useAppStore();
 
+  const [isRecordingPrimary, setIsRecordingPrimary] = useState(false);
+  const [isRecordingSecondary, setIsRecordingSecondary] = useState(false);
+
   const syncBackend = async (updates: Partial<any>) => {
     try {
       const current = await invoke<any>('get_settings');
@@ -46,6 +52,76 @@ export const PreferencesView: React.FC = () => {
     }
   };
 
+  const handleSelectPreset = (newHotkey: string) => {
+    setHotkey(newHotkey);
+    syncBackend({ hotkey: newHotkey });
+  };
+
+  const handleSelectSecondaryPreset = (newHotkey: string) => {
+    setSecondaryHotkey(newHotkey);
+    syncBackend({ assistantHotkey: newHotkey });
+  };
+
+  const handleKeyDownPrimary = (e: React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Ignore standalone modifier presses
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+      return;
+    }
+
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push('Control');
+    if (e.altKey) parts.push('Option');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.metaKey) parts.push('Command');
+
+    let keyName = e.key;
+    if (keyName === ' ') keyName = 'Space';
+    else if (keyName.length === 1) keyName = keyName.toUpperCase();
+
+    if (parts.length === 0) {
+      parts.push('Option'); // Default fallback modifier
+    }
+    parts.push(keyName);
+
+    const combo = parts.join('+');
+    setHotkey(combo);
+    syncBackend({ hotkey: combo });
+    setIsRecordingPrimary(false);
+  };
+
+  const handleKeyDownSecondary = (e: React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+      return;
+    }
+
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push('Control');
+    if (e.altKey) parts.push('Option');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.metaKey) parts.push('Command');
+
+    let keyName = e.key;
+    if (keyName === ' ') keyName = 'Space';
+    else if (keyName.length === 1) keyName = keyName.toUpperCase();
+
+    if (parts.length === 0) {
+      parts.push('Control');
+      parts.push('Option');
+    }
+    parts.push(keyName);
+
+    const combo = parts.join('+');
+    setSecondaryHotkey(combo);
+    syncBackend({ assistantHotkey: combo });
+    setIsRecordingSecondary(false);
+  };
+
   const SECTIONS = [
     { id: 'general', label: 'General', icon: SettingsIcon },
     { id: 'dictation', label: 'Dictation & Hotkeys', icon: Keyboard },
@@ -54,13 +130,26 @@ export const PreferencesView: React.FC = () => {
     { id: 'data', label: 'Data & Storage', icon: Database },
   ] as const;
 
+  const PRIMARY_PRESETS = [
+    { label: '⌥ Space (Default)', value: 'Option+Space', desc: 'Hold or press Option + Space' },
+    { label: '⌃ ⌥ Space', value: 'Control+Option+Space', desc: 'Control + Option + Space' },
+    { label: '⌘ ⇧ Space', value: 'CommandOrControl+Shift+Space', desc: 'Command + Shift + Space' },
+    { label: '⌥ D', value: 'Option+D', desc: 'Option + D (Dictate)' },
+  ];
+
+  const SECONDARY_PRESETS = [
+    { label: '⌃ ⌥ Space', value: 'Control+Option+Space', desc: 'Control + Option + Space' },
+    { label: '⌥ Tab', value: 'Option+Tab', desc: 'Option + Tab' },
+    { label: '⌘ ⇧ A', value: 'CommandOrControl+Shift+A', desc: 'Command + Shift + A (AI)' },
+  ];
+
   return (
     <div className="flex-1 h-full flex flex-col md:flex-row overflow-hidden select-none bg-[#000000] text-[#ededed]">
       {/* Settings Section Sidebar */}
       <div className="w-full md:w-56 h-full border-r border-[#1e1e24] p-3 space-y-1 bg-[#0a0a0c]">
         <div className="px-3 py-2 mb-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-            <Sliders className="w-3.5 h-3.5 text-emerald-400" /> Preferences
+            <Sliders className="w-3.5 h-3.5 text-amber-400" /> Preferences
           </h2>
         </div>
 
@@ -74,7 +163,7 @@ export const PreferencesView: React.FC = () => {
               onClick={() => setSettingsSection(sec.id as any)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                 isActive
-                  ? 'bg-white text-black font-semibold'
+                  ? 'bg-white text-black font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -110,7 +199,7 @@ export const PreferencesView: React.FC = () => {
                   type="checkbox"
                   checked={soundEffects}
                   onChange={(e) => setSoundEffects(e.target.checked)}
-                  className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                 />
               </div>
 
@@ -133,60 +222,138 @@ export const PreferencesView: React.FC = () => {
         )}
 
         {settingsSection === 'dictation' && (
-          <div className="space-y-4 max-w-2xl">
+          <div className="space-y-6 max-w-2xl">
             <div>
-              <h3 className="text-sm font-semibold text-[#ededed]">Dictation & Hotkeys</h3>
-              <p className="text-xs text-zinc-400 mt-0.5">Configure push-to-talk and global triggers.</p>
+              <h3 className="text-sm font-semibold text-[#ededed]">Dictation & Global Hotkeys</h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Customize hotkeys to trigger instant on-device voice dictation anywhere across macOS.
+              </p>
             </div>
 
+            {/* Primary Dictation Hotkey Box */}
+            <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-[#ededed] flex items-center gap-1.5">
+                    <Command className="w-3.5 h-3.5 text-amber-400" /> Primary Dictation Shortcut
+                  </p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Triggers voice dictation from any active app or desktop window.
+                  </p>
+                </div>
+
+                {/* Live Recorder Button / Active Pill */}
+                <button
+                  onClick={() => setIsRecordingPrimary(!isRecordingPrimary)}
+                  onKeyDown={isRecordingPrimary ? handleKeyDownPrimary : undefined}
+                  tabIndex={0}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 border ${
+                    isRecordingPrimary
+                      ? 'bg-amber-500 text-black border-amber-400 ring-2 ring-amber-400/30 animate-pulse'
+                      : 'bg-[#09090b] text-amber-400 border-[#2a2a32] hover:border-amber-400/50'
+                  }`}
+                  title="Click and press your desired key combination"
+                >
+                  <span>{isRecordingPrimary ? 'Press keys on keyboard...' : hotkey || 'Option+Space'}</span>
+                </button>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="space-y-2 pt-1 border-t border-[#1a1a1e]">
+                <p className="text-[11px] text-zinc-400 font-medium">Quick 1-Click Presets:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {PRIMARY_PRESETS.map((preset) => {
+                    const isSelected = hotkey === preset.value;
+                    return (
+                      <button
+                        key={preset.value}
+                        onClick={() => handleSelectPreset(preset.value)}
+                        className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                          isSelected
+                            ? 'bg-[#18181c] border-amber-400/50 ring-1 ring-amber-400/20 text-white'
+                            : 'bg-[#0a0a0c] border-[#1e1e24] hover:border-[#2a2a32] text-zinc-300'
+                        }`}
+                      >
+                        <div>
+                          <p className="text-xs font-semibold font-mono">{preset.label}</p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5">{preset.desc}</p>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                💡 <span className="text-zinc-400">Pro-Tip:</span> macOS system shortcuts require modifier keys alongside a key (e.g. <code className="text-amber-400 font-mono">Option+Space</code> or <code className="text-amber-400 font-mono">Control+Option+Space</code>).
+              </p>
+            </div>
+
+            {/* Secondary Command Shortcut Box */}
+            <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-[#ededed] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Secondary AI Command Shortcut
+                  </p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Triggers AI prompt injection, text rewrites, and commands.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsRecordingSecondary(!isRecordingSecondary)}
+                  onKeyDown={isRecordingSecondary ? handleKeyDownSecondary : undefined}
+                  tabIndex={0}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-2 border ${
+                    isRecordingSecondary
+                      ? 'bg-amber-500 text-black border-amber-400 ring-2 ring-amber-400/30 animate-pulse'
+                      : 'bg-[#09090b] text-amber-400 border-[#2a2a32] hover:border-amber-400/50'
+                  }`}
+                  title="Click and press your desired key combination"
+                >
+                  <span>{isRecordingSecondary ? 'Press keys on keyboard...' : secondaryHotkey || 'Control+Option+Space'}</span>
+                </button>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="space-y-2 pt-1 border-t border-[#1a1a1e]">
+                <p className="text-[11px] text-zinc-400 font-medium">Secondary Presets:</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {SECONDARY_PRESETS.map((preset) => {
+                    const isSelected = secondaryHotkey === preset.value;
+                    return (
+                      <button
+                        key={preset.value}
+                        onClick={() => handleSelectSecondaryPreset(preset.value)}
+                        className={`p-2 rounded-xl border text-left flex items-center justify-between transition-all ${
+                          isSelected
+                            ? 'bg-[#18181c] border-amber-400/50 ring-1 ring-amber-400/20 text-white'
+                            : 'bg-[#0a0a0c] border-[#1e1e24] hover:border-[#2a2a32] text-zinc-300'
+                        }`}
+                      >
+                        <div>
+                          <p className="text-xs font-semibold font-mono">{preset.label}</p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5">{preset.desc}</p>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Dictation Behavior Controls */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
-                <div>
-                  <p className="text-xs font-medium text-[#ededed]">Primary Dictation Shortcut</p>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Hold or press to activate voice dictation in any app.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={hotkey}
-                    onChange={(e) => {
-                      setHotkey(e.target.value);
-                      syncBackend({ hotkey: e.target.value });
-                    }}
-                    className="w-40 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-center font-mono font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
-                <div>
-                  <p className="text-xs font-medium text-[#ededed]">Secondary Command Shortcut</p>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Hold to ask AI, edit selected text, or run voice commands.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={secondaryHotkey}
-                    onChange={(e) => {
-                      setSecondaryHotkey(e.target.value);
-                      syncBackend({ assistantHotkey: e.target.value });
-                    }}
-                    className="w-40 bg-[#09090b] border border-[#1e1e24] rounded-xl px-2.5 py-1 text-xs text-white text-center font-mono font-semibold"
-                  />
-                </div>
-              </div>
-
               <div className="flex items-center justify-between p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] hover:border-[#2a2a32] transition-colors">
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Push-to-Talk (Hold Key)</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
                     {pushToTalk
-                      ? 'Push-to-Talk: Hold key down while speaking; release to paste.'
-                      : 'Toggle Mode: Press once to start, press again to stop & paste.'}
+                      ? 'Push-to-Talk: Hold shortcut down while speaking; release to paste.'
+                      : 'Toggle Mode: Press shortcut once to start, press again to stop & paste.'}
                   </p>
                 </div>
                 <input
@@ -196,7 +363,7 @@ export const PreferencesView: React.FC = () => {
                     setPushToTalk(e.target.checked);
                     syncBackend({ activationMode: e.target.checked ? 'hold' : 'toggle' });
                   }}
-                  className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                 />
               </div>
 
@@ -204,7 +371,7 @@ export const PreferencesView: React.FC = () => {
                 <div>
                   <p className="text-xs font-medium text-[#ededed]">Smart Auto-Paste</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    Immediately insert transcribed text into the active cursor.
+                    Immediately insert transcribed text into your active cursor position.
                   </p>
                 </div>
                 <input
@@ -214,7 +381,7 @@ export const PreferencesView: React.FC = () => {
                     setAutoPaste(e.target.checked);
                     syncBackend({ autoPaste: e.target.checked });
                   }}
-                  className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                 />
               </div>
             </div>
@@ -235,7 +402,7 @@ export const PreferencesView: React.FC = () => {
               <select
                 value={selectedInputDevice}
                 onChange={(e) => setSelectedInputDevice(e.target.value)}
-                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white/30"
+                className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400/50"
               >
                 {inputDevices.map((dev) => (
                   <option key={dev.id} value={dev.id}>
@@ -265,7 +432,7 @@ export const PreferencesView: React.FC = () => {
                   onClick={() => setOverlayStyle(style.id as OverlayStyle)}
                   className={`p-4 rounded-2xl text-left transition-all border ${
                     overlayStyle === style.id
-                      ? 'bg-[#18181c] border-white/40 ring-1 ring-white/10'
+                      ? 'bg-[#18181c] border-amber-400/50 ring-1 ring-amber-400/20'
                       : 'bg-[#121215] border-[#1e1e24] hover:border-[#2a2a32]'
                   }`}
                 >

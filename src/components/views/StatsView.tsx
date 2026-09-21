@@ -20,7 +20,7 @@ export const StatsView: React.FC = () => {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-emerald-400" /> Productivity Stats & Insights
+          <BarChart3 className="w-5 h-5 text-amber-400" /> Productivity Stats & Insights
         </h1>
         <p className="text-xs text-zinc-400 mt-1">
           Detailed metrics calculating your typing time saved, speaking speed, and dictation streaks.
@@ -33,10 +33,10 @@ export const StatsView: React.FC = () => {
         <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-1 hover:border-[#2a2a32] transition-colors">
           <div className="flex justify-between items-center text-zinc-400 text-xs font-medium">
             <span>Words Today</span>
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <Sparkles className="w-4 h-4 text-amber-400" />
           </div>
           <p className="text-2xl font-bold text-white font-mono">{wordsToday.toLocaleString()}</p>
-          <p className="text-[11px] text-emerald-400 font-medium">~{Math.round(wordsToday / 250)} pages written</p>
+          <p className="text-[11px] text-amber-400 font-medium">~{Math.round(wordsToday / 250)} pages written</p>
         </div>
 
         {/* Time Saved Today */}
@@ -85,12 +85,12 @@ export const StatsView: React.FC = () => {
 
             return (
               <div key={index} className="flex-1 flex flex-col items-center gap-2 group">
-                <span className="text-[10px] font-mono text-zinc-500 group-hover:text-zinc-200 transition-colors">
+                <span className="text-[10px] font-mono text-zinc-500 group-hover:text-amber-400 transition-colors">
                   {item.words}
                 </span>
                 <div className="w-full max-w-[40px] bg-[#09090b] border border-[#1e1e24] rounded-xl h-32 flex items-end p-1.5 overflow-hidden">
                   <div
-                    className="w-full bg-white rounded-lg transition-all duration-300 group-hover:bg-emerald-400"
+                    className="w-full bg-white rounded-lg transition-all duration-300 group-hover:bg-amber-400"
                     style={{ height: `${heightPercent}%` }}
                   />
                 </div>

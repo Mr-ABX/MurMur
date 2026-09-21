@@ -49,7 +49,7 @@ export const SettingsModal: React.FC = () => {
         {/* Header */}
         <div className="h-14 border-b border-[#1e1e24] flex items-center justify-between px-6 bg-[#0a0a0c]">
           <div className="flex items-center gap-2">
-            <SettingsIcon className="w-4 h-4 text-emerald-400" />
+            <SettingsIcon className="w-4 h-4 text-amber-400" />
             <h2 className="text-xs font-semibold text-[#ededed] uppercase tracking-wider">DopeNotch Preferences</h2>
           </div>
           <button
@@ -109,7 +109,7 @@ export const SettingsModal: React.FC = () => {
                       type="checkbox"
                       checked={soundEffects}
                       onChange={(e) => setSoundEffects(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                      className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                     />
                   </div>
 
@@ -164,7 +164,7 @@ export const SettingsModal: React.FC = () => {
                       type="checkbox"
                       checked={pushToTalk}
                       onChange={(e) => setPushToTalk(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                      className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                     />
                   </div>
 
@@ -179,7 +179,7 @@ export const SettingsModal: React.FC = () => {
                       type="checkbox"
                       checked={autoPaste}
                       onChange={(e) => setAutoPaste(e.target.checked)}
-                      className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                      className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                     />
                   </div>
                 </div>

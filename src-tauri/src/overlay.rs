@@ -9,6 +9,9 @@ pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
         // Show window first so window is initialized by Tauri
         let _ = window.show();
 
+        let target_w = 360.0_f64;
+        let target_h = 64.0_f64;
+
         #[cfg(target_os = "macos")]
         {
             use objc2::msg_send;
@@ -101,15 +104,17 @@ pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
                         let screen: *mut AnyObject = msg_send![ns_win, screen];
                         if !screen.is_null() {
                             let screen_frame: NSRect = msg_send![screen, frame];
-                            let win_frame: NSRect = msg_send![ns_win, frame];
 
                             // Target frame: centered horizontally, flush against top edge of physical screen
                             let target_frame = NSRect {
                                 origin: NSPoint {
-                                    x: screen_frame.origin.x + (screen_frame.size.width - win_frame.size.width) / 2.0,
-                                    y: screen_frame.origin.y + screen_frame.size.height - win_frame.size.height,
+                                    x: screen_frame.origin.x + (screen_frame.size.width - target_w) / 2.0,
+                                    y: screen_frame.origin.y + screen_frame.size.height - target_h,
                                 },
-                                size: win_frame.size,
+                                size: NSSize {
+                                    width: target_w,
+                                    height: target_h,
+                                },
                             };
 
                             let _: () = msg_send![ns_win, setFrame: target_frame, display: true];
@@ -127,24 +132,26 @@ pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
             if let Some(monitor) = monitor {
                 let scale = monitor.scale_factor();
                 let screen_w = monitor.size().width as f64 / scale;
-                let notch_w = 560.0_f64;
-                let x = (screen_w - notch_w) / 2.0;
+                let x = (screen_w - target_w) / 2.0;
 
                 let target_x = (x * scale) as i32;
                 let _ = window.set_position(tauri::PhysicalPosition::new(target_x, 0));
+                let _ = window.set_size(tauri::LogicalSize::new(target_w, target_h));
                 let _ = window.set_always_on_top(true);
             }
         }
     }
 }
 
-/// Hide the notch visualizer window if the setting is AutoHidden
+/// Hide the notch visualizer window if the setting is AutoHidden, or shrink to idle size
 pub fn hide_visualizers(app: &AppHandle, settings: &AppSettings) {
     if settings.visibility_mode == crate::settings::VisibilityMode::AlwaysOn {
-        return; // Do not hide window if always on
+        resize_notch(app, false);
+        return; // Keep small idle notch visible
     }
 
     if let Some(window) = app.get_webview_window("notch") {
+        resize_notch(app, false);
         let _ = window.hide();
     }
 }
@@ -268,8 +275,8 @@ pub fn toggle_tray_popover(app: &AppHandle) {
 /// Resize the notch window dynamically between idle and expanded modes
 pub fn resize_notch(app: &AppHandle, expanded: bool) {
     if let Some(window) = app.get_webview_window("notch") {
-        let target_w = if expanded { 800.0_f64 } else { 560.0_f64 };
-        let target_h = if expanded { 260.0_f64 } else { 160.0_f64 };
+        let target_w = if expanded { 780.0_f64 } else { 170.0_f64 };
+        let target_h = if expanded { 260.0_f64 } else { 32.0_f64 };
 
         #[cfg(target_os = "macos")]
         {

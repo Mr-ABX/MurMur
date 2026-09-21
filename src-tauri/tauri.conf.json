@@ -48,8 +48,8 @@
         "label": "notch",
         "title": "DopeNotch Shelf",
         "url": "/",
-        "width": 560,
-        "height": 480,
+        "width": 170,
+        "height": 32,
         "resizable": true,
         "decorations": false,
         "transparent": true,
@@ -57,7 +57,7 @@
         "skipTaskbar": true,
         "visible": false,
         "shadow": false,
-        "focus": true
+        "focus": false
       }
     ]
   },

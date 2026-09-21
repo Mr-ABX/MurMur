@@ -66,7 +66,7 @@ export const TranscriptionHistoryView: React.FC = () => {
     switch (category) {
       case 'dictation':
         return (
-          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
             <Mic className="w-2.5 h-2.5" /> Dictation
           </span>
         );
@@ -105,7 +105,7 @@ export const TranscriptionHistoryView: React.FC = () => {
         <div className="p-4 border-b border-[#1e1e24] space-y-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xs font-semibold text-[#ededed] flex items-center gap-1.5 uppercase tracking-wide">
-              <History className="w-4 h-4 text-emerald-400" /> History & Vault
+              <History className="w-4 h-4 text-amber-400" /> History & Vault
             </h1>
             {activeViewTab === 'dictations' ? (
               historyRecords.length > 0 && (
@@ -308,7 +308,7 @@ export const TranscriptionHistoryView: React.FC = () => {
               {/* Audio Wave Player Bar */}
               <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] flex items-center gap-4">
                 <button className="w-8 h-8 rounded-xl bg-[#18181c] text-zinc-300 flex items-center justify-center border border-[#2a2a32] hover:text-white transition-colors">
-                  <Volume2 className="w-4 h-4 text-emerald-400" />
+                  <Volume2 className="w-4 h-4 text-amber-400" />
                 </button>
                 <div className="flex-1 space-y-1">
                   <div className="flex justify-between text-[11px] text-zinc-400 font-mono">
@@ -316,7 +316,7 @@ export const TranscriptionHistoryView: React.FC = () => {
                     <span>{selectedRecord.durationSeconds.toFixed(1)}s</span>
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-[#09090b] overflow-hidden">
-                    <div className="w-1/3 h-full bg-emerald-500 rounded-full" />
+                    <div className="w-1/3 h-full bg-amber-500 rounded-full" />
                   </div>
                 </div>
               </div>
@@ -324,7 +324,7 @@ export const TranscriptionHistoryView: React.FC = () => {
               {/* Enhanced Transcript */}
               {selectedRecord.enhancedText && (
                 <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
                     <Sparkles className="w-3.5 h-3.5" /> AI Enhanced Transcript
                   </div>
                   <p className="text-sm text-[#ededed] leading-relaxed font-sans select-text">

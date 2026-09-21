@@ -19,8 +19,9 @@
     --text-muted: #5e6066;
     
     /* Apple / Swift Accent Tokens */
-    --accent-emerald: #10b981;
+    --accent-brand: #f59e0b;
     --accent-amber: #f59e0b;
+    --accent-orange: #ea580c;
     --accent-blue: #0070f3;
     --accent-purple: #8b5cf6;
   }

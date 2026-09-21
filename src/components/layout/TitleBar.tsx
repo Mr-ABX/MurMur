@@ -54,7 +54,7 @@ export const TitleBar: React.FC = () => {
       data-tauri-drag-region
       onMouseDown={handleMouseDown}
       onDoubleClick={handleMaximize}
-      className={`h-11 w-full bg-[#0a0a0a] border-b border-[#222222] flex items-center justify-between ${
+      className={`h-11 w-full bg-[#0a0a0c] border-b border-[#1e1e24] flex items-center justify-between ${
         isMac ? 'pl-20 pr-4' : 'px-4'
       } select-none z-10 cursor-default`}
     >
@@ -62,9 +62,9 @@ export const TitleBar: React.FC = () => {
       <div className="flex items-center gap-2" data-tauri-drag-region>
         <div
           data-tauri-drag-region
-          className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#111111] border border-[#262626] text-[11px]"
+          className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#121215] border border-[#1e1e24] text-[11px]"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
           <span className="font-medium text-zinc-200">{activeModel?.name || 'Local Whisper (Ready)'}</span>
         </div>
       </div>

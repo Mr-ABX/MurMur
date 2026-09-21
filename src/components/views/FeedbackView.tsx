@@ -17,7 +17,7 @@ export const FeedbackView: React.FC = () => {
     <div className="flex-1 h-full overflow-y-auto p-8 space-y-6 bg-[#000000] text-[#ededed]">
       <div>
         <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-          <MessageSquareHeart className="w-5 h-5 text-emerald-400" /> Community & Feedback
+          <MessageSquareHeart className="w-5 h-5 text-amber-400" /> Community & Feedback
         </h1>
         <p className="text-xs text-zinc-400 mt-1">
           Have an idea or spotted a glitch? Your feedback shapes the future of DopeNotch.
@@ -35,7 +35,7 @@ export const FeedbackView: React.FC = () => {
               placeholder="Tell us what you love, what needs fixing, or what models you'd like added..."
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 resize-none font-sans"
+              className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 resize-none font-sans"
             />
           </div>
 
@@ -51,8 +51,8 @@ export const FeedbackView: React.FC = () => {
           </div>
 
           {submitted && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-amber-400" />
               <span>Thank you! Your feedback has been logged.</span>
             </div>
           )}

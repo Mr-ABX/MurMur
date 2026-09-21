@@ -107,7 +107,7 @@ export const AIEnhancementsView: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-[#ededed] tracking-tight flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-emerald-400" /> AI Settings & Speech Engine
+            <Sparkles className="w-5 h-5 text-amber-400" /> AI Settings & Speech Engine
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
             Configure local on-device Whisper models and AI post-enhancements for clean formatting and command execution.
@@ -144,7 +144,7 @@ export const AIEnhancementsView: React.FC = () => {
           {/* Info Banner on Local Models */}
           <div className="p-4 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+              <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
                 <Info className="w-4 h-4" />
                 <span>100% Private & Offline Speech Recognition</span>
               </div>
@@ -152,7 +152,7 @@ export const AIEnhancementsView: React.FC = () => {
                 onClick={handleOpenFolder}
                 className="btn-swift-ghost text-xs"
               >
-                <FolderOpen className="w-3.5 h-3.5 text-emerald-400" /> Open Models Directory
+                <FolderOpen className="w-3.5 h-3.5 text-amber-400" /> Open Models Directory
               </button>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
@@ -171,7 +171,7 @@ export const AIEnhancementsView: React.FC = () => {
                 <div
                   key={model.id}
                   className={`p-4 rounded-2xl bg-[#121215] border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
-                    isSelected ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
+                    isSelected ? 'border-amber-400/50 ring-1 ring-amber-400/20 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
                   }`}
                 >
                   <div className="space-y-1.5 flex-1">
@@ -181,7 +181,7 @@ export const AIEnhancementsView: React.FC = () => {
                         {model.provider}
                       </span>
                       {model.isDefault && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                           Default
                         </span>
                       )}
@@ -200,7 +200,7 @@ export const AIEnhancementsView: React.FC = () => {
                       isSelected ? (
                         <button
                           disabled
-                          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5"
+                          className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5"
                         >
                           <Check className="w-3.5 h-3.5" /> Active Engine
                         </button>
@@ -220,7 +220,7 @@ export const AIEnhancementsView: React.FC = () => {
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                           <div
-                            className="h-full bg-emerald-500 rounded-full transition-all"
+                            className="h-full bg-amber-500 rounded-full transition-all"
                             style={{ width: `${downloadProgress[model.id]}%` }}
                           />
                         </div>
@@ -249,12 +249,12 @@ export const AIEnhancementsView: React.FC = () => {
             <button
               onClick={() => setSelectedAIProvider('local')}
               className={`p-4 rounded-2xl bg-[#121215] border text-left transition-all relative ${
-                selectedAIProvider === 'local' ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
+                selectedAIProvider === 'local' ? 'border-amber-400/50 ring-1 ring-amber-400/20 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white">Local AI (Ollama / GGUF)</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-semibold">
+                <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-mono font-semibold">
                   100% Offline
                 </span>
               </div>
@@ -267,12 +267,12 @@ export const AIEnhancementsView: React.FC = () => {
             <button
               onClick={() => setSelectedAIProvider('groq')}
               className={`p-4 rounded-2xl bg-[#121215] border text-left transition-all relative ${
-                selectedAIProvider === 'groq' ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
+                selectedAIProvider === 'groq' ? 'border-amber-400/50 ring-1 ring-amber-400/20 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-white">Groq LPU (Cloud)</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-semibold">
+                <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-mono font-semibold">
                   ⚡ 150ms
                 </span>
               </div>
@@ -285,7 +285,7 @@ export const AIEnhancementsView: React.FC = () => {
             <button
               onClick={() => setSelectedAIProvider('gemini')}
               className={`p-4 rounded-2xl bg-[#121215] border text-left transition-all relative ${
-                selectedAIProvider === 'gemini' ? 'border-white/40 ring-1 ring-white/10 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
+                selectedAIProvider === 'gemini' ? 'border-amber-400/50 ring-1 ring-amber-400/20 bg-[#16161a]' : 'border-[#1e1e24] hover:border-[#2a2a32]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -303,7 +303,7 @@ export const AIEnhancementsView: React.FC = () => {
           {/* Provider Configuration Panel */}
           <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-              <Key className="w-4 h-4 text-emerald-400" />
+              <Key className="w-4 h-4 text-amber-400" />
               API Key & Provider Configuration ({selectedAIProvider.toUpperCase()})
             </h2>
 
@@ -319,10 +319,10 @@ export const AIEnhancementsView: React.FC = () => {
                       placeholder={`Enter your ${selectedAIProvider} API key...`}
                       value={apiKeys[selectedAIProvider] || ''}
                       onChange={(e) => setApiKey(selectedAIProvider, e.target.value)}
-                      className="flex-1 bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 font-mono"
+                      className="flex-1 bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 font-mono"
                     />
                     <button className="btn-swift-ghost text-xs">
-                      <Shield className="w-3.5 h-3.5 text-emerald-400" /> Stored
+                      <Shield className="w-3.5 h-3.5 text-amber-400" /> Stored
                     </button>
                   </div>
                 </div>
@@ -336,7 +336,7 @@ export const AIEnhancementsView: React.FC = () => {
                   type="text"
                   value={selectedModelByProvider[selectedAIProvider] || (selectedAIProvider === 'local' ? 'qwen2.5-coder:7b' : 'llama-3.3-70b-versatile')}
                   onChange={(e) => setModelForProvider(selectedAIProvider, e.target.value)}
-                  className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 font-mono"
+                  className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 font-mono"
                 />
               </div>
             </div>
@@ -346,7 +346,7 @@ export const AIEnhancementsView: React.FC = () => {
           <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-200 flex items-center gap-2">
-                <Bot className="w-4 h-4 text-emerald-400" /> AI Enhancement Test Playground
+                <Bot className="w-4 h-4 text-amber-400" /> AI Enhancement Test Playground
               </h2>
               <span className="text-[11px] text-zinc-400">Instant verification</span>
             </div>
@@ -358,7 +358,7 @@ export const AIEnhancementsView: React.FC = () => {
                   rows={2}
                   value={testInput}
                   onChange={(e) => setTestInput(e.target.value)}
-                  className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/30 resize-none font-sans"
+                  className="w-full bg-[#09090b] border border-[#1e1e24] rounded-xl p-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 resize-none font-sans"
                 />
               </div>
 
@@ -374,8 +374,8 @@ export const AIEnhancementsView: React.FC = () => {
               </div>
 
               {testOutput && (
-                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Enhanced AI Output:
                   </div>
                   <p className="text-xs text-white leading-relaxed">{testOutput}</p>
