@@ -30,18 +30,18 @@ export const InteractiveNotchDemo: React.FC = () => {
     setTimeout(() => setMorphing(false), 450);
   };
 
-  // Foreground landscape zoom calculation (matches Supaste's foreground scroll-zoom)
-  const duneScale = 1 + Math.min(scrollY * 0.00045, 0.16);
-  const duneTranslateY = Math.min(scrollY * 0.035, 24);
+  // Foreground landscape zoom calculation (matches Supaste's scroll-zoom)
+  const duneScale = 1 + Math.min(scrollY * 0.00065, 0.28);
+  const duneTranslateY = Math.max(-25, -scrollY * 0.025);
 
   return (
     <div id="notch-demo" className="w-full relative pt-2 pb-0 flex flex-col items-center select-none bg-transparent">
       
       {/* Continuous Golden Landscape Container with warm ambient atmosphere */}
       <div 
-        className="w-full relative flex flex-col items-center px-4 pt-2 sm:pt-6 pb-24 sm:pb-36 overflow-hidden"
+        className="w-full relative flex flex-col items-center px-4 pt-2 sm:pt-6 pb-24 sm:pb-32 overflow-hidden"
         style={{
-          minHeight: '1200px'
+          minHeight: '880px'
         }}
       >
         {/* Soft Ambient Golden Light behind Frosted Glass */}
@@ -49,7 +49,7 @@ export const InteractiveNotchDemo: React.FC = () => {
         
         {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Deep Behind Foreground Mountain) */}
         <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden min-h-[720px] sm:min-h-[820px] md:min-h-[880px] flex flex-col justify-between mb-0"
+          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10.5] sm:aspect-[16/9.5] min-h-[580px] sm:min-h-[640px] flex flex-col justify-between mb-[-30px] sm:mb-[-45px]"
         >
           
           {/* Mac Top Bar inside the Frosted Glass Window */}
@@ -305,20 +305,20 @@ export const InteractiveNotchDemo: React.FC = () => {
           </div>
 
           {/* Bottom Clear Blur Area (Visible through the frosted glass above the dunes) */}
-          <div className="h-64 sm:h-80 md:h-[360px] pointer-events-none select-none"></div>
+          <div className="h-20 sm:h-28 pointer-events-none select-none"></div>
 
         </div>
 
-        {/* FOREGROUND MEADOW MOUNTAIN IMAGE (Solid Opaque over Glass, Soft White Fade at Base: z-30 with Scroll Zoom) */}
+        {/* FOREGROUND MEADOW MOUNTAIN IMAGE (Solid Opaque over Glass, Soft White Fade at Base: z-30 with Dynamic Scroll Zoom) */}
         <div 
           className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
           style={{
-            maskImage: 'linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 80%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 80%, transparent 100%)',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 65%, rgba(0,0,0,0.85) 82%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 65%, rgba(0,0,0,0.85) 82%, transparent 100%)',
           }}
         >
           <div 
-            className="w-full flex justify-center items-end transition-transform duration-150 ease-out"
+            className="w-full flex justify-center items-end"
             style={{
               transform: `scale(${duneScale}) translateY(${duneTranslateY}px)`,
               transformOrigin: 'bottom center',
@@ -328,7 +328,7 @@ export const InteractiveNotchDemo: React.FC = () => {
             <img 
               src="/foreground_hills.png" 
               alt="DopeNotch Meadow Mountain Landscape" 
-              className="w-full h-auto object-cover object-bottom translate-y-[6%] sm:translate-y-[10%] md:translate-y-[12%] drop-shadow-2xl" 
+              className="w-full h-auto object-cover object-bottom translate-y-1 sm:translate-y-2 drop-shadow-2xl" 
             />
           </div>
         </div>
