@@ -9,11 +9,9 @@ export const InteractiveNotchDemo: React.FC = () => {
   const [morphing, setMorphing] = useState<boolean>(false);
   const [scrollY, setScrollY] = useState<number>(0);
 
-  // Scroll-driven zoom & gentle parallax applied strictly to the foreground landscape (matching Supaste)
+  // Scroll-driven zoom — very subtle, 1% max, exactly like Supaste
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
+    const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -30,314 +28,314 @@ export const InteractiveNotchDemo: React.FC = () => {
     setTimeout(() => setMorphing(false), 450);
   };
 
-  // Foreground landscape zoom calculation (matches Supaste's scroll-zoom)
-  const duneScale = 1 + Math.min(scrollY * 0.00065, 0.28);
-  const duneTranslateY = Math.max(-25, -scrollY * 0.025);
+  // Very subtle scroll zoom matching Supaste — max ~8% scale increase, smooth parallax rise
+  const landscapeScale = 1 + Math.min(scrollY * 0.00008, 0.08);
+  const landscapeTranslateY = Math.max(-12, -scrollY * 0.012);
 
   return (
-    <div id="notch-demo" className="w-full relative pt-2 pb-0 flex flex-col items-center select-none bg-transparent">
+    <div id="notch-demo" className="w-full relative flex flex-col items-center select-none bg-transparent">
 
-      {/* Continuous Golden Landscape Container with warm ambient atmosphere */}
+      {/* ─── HERO WINDOW SECTION: exact Supaste structure ─────────────────────────── */}
+      {/*
+          Supaste layout:
+            - outer container: position relative, overflow hidden
+            - LAYER 1 (z-10): landscape image, absolute bottom-0, full width, height 600px — BEHIND glass
+            - LAYER 2 (z-20): frosted glass screen, max-w-[1000px], aspect-[16/9], rounded-[30px] — ON TOP
+            - LAYER 3 (z-30): white fade gradient, absolute bottom-0, height 200px — above landscape, clips into glass bottom
+      */}
       <div
-        className="w-full relative flex flex-col items-center px-4 pt-2 sm:pt-6 pb-20 overflow-hidden"
+        className="w-full relative flex flex-col items-center px-4 sm:px-6 overflow-hidden"
+        style={{ paddingTop: '40px', paddingBottom: '200px' }}
       >
-        {/* Soft Ambient Golden Light behind Frosted Glass */}
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-amber-400/20 blur-[140px] rounded-full pointer-events-none -z-10" />
 
-        {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Deep Behind Foreground Mountain) */}
+        {/* ── LAYER 1 (z-10): Landscape BEHIND glass ─────────────────────────── */}
         <div
-          className="w-full max-w-[1000px] rounded-[30px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/9] flex flex-col justify-between mb-[-30px] sm:mb-[-45px] bg-white/20 backdrop-blur-[10px]"
-          style={{
-            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2), inset 0 4px 8px rgba(255,255,255,0.25), inset 0 -20px 20px rgba(255,255,255,0.25), inset 0 -1px rgba(255,255,255,0.4)'
-          }}
-        >
-
-          {/* Mac Top Bar inside the Frosted Glass Window */}
-          <div className="h-10 px-5 flex items-center justify-between text-white/90 text-xs font-semibold select-none z-30 relative">
-
-            {/* Left:  DopeNotch */}
-            <div className="flex items-center gap-1.5 drop-shadow">
-              <AppleLogo className="w-3.5 h-3.5 text-white" />
-              <span className="font-semibold text-[13px] tracking-tight">DopeNotch</span>
-            </div>
-
-            {/* Right: Search, Wifi, 09:41 */}
-            <div className="flex items-center gap-3 drop-shadow text-[11px] font-medium">
-              <Search className="w-3.5 h-3.5 text-white/80 cursor-pointer hover:text-white" />
-              <Wifi className="w-3.5 h-3.5 text-white/80" />
-              <span className="font-mono font-semibold">09:41</span>
-            </div>
-
-          </div>
-
-          {/* HARDWARE NOTCH CUTTING DOWN FROM TOP OF GLASS WINDOW */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 flex items-start w-full justify-center pointer-events-none">
-
-            {/* Left Notch Ear SVG (Exact Apple Concave Curve) */}
-            <div className="w-5 h-5 flex-none relative overflow-visible -mr-[0.5px]">
-              <svg
-                viewBox="0 0 20 20"
-                className="w-5 h-5 fill-black flex-none"
-                style={{ transform: 'scaleX(-1)' }}
-                aria-hidden="true"
-              >
-                <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
-              </svg>
-            </div>
-
-            {/* NOTCH CONTAINER WITH SMOOTH SPRING MORPH (EXPANDED vs COMPACT ISLAND) */}
-            {isNotchExpanded ? (
-              /* --- STATE 1: EXPANDED SHELF (Exact 1:1 Supaste Layout) --- */
-              <div
-                className={`w-[92%] sm:w-[84%] md:w-[76%] lg:w-[68%] max-w-4xl bg-black text-white rounded-b-[24px] p-3.5 sm:p-4 shadow-2xl border-b border-x border-white/10 flex flex-col gap-3 pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${morphing ? 'scale-95 opacity-90' : 'scale-100 opacity-100'
-                  }`}
-              >
-
-                {/* Top Row: Search Bar + Action Icons + Dynamic Island Collapse Toggle */}
-                <div className="flex items-center justify-between gap-3 text-xs">
-
-                  {/* Search Input */}
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#18181f] border border-white/10 text-zinc-400 text-[11px] w-40 sm:w-56">
-                    <Search className="w-3 h-3 text-zinc-500" />
-                    <span>Search speech & clips...</span>
-                  </div>
-
-                  {/* Action Icons + Collapse Button */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-zinc-400">
-                    <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Starred">
-                      <Star className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Grid View">
-                      <LayoutGrid className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Full Library">
-                      <Maximize2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    {/* Apple Dynamic Island Collapse Button */}
-                    <button
-                      onClick={toggleNotch}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-amber-500/20 text-zinc-300 hover:text-amber-300 border border-white/10 transition-all text-[10px] font-semibold ml-1"
-                      title="Collapse to Dynamic Island"
-                    >
-                      <Minimize2 className="w-3 h-3" />
-                      <span className="hidden sm:inline">Island</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tabs with Count Badges (1:1 with Screenshot 4) */}
-                <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] pb-0.5 no-scrollbar">
-                  {[
-                    { name: 'Voice Dictations', count: 18 },
-                    { name: 'Prompts', count: 24 },
-                    { name: 'Brand Colors', count: 8 },
-                    { name: 'Code Snippets', count: 32 },
-                    { name: 'Inspirations', count: 14 },
-                  ].map((tab) => (
-                    <button
-                      key={tab.name}
-                      onClick={() => setActiveTab(tab.name)}
-                      className={`px-3 py-1 rounded-full font-medium flex items-center gap-1.5 transition-all flex-none ${activeTab === tab.name
-                        ? 'bg-white text-black font-semibold shadow-sm'
-                        : 'text-zinc-400 hover:text-white bg-[#18181f] hover:bg-zinc-800'
-                        }`}
-                    >
-                      <span>{tab.name}</span>
-                      <span className={`text-[9px] ${activeTab === tab.name ? 'text-zinc-500' : 'text-zinc-500'}`}>{tab.count}</span>
-                    </button>
-                  ))}
-                  <button className="p-1 rounded-full bg-[#18181f] text-zinc-400 hover:text-white flex-none">
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* Clip Cards Row (1:1 with media_1789956698808.png) */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
-
-                  {/* CARD 1: Portrait Photo of Smiling Woman */}
-                  <div
-                    onClick={() => handleCardClick('c1', 'Portrait asset screenshot')}
-                    className="rounded-2xl bg-cover bg-center border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between p-2.5 h-32 relative group overflow-hidden"
-                    style={{
-                      backgroundImage: `url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80')`
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent"></div>
-                    <div className="relative z-10 flex justify-end">
-                      {copiedId === 'c1' && <Check className="w-3.5 h-3.5 text-amber-400 drop-shadow" />}
-                    </div>
-                    <div className="relative z-10 flex items-center justify-between text-[9px] text-zinc-300 font-mono">
-                      <span>5 min ago</span>
-                      <span>3.5 MB</span>
-                    </div>
-                  </div>
-
-                  {/* CARD 2: Minneapolis Address Snippet */}
-                  <div
-                    onClick={() => handleCardClick('c2', 'Minneapolis 55410, 2041 Rocket Drive United States')}
-                    className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between h-32 group"
-                  >
-                    <div>
-                      <span className="text-[10px] text-zinc-300 font-medium block leading-snug">
-                        Minneapolis 55410, 2041 Rocket Drive United States
-                      </span>
-                    </div>
-                    {copiedId === 'c2' && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                    <div className="flex items-center justify-between text-[9px] text-zinc-500">
-                      <span className="flex items-center gap-1 font-mono text-zinc-400">
-                        Chrome
-                      </span>
-                      <span>19 min ago</span>
-                    </div>
-                  </div>
-
-                  {/* CARD 3: DopeNotch Curated Apps Bookmark */}
-                  <div
-                    onClick={() => handleCardClick('c3', 'A curated shelf of beautifully designed macOS apps.')}
-                    className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between h-32 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-medium text-zinc-300 leading-snug line-clamp-2">
-                        A curated shelf of beautifully designed macOS apps.
-                      </p>
-                      {copiedId === 'c3' && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                    </div>
-                    <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-white/10 flex items-center justify-center text-amber-400 text-xs font-black">
-                      dope
-                    </div>
-                    <div className="flex items-center justify-between text-[9px] text-zinc-500">
-                      <span>dopenotch.com</span>
-                      <span>23 min ago</span>
-                    </div>
-                  </div>
-
-                  {/* CARD 4: Signature Amber Gold Swatch (#F59E0B) */}
-                  <div
-                    onClick={() => handleCardClick('c4', '#F59E0B')}
-                    className="p-3 rounded-2xl bg-[#f59e0b] hover:brightness-110 cursor-pointer transition-all flex flex-col justify-between h-32 text-black font-bold shadow-lg"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-mono font-extrabold tracking-tight">#F59E0B</span>
-                      {copiedId === 'c4' && <Check className="w-4 h-4 text-black" />}
-                    </div>
-                    <div className="text-[10px] font-bold opacity-90">
-                      DopeNotch Gold
-                    </div>
-                    <div className="text-[9px] opacity-80 font-mono">
-                      35 min ago
-                    </div>
-                  </div>
-
-                  {/* CARD 5: Live Whisper Voice Dictation Clip */}
-                  <div
-                    onClick={() => handleCardClick('c5', 'Voice dictation: Summarize key engineering milestones for Q4 launch')}
-                    className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between group h-32 relative overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold text-zinc-300 leading-tight line-clamp-2">Voice: "Summarize key Q4 milestones"</span>
-                      {copiedId === 'c5' && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                    </div>
-
-                    <div className="p-1.5 rounded-lg bg-black/60 border border-white/5 flex items-center justify-center">
-                      <div className="flex items-center gap-1">
-                        {[8, 16, 12, 22, 14, 18].map((h, i) => (
-                          <div key={i} className="w-1 bg-amber-400 rounded-full animate-pulse" style={{ height: `${h}px` }}></div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[9px] text-zinc-500 pt-1">
-                      <span className="font-mono text-amber-400/80">Whisper Local</span>
-                      <span>Just now</span>
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-            ) : (
-              /* --- STATE 2: COMPACT IDLE DYNAMIC ISLAND NOTCH (Apple iOS / macOS Style) --- */
-              <div
-                onClick={toggleNotch}
-                className="w-[260px] sm:w-[320px] h-[38px] bg-black text-white rounded-b-[18px] px-3.5 flex items-center justify-between shadow-2xl border-b border-x border-white/10 pointer-events-auto cursor-pointer hover:bg-zinc-950 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105 group"
-                title="Click to expand DopeNotch Shelf"
-              >
-                {/* Left: Animated Audio Pulse / Status Dot */}
-                <div className="flex items-center gap-1.5">
-                  <div className="relative flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                    <span className="w-3.5 h-3.5 rounded-full bg-amber-400/40 absolute animate-ping"></span>
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    {[6, 11, 8, 14, 9].map((h, i) => (
-                      <div key={i} className="w-0.5 bg-amber-400 rounded-full animate-pulse" style={{ height: `${h}px` }}></div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Center: Dynamic Island Prompt */}
-                <div className="flex items-center gap-1 text-[11px] font-medium text-white/90 group-hover:text-amber-300 transition-colors">
-                  <span>⌥ + Space to Dictate</span>
-                </div>
-
-                {/* Right: Expand Hint with Shimmer Icon */}
-                <div className="flex items-center gap-1 text-[10px] text-zinc-400 group-hover:text-white transition-colors">
-                  <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
-                  <span className="text-[10px] font-mono">Shelf</span>
-                </div>
-              </div>
-            )}
-
-            {/* Right Notch Ear SVG (Exact Apple Concave Curve) */}
-            <div className="w-5 h-5 flex-none relative overflow-visible -ml-[0.5px]">
-              <svg
-                viewBox="0 0 20 20"
-                className="w-5 h-5 fill-black flex-none"
-                aria-hidden="true"
-              >
-                <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
-              </svg>
-            </div>
-
-          </div>
-
-          {/* Bottom Clear Blur Area (Visible through the frosted glass above the dunes) */}
-          <div className="h-20 sm:h-28 pointer-events-none select-none"></div>
-
-        </div>
-
-        {/* FOREGROUND MEADOW MOUNTAIN IMAGE (Solid Opaque over Glass, Soft White Fade at Base: z-30 with Dynamic Scroll Zoom) */}
-        <div
-          className="w-full h-[600px] absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
-          style={{
-            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, rgba(0,0,0,0.8) 85%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, rgba(0,0,0,0.8) 85%, transparent 100%)',
-          }}
+          className="absolute bottom-0 left-0 right-0 w-full pointer-events-none select-none overflow-hidden"
+          style={{ height: '600px', zIndex: 10 }}
         >
           <div
-            className="w-full flex justify-center items-end"
             style={{
-              transform: `scale(${duneScale}) translateY(${duneTranslateY}px)`,
+              width: '100%',
+              height: '100%',
+              transform: `scale(${landscapeScale}) translateY(${landscapeTranslateY}px)`,
               transformOrigin: 'bottom center',
-              willChange: 'transform'
+              willChange: 'transform',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
             }}
           >
             <img
               src="/foreground_hills.png"
-              alt="DopeNotch Meadow Mountain Landscape"
-              className="w-full h-auto object-cover object-bottom translate-y-1 sm:translate-y-2 drop-shadow-2xl"
+              alt="DopeNotch Landscape"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'bottom center',
+                display: 'block',
+              }}
             />
           </div>
         </div>
 
-        {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Exact Supaste 200px fade) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-[200px] bg-gradient-to-t from-white via-white/90 35% via-white/60 70% to-transparent z-35 pointer-events-none" />
+        {/* ── LAYER 3 (z-30): White bottom fade — above landscape, below glass edge ─ */}
+        <div
+          className="absolute bottom-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: '200px',
+            zIndex: 30,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 100%)',
+          }}
+        />
+
+        {/* ── LAYER 2 (z-20): Frosted Glass Mac Screen — ON TOP of landscape ────── */}
+        <div
+          className="w-full relative"
+          style={{ maxWidth: '1000px', zIndex: 20 }}
+        >
+          <div
+            className="w-full frosted-glass-mac overflow-hidden flex flex-col"
+            style={{
+              aspectRatio: '16 / 9',
+              borderRadius: '30px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              boxShadow: [
+                'inset 0 2px 4px rgba(255,255,255,0.2)',
+                'inset 0 4px 8px rgba(255,255,255,0.25)',
+                'inset 0 -20px 20px rgba(255,255,255,0.25)',
+                'inset 0 -1px rgba(255,255,255,0.4)',
+                '0 20px 60px rgba(0,0,0,0.12)',
+              ].join(', '),
+            }}
+          >
+
+            {/* Mac Top Bar inside Glass Window */}
+            <div className="h-10 px-5 flex items-center justify-between text-white/90 text-xs font-semibold select-none relative flex-shrink-0">
+              {/* Left: DopeNotch */}
+              <div className="flex items-center gap-1.5 drop-shadow">
+                <AppleLogo className="w-3.5 h-3.5 text-white" />
+                <span className="font-semibold text-[13px] tracking-tight">DopeNotch</span>
+              </div>
+              {/* Right: Search, Wifi, Time */}
+              <div className="flex items-center gap-3 drop-shadow text-[11px] font-medium">
+                <Search className="w-3.5 h-3.5 text-white/80 cursor-pointer hover:text-white" />
+                <Wifi className="w-3.5 h-3.5 text-white/80" />
+                <span className="font-mono font-semibold">09:41</span>
+              </div>
+            </div>
+
+            {/* HARDWARE NOTCH — cuts down from top of glass window */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 flex items-start w-full justify-center pointer-events-none">
+
+              {/* Left Notch Ear SVG */}
+              <div className="w-5 h-5 flex-none relative overflow-visible -mr-[0.5px]">
+                <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black flex-none" style={{ transform: 'scaleX(-1)' }} aria-hidden="true">
+                  <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
+                </svg>
+              </div>
+
+              {/* NOTCH CONTENT */}
+              {isNotchExpanded ? (
+                /* --- EXPANDED SHELF --- */
+                <div
+                  className={`w-[92%] sm:w-[84%] md:w-[76%] lg:w-[68%] max-w-4xl bg-black text-white rounded-b-[24px] p-3.5 sm:p-4 shadow-2xl border-b border-x border-white/10 flex flex-col gap-3 pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${morphing ? 'scale-95 opacity-90' : 'scale-100 opacity-100'}`}
+                >
+                  {/* Top Row: Search + Actions */}
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#18181f] border border-white/10 text-zinc-400 text-[11px] w-40 sm:w-56">
+                      <Search className="w-3 h-3 text-zinc-500" />
+                      <span>Search speech & clips...</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-zinc-400">
+                      <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Starred">
+                        <Star className="w-3.5 h-3.5" />
+                      </button>
+                      <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Grid View">
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                      </button>
+                      <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Full Library">
+                        <Maximize2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={toggleNotch}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-amber-500/20 text-zinc-300 hover:text-amber-300 border border-white/10 transition-all text-[10px] font-semibold ml-1"
+                        title="Collapse to Dynamic Island"
+                      >
+                        <Minimize2 className="w-3 h-3" />
+                        <span className="hidden sm:inline">Island</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] pb-0.5 no-scrollbar">
+                    {[
+                      { name: 'Voice Dictations', count: 18 },
+                      { name: 'Prompts', count: 24 },
+                      { name: 'Brand Colors', count: 8 },
+                      { name: 'Code Snippets', count: 32 },
+                      { name: 'Inspirations', count: 14 },
+                    ].map((tab) => (
+                      <button
+                        key={tab.name}
+                        onClick={() => setActiveTab(tab.name)}
+                        className={`px-3 py-1 rounded-full font-medium flex items-center gap-1.5 transition-all flex-none ${activeTab === tab.name
+                          ? 'bg-white text-black font-semibold shadow-sm'
+                          : 'text-zinc-400 hover:text-white bg-[#18181f] hover:bg-zinc-800'
+                          }`}
+                      >
+                        <span>{tab.name}</span>
+                        <span className="text-[9px] text-zinc-500">{tab.count}</span>
+                      </button>
+                    ))}
+                    <button className="p-1 rounded-full bg-[#18181f] text-zinc-400 hover:text-white flex-none">
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Clip Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
+
+                    {/* CARD 1: Portrait */}
+                    <div
+                      onClick={() => handleCardClick('c1', 'Portrait asset screenshot')}
+                      className="rounded-2xl bg-cover bg-center border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between p-2.5 h-32 relative group overflow-hidden"
+                      style={{ backgroundImage: `url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80')` }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+                      <div className="relative z-10 flex justify-end">
+                        {copiedId === 'c1' && <Check className="w-3.5 h-3.5 text-amber-400 drop-shadow" />}
+                      </div>
+                      <div className="relative z-10 flex items-center justify-between text-[9px] text-zinc-300 font-mono">
+                        <span>5 min ago</span>
+                        <span>3.5 MB</span>
+                      </div>
+                    </div>
+
+                    {/* CARD 2: Address */}
+                    <div
+                      onClick={() => handleCardClick('c2', 'Minneapolis 55410, 2041 Rocket Drive United States')}
+                      className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between h-32 group"
+                    >
+                      <div>
+                        <span className="text-[10px] text-zinc-300 font-medium block leading-snug">
+                          Minneapolis 55410, 2041 Rocket Drive United States
+                        </span>
+                      </div>
+                      {copiedId === 'c2' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                      <div className="flex items-center justify-between text-[9px] text-zinc-500">
+                        <span className="flex items-center gap-1 font-mono text-zinc-400">Chrome</span>
+                        <span>19 min ago</span>
+                      </div>
+                    </div>
+
+                    {/* CARD 3: Bookmark */}
+                    <div
+                      onClick={() => handleCardClick('c3', 'A curated shelf of beautifully designed macOS apps.')}
+                      className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between h-32 group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-medium text-zinc-300 leading-snug line-clamp-2">
+                          A curated shelf of beautifully designed macOS apps.
+                        </p>
+                        {copiedId === 'c3' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                      </div>
+                      <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-white/10 flex items-center justify-center text-amber-400 text-xs font-black">
+                        dope
+                      </div>
+                      <div className="flex items-center justify-between text-[9px] text-zinc-500">
+                        <span>dopenotch.com</span>
+                        <span>23 min ago</span>
+                      </div>
+                    </div>
+
+                    {/* CARD 4: Color Swatch */}
+                    <div
+                      onClick={() => handleCardClick('c4', '#F59E0B')}
+                      className="p-3 rounded-2xl bg-[#f59e0b] hover:brightness-110 cursor-pointer transition-all flex flex-col justify-between h-32 text-black font-bold shadow-lg"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-mono font-extrabold tracking-tight">#F59E0B</span>
+                        {copiedId === 'c4' && <Check className="w-4 h-4 text-black" />}
+                      </div>
+                      <div className="text-[10px] font-bold opacity-90">DopeNotch Gold</div>
+                      <div className="text-[9px] opacity-80 font-mono">35 min ago</div>
+                    </div>
+
+                    {/* CARD 5: Voice Clip */}
+                    <div
+                      onClick={() => handleCardClick('c5', 'Voice dictation: Summarize key engineering milestones for Q4 launch')}
+                      className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between group h-32 relative overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold text-zinc-300 leading-tight line-clamp-2">Voice: "Summarize key Q4 milestones"</span>
+                        {copiedId === 'c5' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                      </div>
+                      <div className="p-1.5 rounded-lg bg-black/60 border border-white/5 flex items-center justify-center">
+                        <div className="flex items-center gap-1">
+                          {[8, 16, 12, 22, 14, 18].map((h, i) => (
+                            <div key={i} className="w-1 bg-amber-400 rounded-full animate-pulse" style={{ height: `${h}px` }} />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[9px] text-zinc-500 pt-1">
+                        <span className="font-mono text-amber-400/80">Whisper Local</span>
+                        <span>Just now</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              ) : (
+                /* --- COMPACT DYNAMIC ISLAND --- */
+                <div
+                  onClick={toggleNotch}
+                  className="w-[260px] sm:w-[320px] h-[38px] bg-black text-white rounded-b-[18px] px-3.5 flex items-center justify-between shadow-2xl border-b border-x border-white/10 pointer-events-auto cursor-pointer hover:bg-zinc-950 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105 group"
+                  title="Click to expand DopeNotch Shelf"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative flex items-center justify-center">
+                      <span className="w-2 h-2 rounded-full bg-amber-400" />
+                      <span className="w-3.5 h-3.5 rounded-full bg-amber-400/40 absolute animate-ping" />
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      {[6, 11, 8, 14, 9].map((h, i) => (
+                        <div key={i} className="w-0.5 bg-amber-400 rounded-full animate-pulse" style={{ height: `${h}px` }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-white/90 group-hover:text-amber-300 transition-colors">
+                    <span>⌥ + Space to Dictate</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-zinc-400 group-hover:text-white transition-colors">
+                    <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                    <span className="text-[10px] font-mono">Shelf</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Right Notch Ear SVG */}
+              <div className="w-5 h-5 flex-none relative overflow-visible -ml-[0.5px]">
+                <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black flex-none" aria-hidden="true">
+                  <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Bottom spacer inside glass — fills height so landscape shows through lower portion */}
+            <div className="flex-1" />
+
+          </div>
+        </div>
+        {/* ─────────────────────────────────────────────────────────────────────────── */}
 
       </div>
 
-      {/* CIRCULAR AWARDS BADGES ROW AT BOTTOM OF WALLPAPER (Grounding Layer: z-40) */}
-      <div className="w-full bg-white flex justify-center py-6 border-b border-black/5 relative z-40">
+      {/* CIRCULAR AWARDS BADGES ROW */}
+      <div className="w-full bg-white flex justify-center py-6 border-b border-black/5 relative" style={{ zIndex: 40 }}>
         <div className="flex items-center justify-center gap-6 sm:gap-10 overflow-hidden px-4 opacity-70 grayscale hover:grayscale-0 transition-all">
           <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
             <span>Product Hunt</span>
