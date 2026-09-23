@@ -47,9 +47,9 @@ export const InteractiveNotchDemo: React.FC = () => {
         {/* Soft Ambient Golden Light behind Frosted Glass */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[720px] h-[520px] bg-amber-400/20 blur-[130px] rounded-full pointer-events-none -z-10" />
         
-        {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Behind Foreground Dunes) */}
+        {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Deep Behind Foreground Mountain) */}
         <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10.5] sm:aspect-[16/9.5] flex flex-col justify-between mb-0 sm:mb-2"
+          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/11] sm:aspect-[16/10] min-h-[560px] sm:min-h-[640px] flex flex-col justify-between mb-[-40px] sm:mb-[-60px]"
         >
           
           {/* Mac Top Bar inside the Frosted Glass Window */}
@@ -309,14 +309,8 @@ export const InteractiveNotchDemo: React.FC = () => {
 
         </div>
 
-        {/* FOREGROUND GOLDEN DUNES IMAGE (In Front of the Glass Screen: z-30 with Scroll Zoom) */}
-        <div 
-          className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
-          style={{
-            maskImage: 'linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.85) 68%, transparent 96%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 50%, rgba(0,0,0,0.85) 68%, transparent 96%)',
-          }}
-        >
+        {/* FOREGROUND MEADOW MOUNTAIN IMAGE (100% Solid & Opaque In Front of Glass Screen: z-30 with Scroll Zoom) */}
+        <div className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden">
           <div 
             className="w-full flex justify-center items-end transition-transform duration-150 ease-out"
             style={{
@@ -327,14 +321,14 @@ export const InteractiveNotchDemo: React.FC = () => {
           >
             <img 
               src="/foreground_hills.png" 
-              alt="DopeNotch Golden Dunes Landscape" 
-              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom translate-y-[6%] sm:translate-y-[8%] md:translate-y-[10%] drop-shadow-2xl" 
+              alt="DopeNotch Meadow Mountain Landscape" 
+              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom translate-y-[4%] sm:translate-y-[6%] md:translate-y-[8%] drop-shadow-2xl" 
             />
           </div>
         </div>
 
         {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Zero Hard Edges) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-40 sm:h-56 bg-gradient-to-t from-white via-white/80 to-transparent z-35 pointer-events-none" />
+        <div className="w-full absolute bottom-0 left-0 right-0 h-36 sm:h-52 bg-gradient-to-t from-white via-white/85 to-transparent z-35 pointer-events-none" />
 
       </div>
 
