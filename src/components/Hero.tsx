@@ -26,7 +26,7 @@ export const Hero: React.FC = () => {
       </p>
 
       {/* Download for macOS (Solid Black Pill Button) */}
-      <div className="flex flex-col items-center gap-3.5 mb-6 px-4">
+      <div className="flex flex-col items-center gap-3.5 mb-12 sm:mb-16 md:mb-20 px-4">
         <a 
           href="#pricing"
           className="px-7 py-3 rounded-full text-xs sm:text-sm font-bold bg-black text-white hover:bg-zinc-900 border border-white/15 transition-all hover:scale-105 active:scale-95 shadow-2xl flex items-center gap-2.5"

@@ -39,17 +39,17 @@ export const InteractiveNotchDemo: React.FC = () => {
       
       {/* Continuous Golden Landscape Container with warm ambient atmosphere */}
       <div 
-        className="w-full relative flex flex-col items-center px-4 pt-4 sm:pt-8 pb-28 sm:pb-36 overflow-hidden"
+        className="w-full relative flex flex-col items-center px-4 pt-2 sm:pt-6 pb-24 sm:pb-36 overflow-hidden"
         style={{
-          minHeight: '800px'
+          minHeight: '1200px'
         }}
       >
         {/* Soft Ambient Golden Light behind Frosted Glass */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[720px] h-[520px] bg-amber-400/20 blur-[130px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-amber-400/25 blur-[140px] rounded-full pointer-events-none -z-10" />
         
         {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Deep Behind Foreground Mountain) */}
         <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/11] sm:aspect-[16/10] min-h-[560px] sm:min-h-[640px] flex flex-col justify-between mb-[-40px] sm:mb-[-60px]"
+          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden min-h-[720px] sm:min-h-[820px] md:min-h-[880px] flex flex-col justify-between mb-0"
         >
           
           {/* Mac Top Bar inside the Frosted Glass Window */}
@@ -305,7 +305,7 @@ export const InteractiveNotchDemo: React.FC = () => {
           </div>
 
           {/* Bottom Clear Blur Area (Visible through the frosted glass above the dunes) */}
-          <div className="h-28 sm:h-40 pointer-events-none select-none"></div>
+          <div className="h-64 sm:h-80 md:h-[360px] pointer-events-none select-none"></div>
 
         </div>
 
@@ -328,7 +328,7 @@ export const InteractiveNotchDemo: React.FC = () => {
             <img 
               src="/foreground_hills.png" 
               alt="DopeNotch Meadow Mountain Landscape" 
-              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom drop-shadow-2xl" 
+              className="w-full h-auto object-cover object-bottom translate-y-[6%] sm:translate-y-[10%] md:translate-y-[12%] drop-shadow-2xl" 
             />
           </div>
         </div>
