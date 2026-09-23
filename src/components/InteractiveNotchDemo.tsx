@@ -36,25 +36,25 @@ export const InteractiveNotchDemo: React.FC = () => {
 
   return (
     <div id="notch-demo" className="w-full relative pt-2 pb-0 flex flex-col items-center select-none bg-transparent">
-      
+
       {/* Continuous Golden Landscape Container with warm ambient atmosphere */}
-      <div 
-        className="w-full relative flex flex-col items-center px-4 pt-2 sm:pt-6 pb-24 sm:pb-32 overflow-hidden"
-        style={{
-          minHeight: '880px'
-        }}
+      <div
+        className="w-full relative flex flex-col items-center px-4 pt-2 sm:pt-6 pb-20 overflow-hidden"
       >
         {/* Soft Ambient Golden Light behind Frosted Glass */}
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-amber-400/25 blur-[140px] rounded-full pointer-events-none -z-10" />
-        
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-amber-400/20 blur-[140px] rounded-full pointer-events-none -z-10" />
+
         {/* FROSTED GLASS MAC SCREEN (Middle Layer: z-20, Deep Behind Foreground Mountain) */}
-        <div 
-          className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/10.5] sm:aspect-[16/9.5] min-h-[580px] sm:min-h-[640px] flex flex-col justify-between mb-[-30px] sm:mb-[-45px]"
+        <div
+          className="w-full max-w-[1000px] rounded-[30px] frosted-glass-mac relative z-20 shadow-2xl overflow-hidden aspect-[16/9] flex flex-col justify-between mb-[-30px] sm:mb-[-45px] bg-white/20 backdrop-blur-[10px]"
+          style={{
+            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2), inset 0 4px 8px rgba(255,255,255,0.25), inset 0 -20px 20px rgba(255,255,255,0.25), inset 0 -1px rgba(255,255,255,0.4)'
+          }}
         >
-          
+
           {/* Mac Top Bar inside the Frosted Glass Window */}
           <div className="h-10 px-5 flex items-center justify-between text-white/90 text-xs font-semibold select-none z-30 relative">
-            
+
             {/* Left:  DopeNotch */}
             <div className="flex items-center gap-1.5 drop-shadow">
               <AppleLogo className="w-3.5 h-3.5 text-white" />
@@ -72,12 +72,12 @@ export const InteractiveNotchDemo: React.FC = () => {
 
           {/* HARDWARE NOTCH CUTTING DOWN FROM TOP OF GLASS WINDOW */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 flex items-start w-full justify-center pointer-events-none">
-            
+
             {/* Left Notch Ear SVG (Exact Apple Concave Curve) */}
             <div className="w-5 h-5 flex-none relative overflow-visible -mr-[0.5px]">
-              <svg 
-                viewBox="0 0 20 20" 
-                className="w-5 h-5 fill-black flex-none" 
+              <svg
+                viewBox="0 0 20 20"
+                className="w-5 h-5 fill-black flex-none"
                 style={{ transform: 'scaleX(-1)' }}
                 aria-hidden="true"
               >
@@ -88,15 +88,14 @@ export const InteractiveNotchDemo: React.FC = () => {
             {/* NOTCH CONTAINER WITH SMOOTH SPRING MORPH (EXPANDED vs COMPACT ISLAND) */}
             {isNotchExpanded ? (
               /* --- STATE 1: EXPANDED SHELF (Exact 1:1 Supaste Layout) --- */
-              <div 
-                className={`w-[92%] sm:w-[84%] md:w-[76%] lg:w-[68%] max-w-4xl bg-black text-white rounded-b-[24px] p-3.5 sm:p-4 shadow-2xl border-b border-x border-white/10 flex flex-col gap-3 pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                  morphing ? 'scale-95 opacity-90' : 'scale-100 opacity-100'
-                }`}
+              <div
+                className={`w-[92%] sm:w-[84%] md:w-[76%] lg:w-[68%] max-w-4xl bg-black text-white rounded-b-[24px] p-3.5 sm:p-4 shadow-2xl border-b border-x border-white/10 flex flex-col gap-3 pointer-events-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${morphing ? 'scale-95 opacity-90' : 'scale-100 opacity-100'
+                  }`}
               >
-                
+
                 {/* Top Row: Search Bar + Action Icons + Dynamic Island Collapse Toggle */}
                 <div className="flex items-center justify-between gap-3 text-xs">
-                  
+
                   {/* Search Input */}
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#18181f] border border-white/10 text-zinc-400 text-[11px] w-40 sm:w-56">
                     <Search className="w-3 h-3 text-zinc-500" />
@@ -114,9 +113,9 @@ export const InteractiveNotchDemo: React.FC = () => {
                     <button className="p-1.5 rounded-full hover:text-amber-400 hover:bg-white/5 transition-colors" title="Full Library">
                       <Maximize2 className="w-3.5 h-3.5" />
                     </button>
-                    
+
                     {/* Apple Dynamic Island Collapse Button */}
-                    <button 
+                    <button
                       onClick={toggleNotch}
                       className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-amber-500/20 text-zinc-300 hover:text-amber-300 border border-white/10 transition-all text-[10px] font-semibold ml-1"
                       title="Collapse to Dynamic Island"
@@ -139,11 +138,10 @@ export const InteractiveNotchDemo: React.FC = () => {
                     <button
                       key={tab.name}
                       onClick={() => setActiveTab(tab.name)}
-                      className={`px-3 py-1 rounded-full font-medium flex items-center gap-1.5 transition-all flex-none ${
-                        activeTab === tab.name 
-                          ? 'bg-white text-black font-semibold shadow-sm' 
-                          : 'text-zinc-400 hover:text-white bg-[#18181f] hover:bg-zinc-800'
-                      }`}
+                      className={`px-3 py-1 rounded-full font-medium flex items-center gap-1.5 transition-all flex-none ${activeTab === tab.name
+                        ? 'bg-white text-black font-semibold shadow-sm'
+                        : 'text-zinc-400 hover:text-white bg-[#18181f] hover:bg-zinc-800'
+                        }`}
                     >
                       <span>{tab.name}</span>
                       <span className={`text-[9px] ${activeTab === tab.name ? 'text-zinc-500' : 'text-zinc-500'}`}>{tab.count}</span>
@@ -156,9 +154,9 @@ export const InteractiveNotchDemo: React.FC = () => {
 
                 {/* Clip Cards Row (1:1 with media_1789956698808.png) */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
-                  
+
                   {/* CARD 1: Portrait Photo of Smiling Woman */}
-                  <div 
+                  <div
                     onClick={() => handleCardClick('c1', 'Portrait asset screenshot')}
                     className="rounded-2xl bg-cover bg-center border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between p-2.5 h-32 relative group overflow-hidden"
                     style={{
@@ -176,7 +174,7 @@ export const InteractiveNotchDemo: React.FC = () => {
                   </div>
 
                   {/* CARD 2: Minneapolis Address Snippet */}
-                  <div 
+                  <div
                     onClick={() => handleCardClick('c2', 'Minneapolis 55410, 2041 Rocket Drive United States')}
                     className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between h-32 group"
                   >
@@ -195,7 +193,7 @@ export const InteractiveNotchDemo: React.FC = () => {
                   </div>
 
                   {/* CARD 3: DopeNotch Curated Apps Bookmark */}
-                  <div 
+                  <div
                     onClick={() => handleCardClick('c3', 'A curated shelf of beautifully designed macOS apps.')}
                     className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between h-32 group"
                   >
@@ -215,7 +213,7 @@ export const InteractiveNotchDemo: React.FC = () => {
                   </div>
 
                   {/* CARD 4: Signature Amber Gold Swatch (#F59E0B) */}
-                  <div 
+                  <div
                     onClick={() => handleCardClick('c4', '#F59E0B')}
                     className="p-3 rounded-2xl bg-[#f59e0b] hover:brightness-110 cursor-pointer transition-all flex flex-col justify-between h-32 text-black font-bold shadow-lg"
                   >
@@ -232,7 +230,7 @@ export const InteractiveNotchDemo: React.FC = () => {
                   </div>
 
                   {/* CARD 5: Live Whisper Voice Dictation Clip */}
-                  <div 
+                  <div
                     onClick={() => handleCardClick('c5', 'Voice dictation: Summarize key engineering milestones for Q4 launch')}
                     className="p-3 rounded-2xl bg-[#141419] hover:bg-[#1a1a20] border border-white/5 hover:border-amber-500/50 cursor-pointer transition-all flex flex-col justify-between group h-32 relative overflow-hidden"
                   >
@@ -240,7 +238,7 @@ export const InteractiveNotchDemo: React.FC = () => {
                       <span className="text-[10px] font-semibold text-zinc-300 leading-tight line-clamp-2">Voice: "Summarize key Q4 milestones"</span>
                       {copiedId === 'c5' && <Check className="w-3.5 h-3.5 text-amber-400" />}
                     </div>
-                    
+
                     <div className="p-1.5 rounded-lg bg-black/60 border border-white/5 flex items-center justify-center">
                       <div className="flex items-center gap-1">
                         {[8, 16, 12, 22, 14, 18].map((h, i) => (
@@ -260,7 +258,7 @@ export const InteractiveNotchDemo: React.FC = () => {
               </div>
             ) : (
               /* --- STATE 2: COMPACT IDLE DYNAMIC ISLAND NOTCH (Apple iOS / macOS Style) --- */
-              <div 
+              <div
                 onClick={toggleNotch}
                 className="w-[260px] sm:w-[320px] h-[38px] bg-black text-white rounded-b-[18px] px-3.5 flex items-center justify-between shadow-2xl border-b border-x border-white/10 pointer-events-auto cursor-pointer hover:bg-zinc-950 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105 group"
                 title="Click to expand DopeNotch Shelf"
@@ -293,9 +291,9 @@ export const InteractiveNotchDemo: React.FC = () => {
 
             {/* Right Notch Ear SVG (Exact Apple Concave Curve) */}
             <div className="w-5 h-5 flex-none relative overflow-visible -ml-[0.5px]">
-              <svg 
-                viewBox="0 0 20 20" 
-                className="w-5 h-5 fill-black flex-none" 
+              <svg
+                viewBox="0 0 20 20"
+                className="w-5 h-5 fill-black flex-none"
                 aria-hidden="true"
               >
                 <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
@@ -310,14 +308,14 @@ export const InteractiveNotchDemo: React.FC = () => {
         </div>
 
         {/* FOREGROUND MEADOW MOUNTAIN IMAGE (Solid Opaque over Glass, Soft White Fade at Base: z-30 with Dynamic Scroll Zoom) */}
-        <div 
-          className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
+        <div
+          className="w-full h-[600px] absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
           style={{
-            maskImage: 'linear-gradient(to bottom, black 0%, black 65%, rgba(0,0,0,0.85) 82%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 65%, rgba(0,0,0,0.85) 82%, transparent 100%)',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, rgba(0,0,0,0.8) 85%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, rgba(0,0,0,0.8) 85%, transparent 100%)',
           }}
         >
-          <div 
+          <div
             className="w-full flex justify-center items-end"
             style={{
               transform: `scale(${duneScale}) translateY(${duneTranslateY}px)`,
@@ -325,16 +323,16 @@ export const InteractiveNotchDemo: React.FC = () => {
               willChange: 'transform'
             }}
           >
-            <img 
-              src="/foreground_hills.png" 
-              alt="DopeNotch Meadow Mountain Landscape" 
-              className="w-full h-auto object-cover object-bottom translate-y-1 sm:translate-y-2 drop-shadow-2xl" 
+            <img
+              src="/foreground_hills.png"
+              alt="DopeNotch Meadow Mountain Landscape"
+              className="w-full h-auto object-cover object-bottom translate-y-1 sm:translate-y-2 drop-shadow-2xl"
             />
           </div>
         </div>
 
-        {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Zero Hard Edges) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-56 sm:h-80 bg-gradient-to-t from-white via-white/90 35% via-white/60 70% to-transparent z-35 pointer-events-none" />
+        {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Exact Supaste 200px fade) */}
+        <div className="w-full absolute bottom-0 left-0 right-0 h-[200px] bg-gradient-to-t from-white via-white/90 35% via-white/60 70% to-transparent z-35 pointer-events-none" />
 
       </div>
 
