@@ -309,8 +309,14 @@ export const InteractiveNotchDemo: React.FC = () => {
 
         </div>
 
-        {/* FOREGROUND MEADOW MOUNTAIN IMAGE (100% Solid & Opaque In Front of Glass Screen: z-30 with Scroll Zoom) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden">
+        {/* FOREGROUND MEADOW MOUNTAIN IMAGE (Solid Opaque over Glass, Soft White Fade at Base: z-30 with Scroll Zoom) */}
+        <div 
+          className="w-full absolute bottom-0 left-0 right-0 z-30 pointer-events-none select-none flex justify-center items-end overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 80%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, rgba(0,0,0,0.8) 80%, transparent 100%)',
+          }}
+        >
           <div 
             className="w-full flex justify-center items-end transition-transform duration-150 ease-out"
             style={{
@@ -322,13 +328,13 @@ export const InteractiveNotchDemo: React.FC = () => {
             <img 
               src="/foreground_hills.png" 
               alt="DopeNotch Meadow Mountain Landscape" 
-              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom translate-y-[4%] sm:translate-y-[6%] md:translate-y-[8%] drop-shadow-2xl" 
+              className="w-full min-w-[1100px] max-w-[2100px] h-auto object-cover object-bottom drop-shadow-2xl" 
             />
           </div>
         </div>
 
         {/* Soft Ethereal Bottom Fade Mist into White Badges Row (Zero Hard Edges) */}
-        <div className="w-full absolute bottom-0 left-0 right-0 h-36 sm:h-52 bg-gradient-to-t from-white via-white/85 to-transparent z-35 pointer-events-none" />
+        <div className="w-full absolute bottom-0 left-0 right-0 h-56 sm:h-80 bg-gradient-to-t from-white via-white/90 35% via-white/60 70% to-transparent z-35 pointer-events-none" />
 
       </div>
 
