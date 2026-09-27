@@ -54,10 +54,10 @@ export const ValueProp: React.FC = () => {
       
       {/* ─── 1:1 TITLE & SUBTITLE ─────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto mb-10">
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-black mb-4">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#111113] mb-4">
           Your clipboard, wherever you need it
         </h2>
-        <p className="text-zinc-500 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-normal">
+        <p className="text-[#6e6e73] text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-normal">
           Use the notch shelf, quick search, inline paste, drag and drop, and the full Library view to find, reuse, and organize anything you copied.
         </p>
       </div>
@@ -79,13 +79,13 @@ export const ValueProp: React.FC = () => {
       </div>
 
       {/* ─── SECTION 1: SUPASTE-INSPIRED BIG SHOWCASE CARD ───────────────── */}
-      <div className="w-full max-w-5xl rounded-[32px] bg-[#f5f5f7] border border-black/5 p-6 sm:p-12 text-center flex flex-col items-center mb-6 overflow-hidden relative shadow-sm">
+      <div className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] bg-[#f5f5f7] border border-black/[0.04] p-6 sm:p-12 text-center flex flex-col items-center mb-6 overflow-hidden relative shadow-sm">
         
         <div className="max-w-3xl mx-auto mb-8">
-          <h3 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-black mb-4">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#111113] mb-4">
             Smarter, Faster, and Connected Across Your Mac
           </h3>
-          <p className="text-zinc-500 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[#6e6e73] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
             Keep your clipboard synced with iCloud, automatically organize clips with Smart Auto-Filter, share files instantly through AirDrop, and rewrite or summarize text using on-device Whisper AI.
           </p>
         </div>
@@ -216,12 +216,12 @@ export const ValueProp: React.FC = () => {
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-16">
         
         {/* CARD 1: Custom Categories */}
-        <div className="rounded-[32px] bg-[#f5f5f7] border border-black/5 p-8 sm:p-10 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+        <div className="rounded-[32px] sm:rounded-[40px] bg-[#f5f5f7] border border-black/[0.04] p-8 sm:p-10 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <h4 className="text-2xl sm:text-3xl font-black tracking-tight text-black mb-3">
+            <h4 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111113] mb-3">
               Custom Categories
             </h4>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-8">
+            <p className="text-[#6e6e73] text-sm leading-relaxed mb-8 font-normal">
               Create your own spaces for projects, voice memos, templates, brand assets, and everyday snippets. Organize email replies, text blocks, logos, icons, colors, files, and anything else you want to find and reuse quickly.
             </p>
           </div>
@@ -254,12 +254,12 @@ export const ValueProp: React.FC = () => {
         </div>
 
         {/* CARD 2: Find by App or Type */}
-        <div className="rounded-[32px] bg-[#f5f5f7] border border-black/5 p-8 sm:p-10 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+        <div className="rounded-[32px] sm:rounded-[40px] bg-[#f5f5f7] border border-black/[0.04] p-8 sm:p-10 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <h4 className="text-2xl sm:text-3xl font-black tracking-tight text-black mb-3">
+            <h4 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#111113] mb-3">
               Find by App or Type
             </h4>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-8">
+            <p className="text-[#6e6e73] text-sm leading-relaxed mb-8 font-normal">
               Filter your history by the app it came from or the kind of content it is. Quickly find clips from Safari, Figma, Slack, Xcode, or Mail, and browse by voice, links, screenshots, images, files, code, colors, and more.
             </p>
           </div>
