@@ -18,7 +18,7 @@ export const ValueProp: React.FC = () => {
   ];
 
   return (
-    <section className="bg-white text-black py-24 px-4 flex flex-col items-center text-center">
+    <section className="bg-white text-black pt-8 sm:pt-12 pb-24 px-4 flex flex-col items-center text-center">
       
       {/* 1:1 Title & Subtitle (Screenshot 2) */}
       <div className="max-w-3xl mx-auto mb-10">

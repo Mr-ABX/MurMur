@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Star, LayoutGrid, Maximize2, Check, Plus, Wifi, Minimize2, Sparkles } from 'lucide-react';
+import { Search, Star, LayoutGrid, Maximize2, Check, Plus, Wifi, Minimize2, Sparkles, Mic, Zap, ShieldCheck, Command } from 'lucide-react';
 import { AppleLogo } from './AppleLogo';
 
 export const InteractiveNotchDemo: React.FC = () => {
@@ -334,29 +334,160 @@ export const InteractiveNotchDemo: React.FC = () => {
 
       </div>
 
-      {/* CIRCULAR AWARDS BADGES ROW */}
-      <div className="w-full bg-white flex justify-center py-6 border-b border-black/5 relative" style={{ zIndex: 40 }}>
-        <div className="flex items-center justify-center gap-6 sm:gap-10 overflow-hidden px-4 opacity-70 grayscale hover:grayscale-0 transition-all">
-          <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
-            <span>Product Hunt</span>
-            <span className="font-extrabold text-black">#1 Product</span>
+      {/* ── REVOLVING CIRCULAR FEATURE BADGES ROW (1:1 Supaste Style, Seamless White Flow) ── */}
+      <div className="w-full bg-white flex justify-center pt-8 pb-4 relative z-40">
+        <div className="flex items-center justify-center gap-5 sm:gap-8 md:gap-10 overflow-x-auto px-4 max-w-6xl no-scrollbar">
+
+          {/* BADGE 1: On-Device Whisper AI */}
+          <div className="relative w-[76px] h-[76px] sm:w-[86px] sm:h-[86px] flex items-center justify-center group flex-none">
+            <div className="absolute inset-0 rounded-full border border-zinc-200/80 group-hover:border-zinc-400 group-hover:scale-105 transition-all duration-300 bg-white" />
+            <svg
+              className="w-full h-full absolute inset-0 select-none pointer-events-none"
+              viewBox="0 0 100 100"
+              style={{ animation: 'spin 20s linear infinite' }}
+            >
+              <defs>
+                <path
+                  id="circle-whisper"
+                  d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                />
+              </defs>
+              <text className="text-[7px] uppercase font-bold tracking-[0.2em] fill-zinc-600 group-hover:fill-black transition-colors">
+                <textPath href="#circle-whisper" startOffset="0%">
+                  • ON-DEVICE WHISPER • LOCAL AI •
+                </textPath>
+              </text>
+            </svg>
+            <div className="relative z-10 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-50 border border-zinc-200/90 shadow-sm text-zinc-800 group-hover:scale-110 group-hover:text-amber-500 transition-all duration-300">
+              <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
-            <span>Awwwards</span>
-            <span className="font-extrabold text-black">Honorable</span>
+
+          {/* BADGE 2: Real-time <80ms Speed */}
+          <div className="relative w-[76px] h-[76px] sm:w-[86px] sm:h-[86px] flex items-center justify-center group flex-none">
+            <div className="absolute inset-0 rounded-full border border-zinc-200/80 group-hover:border-zinc-400 group-hover:scale-105 transition-all duration-300 bg-white" />
+            <svg
+              className="w-full h-full absolute inset-0 select-none pointer-events-none"
+              viewBox="0 0 100 100"
+              style={{ animation: 'spin 18s linear infinite' }}
+            >
+              <defs>
+                <path
+                  id="circle-speed"
+                  d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                />
+              </defs>
+              <text className="text-[7px] uppercase font-bold tracking-[0.2em] fill-zinc-600 group-hover:fill-black transition-colors">
+                <textPath href="#circle-speed" startOffset="0%">
+                  • ULTRA LOW LATENCY • &lt;80MS SPEED •
+                </textPath>
+              </text>
+            </svg>
+            <div className="relative z-10 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-50 border border-zinc-200/90 shadow-sm text-zinc-800 group-hover:scale-110 group-hover:text-amber-500 transition-all duration-300">
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
-            <span>Best UI</span>
-            <span className="font-extrabold text-black">Design</span>
+
+          {/* BADGE 3: Dynamic Notch Shelf */}
+          <div className="relative w-[76px] h-[76px] sm:w-[86px] sm:h-[86px] flex items-center justify-center group flex-none">
+            <div className="absolute inset-0 rounded-full border border-zinc-200/80 group-hover:border-zinc-400 group-hover:scale-105 transition-all duration-300 bg-white" />
+            <svg
+              className="w-full h-full absolute inset-0 select-none pointer-events-none"
+              viewBox="0 0 100 100"
+              style={{ animation: 'spin 22s linear infinite' }}
+            >
+              <defs>
+                <path
+                  id="circle-notch"
+                  d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                />
+              </defs>
+              <text className="text-[6.8px] uppercase font-bold tracking-[0.18em] fill-zinc-600 group-hover:fill-black transition-colors">
+                <textPath href="#circle-notch" startOffset="0%">
+                  • DYNAMIC NOTCH SHELF • MACOS NATIVE •
+                </textPath>
+              </text>
+            </svg>
+            <div className="relative z-10 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-50 border border-zinc-200/90 shadow-sm text-zinc-800 group-hover:scale-110 group-hover:text-amber-500 transition-all duration-300">
+              <AppleLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
-            <span>Best UX</span>
-            <span className="font-extrabold text-black">Design</span>
+
+          {/* BADGE 4: AI Smart Cleanup & Formatting */}
+          <div className="relative w-[76px] h-[76px] sm:w-[86px] sm:h-[86px] flex items-center justify-center group flex-none">
+            <div className="absolute inset-0 rounded-full border border-zinc-200/80 group-hover:border-zinc-400 group-hover:scale-105 transition-all duration-300 bg-white" />
+            <svg
+              className="w-full h-full absolute inset-0 select-none pointer-events-none"
+              viewBox="0 0 100 100"
+              style={{ animation: 'spin 20s linear infinite' }}
+            >
+              <defs>
+                <path
+                  id="circle-ai"
+                  d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                />
+              </defs>
+              <text className="text-[6.8px] uppercase font-bold tracking-[0.18em] fill-zinc-600 group-hover:fill-black transition-colors">
+                <textPath href="#circle-ai" startOffset="0%">
+                  • AI AUTO FORMATTING • SMART CLEANUP •
+                </textPath>
+              </text>
+            </svg>
+            <div className="relative z-10 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-50 border border-zinc-200/90 shadow-sm text-zinc-800 group-hover:scale-110 group-hover:text-amber-500 transition-all duration-300">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
-          <div className="w-16 h-16 rounded-full border border-zinc-300 flex flex-col items-center justify-center text-[8px] font-bold text-zinc-800 text-center p-1 uppercase">
-            <span>Special</span>
-            <span className="font-extrabold text-black">Kudos</span>
+
+          {/* BADGE 5: 100% Offline & Private */}
+          <div className="relative w-[76px] h-[76px] sm:w-[86px] sm:h-[86px] flex items-center justify-center group flex-none">
+            <div className="absolute inset-0 rounded-full border border-zinc-200/80 group-hover:border-zinc-400 group-hover:scale-105 transition-all duration-300 bg-white" />
+            <svg
+              className="w-full h-full absolute inset-0 select-none pointer-events-none"
+              viewBox="0 0 100 100"
+              style={{ animation: 'spin 24s linear infinite' }}
+            >
+              <defs>
+                <path
+                  id="circle-offline"
+                  d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                />
+              </defs>
+              <text className="text-[6.8px] uppercase font-bold tracking-[0.18em] fill-zinc-600 group-hover:fill-black transition-colors">
+                <textPath href="#circle-offline" startOffset="0%">
+                  • 100% OFFLINE FIRST • ZERO CLOUD LEAK •
+                </textPath>
+              </text>
+            </svg>
+            <div className="relative z-10 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-50 border border-zinc-200/90 shadow-sm text-zinc-800 group-hover:scale-110 group-hover:text-amber-500 transition-all duration-300">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
           </div>
+
+          {/* BADGE 6: Global Shortcut ⌥ + Space */}
+          <div className="relative w-[76px] h-[76px] sm:w-[86px] sm:h-[86px] flex items-center justify-center group flex-none">
+            <div className="absolute inset-0 rounded-full border border-zinc-200/80 group-hover:border-zinc-400 group-hover:scale-105 transition-all duration-300 bg-white" />
+            <svg
+              className="w-full h-full absolute inset-0 select-none pointer-events-none"
+              viewBox="0 0 100 100"
+              style={{ animation: 'spin 19s linear infinite' }}
+            >
+              <defs>
+                <path
+                  id="circle-shortcut"
+                  d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
+                />
+              </defs>
+              <text className="text-[7px] uppercase font-bold tracking-[0.2em] fill-zinc-600 group-hover:fill-black transition-colors">
+                <textPath href="#circle-shortcut" startOffset="0%">
+                  • OPTION + SPACE • INSTANT DICTATE •
+                </textPath>
+              </text>
+            </svg>
+            <div className="relative z-10 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-50 border border-zinc-200/90 shadow-sm text-zinc-800 group-hover:scale-110 group-hover:text-amber-500 transition-all duration-300">
+              <Command className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+          </div>
+
         </div>
       </div>
 
