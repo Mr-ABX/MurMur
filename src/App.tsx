@@ -4,6 +4,7 @@ import { ValueProp } from './components/ValueProp';
 import { RevoneShowcase } from './components/RevoneShowcase';
 import { Pricing } from './components/Pricing';
 import { FAQ } from './components/FAQ';
+import { OtherProducts } from './components/OtherProducts';
 import { Footer } from './components/Footer';
 
 export function App() {
@@ -25,8 +26,11 @@ export function App() {
         {/* 1:1 Notched Pricing Card Section */}
         <Pricing />
 
-        {/* FAQ Section */}
+        {/* 1:1 2-Column FAQ Section */}
         <FAQ />
+
+        {/* 1:1 Companion Apps & CoolDock Showcase Section */}
+        <OtherProducts />
       </main>
 
       {/* Inverted Notch Top Curve & Black Footer */}
