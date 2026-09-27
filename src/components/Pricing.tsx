@@ -16,23 +16,29 @@ export const Pricing: React.FC = () => {
   return (
     <section id="pricing" className="relative py-28 sm:py-36 px-4 flex flex-col items-center text-center bg-white overflow-hidden select-none">
       
-      {/* ─── SIGNATURE AMBER BRAND ATMOSPHERIC BACKGROUND (1:1 SUPASTE DEPTH) ─── */}
+      {/* ─── 1:1 SUPASTE ATMOSPHERIC BRAND GRADIENT (SIGNATURE AMBER SUNSET) ─── */}
       <div 
-        className="absolute inset-0 pointer-events-none"
+        className="absolute pointer-events-none overflow-visible"
         style={{
-          background: 'radial-gradient(ellipse 90% 70% at 50% 50%, #fbbf24 0%, #fcd34d 32%, #fef3c7 65%, #ffffff 100%)',
-          opacity: 0.85,
+          bottom: '180px',
+          left: '-10vw',
+          right: '-10vw',
+          height: '740px',
+          filter: 'blur(60px)',
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(254, 215, 170, 0.75) 32%, #f97316 66%, #ea580c 84%, #9a3412 100%)',
+          opacity: 0.92,
+          zIndex: 1,
         }}
         aria-hidden="true"
       />
       
-      {/* Soft Ethereal Top & Bottom Seamless Transitions (Zero Cutoffs) */}
+      {/* Soft Seamless Bottom White Transition (1:1 Supaste framer-qkmt98) */}
       <div 
-        className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none" 
-        aria-hidden="true" 
-      />
-      <div 
-        className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" 
+        className="absolute inset-x-0 bottom-0 h-56 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.85) 55%, #ffffff 100%)',
+          zIndex: 2,
+        }}
         aria-hidden="true" 
       />
 
@@ -51,8 +57,8 @@ export const Pricing: React.FC = () => {
         </p>
       </div>
 
-      {/* ─── SIGNATURE NOTCHED WHITE PRICING CARD (1:1 SUPASTE DESIGN) ───── */}
-      <div className="w-full max-w-[440px] bg-white rounded-[36px] shadow-[0_25px_70px_rgba(0,0,0,0.12)] p-8 sm:p-10 text-black relative flex flex-col items-center border border-black/[0.04] z-10">
+      {/* ─── SIGNATURE NOTCHED PRICING CARD (1:1 SUPASTE #f7f7f7 FINISH) ──── */}
+      <div className="w-full max-w-[440px] bg-[#f7f7f7] rounded-[40px] shadow-[0_25px_70px_rgba(0,0,0,0.12)] p-8 sm:p-10 text-black relative flex flex-col items-center border border-black/[0.04] z-10">
         
         {/* Card's Top Hardware Notch with Seamless Concave Ears */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-start z-20 pointer-events-none">
@@ -77,15 +83,15 @@ export const Pricing: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── Device Selector Segmented Control ──────────────────────────── */}
-        <div className="w-full grid grid-cols-3 gap-1.5 p-1 rounded-full bg-[#f4f4f6] border border-black/5 mt-6 mb-7">
+        {/* ─── Device Selector Segmented Control (1:1 Supaste rounded-[14px]) ─── */}
+        <div className="w-full grid grid-cols-3 gap-1.5 p-1 rounded-[14px] bg-white border border-black/[0.04] mt-6 mb-7 shadow-xs">
           {[1, 2, 3].map((num) => (
             <button
               key={num}
               onClick={() => setDevices(num as 1 | 2 | 3)}
-              className={`py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+              className={`py-2 rounded-[11px] text-xs font-semibold transition-all duration-200 ${
                 devices === num
-                  ? 'bg-black text-white shadow-sm scale-[1.02]'
+                  ? 'bg-black text-white shadow-xs scale-[1.01]'
                   : 'text-zinc-600 hover:text-black'
               }`}
             >
@@ -100,13 +106,13 @@ export const Pricing: React.FC = () => {
           <span className="text-3xl font-normal text-zinc-300 line-through tracking-normal">{current.oldPrice}</span>
         </div>
 
-        {/* ─── Limited Offer Progress Box ─────────────────────────────────── */}
-        <div className="w-full p-3.5 rounded-2xl bg-[#f8f9fa] border border-zinc-200/70 mb-7 text-left flex flex-col gap-2 shadow-inner">
+        {/* ─── Limited Offer Progress Box (1:1 Supaste White Card) ─────────── */}
+        <div className="w-full p-3.5 sm:p-4 rounded-[16px] bg-white border border-black/[0.04] mb-7 text-left flex flex-col gap-2 shadow-xs">
           <div className="flex items-center justify-between text-xs font-semibold text-zinc-800">
             <span>Limited offer for early users 🥳</span>
             <span className="text-[11px] text-zinc-500 font-medium font-sans">5 spots left</span>
           </div>
-          <div className="w-full h-2 rounded-full bg-zinc-200/80 overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-[#e3e3e3] overflow-hidden">
             <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full w-[75%] transition-all duration-500 shadow-xs" />
           </div>
         </div>
@@ -133,7 +139,7 @@ export const Pricing: React.FC = () => {
         {/* ─── CTA Download for macOS Button ──────────────────────────────── */}
         <a 
           href="#"
-          className="w-full py-4 rounded-full text-sm font-bold bg-black text-white hover:bg-zinc-800 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-xl flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-[18px] sm:rounded-[20px] text-sm font-semibold bg-black text-white hover:bg-zinc-800 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-lg flex items-center justify-center gap-2.5"
         >
           <AppleLogo className="w-4 h-4 text-white" />
           <span>Download for macOS</span>
@@ -142,7 +148,7 @@ export const Pricing: React.FC = () => {
       </div>
 
       {/* ─── SUB-FOOTER REASSURANCE TEXT (1:1 SUPASTE) ─────────────────────── */}
-      <p className="text-[11px] text-zinc-500 text-center max-w-md mx-auto mt-7 relative z-10 leading-relaxed font-normal">
+      <p className="text-[12px] sm:text-[13px] text-zinc-500 text-center max-w-md mx-auto mt-8 relative z-10 leading-relaxed font-normal">
         Secure checkout by Polar.sh, powered by Stripe. Prices are in USD, excluding VAT and may vary by location.
       </p>
 
