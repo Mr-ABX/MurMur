@@ -1,6 +1,7 @@
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ValueProp } from './components/ValueProp';
+import { RevoneShowcase } from './components/RevoneShowcase';
 import { Pricing } from './components/Pricing';
 import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
@@ -15,8 +16,11 @@ export function App() {
         {/* Unified Continuous Hero & Frosted Glass Mac Showcase */}
         <Hero />
 
-        {/* 1:1 Apple Light Mode "Wherever you need it" Section */}
+        {/* 1:1 Supaste-Inspired Showcase & 2-Column Categories/Filters Section */}
         <ValueProp />
+
+        {/* 1:1 Revone-Inspired Dark Mode 2-Column Workflow Showcase Section */}
+        <RevoneShowcase />
 
         {/* FAQ Section */}
         <FAQ />
