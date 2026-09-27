@@ -22,11 +22,11 @@ export function App() {
         {/* 1:1 Revone-Inspired Dark Mode 2-Column Workflow Showcase Section */}
         <RevoneShowcase />
 
-        {/* FAQ Section */}
-        <FAQ />
-
         {/* 1:1 Notched Pricing Card Section */}
         <Pricing />
+
+        {/* FAQ Section */}
+        <FAQ />
       </main>
 
       {/* Inverted Notch Top Curve & Black Footer */}
