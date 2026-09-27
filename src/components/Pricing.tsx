@@ -16,17 +16,17 @@ export const Pricing: React.FC = () => {
   return (
     <section id="pricing" className="relative py-28 sm:py-36 px-4 flex flex-col items-center text-center bg-white overflow-hidden select-none">
       
-      {/* ─── 1:1 SUPASTE ATMOSPHERIC BRAND GRADIENT (SIGNATURE AMBER SUNSET) ─── */}
+      {/* ─── 1:1 SUPASTE ATMOSPHERIC BRAND GRADIENT (DEEP #F69E0B & LOGO SHADES) ─── */}
       <div 
         className="absolute pointer-events-none overflow-visible"
         style={{
-          bottom: '180px',
+          bottom: '160px',
           left: '-10vw',
           right: '-10vw',
-          height: '740px',
+          height: '760px',
           filter: 'blur(60px)',
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(254, 215, 170, 0.75) 32%, #f97316 66%, #ea580c 84%, #9a3412 100%)',
-          opacity: 0.92,
+          background: 'linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(254, 243, 199, 0.7) 22%, #FCD34D 40%, #F69E0B 62%, #D97706 82%, #9A3412 100%)',
+          opacity: 0.95,
           zIndex: 1,
         }}
         aria-hidden="true"
@@ -113,7 +113,7 @@ export const Pricing: React.FC = () => {
             <span className="text-[11px] text-zinc-500 font-medium font-sans">5 spots left</span>
           </div>
           <div className="w-full h-2 rounded-full bg-[#e3e3e3] overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full w-[75%] transition-all duration-500 shadow-xs" />
+            <div className="h-full bg-gradient-to-r from-[#F69E0B] to-[#D97706] rounded-full w-[75%] transition-all duration-500 shadow-xs" />
           </div>
         </div>
 
