@@ -16,42 +16,43 @@ export const Pricing: React.FC = () => {
   return (
     <section id="pricing" className="relative py-28 sm:py-36 px-4 flex flex-col items-center text-center bg-white overflow-hidden select-none">
       
-      {/* ─── VIBRANT SKY BLUE ATMOSPHERIC BACKGROUND (1:1 SUPASTE STYLE) ─── */}
+      {/* ─── SIGNATURE AMBER BRAND ATMOSPHERIC BACKGROUND (1:1 SUPASTE DEPTH) ─── */}
       <div 
-        className="absolute inset-x-0 top-24 bottom-12 pointer-events-none opacity-90"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 90% 70% at 50% 50%, #60a5fa 0%, #93c5fd 35%, #dbeafe 65%, #ffffff 100%)',
+          background: 'radial-gradient(ellipse 90% 70% at 50% 50%, #fbbf24 0%, #fcd34d 32%, #fef3c7 65%, #ffffff 100%)',
+          opacity: 0.85,
         }}
         aria-hidden="true"
       />
       
-      {/* Soft Top & Bottom Fades for Seamless Transition */}
+      {/* Soft Ethereal Top & Bottom Seamless Transitions (Zero Cutoffs) */}
       <div 
-        className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none" 
+        className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none" 
         aria-hidden="true" 
       />
       <div 
-        className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" 
+        className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" 
         aria-hidden="true" 
       />
 
       {/* ─── 1:1 HEADLINE & SUBTITLE ──────────────────────────────────────── */}
       <div className="max-w-2xl mx-auto mb-14 relative z-10">
-        <h2 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight text-black mb-5 leading-[1.05]">
+        <h2 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#111113] mb-5 leading-[1.05]">
           One price.<br />
           Lifetime access.
         </h2>
-        <p className="text-zinc-700 text-sm sm:text-base font-medium mb-3 leading-relaxed">
+        <p className="text-[#3a3a3c] text-sm sm:text-base font-medium mb-3 leading-relaxed">
           One-time payment. No subscription.<br />
           Get lifetime access to DopeNotch on your Mac.
         </p>
-        <p className="text-zinc-500 text-xs max-w-lg mx-auto leading-relaxed">
+        <p className="text-[#6e6e73] text-xs max-w-lg mx-auto leading-relaxed font-normal">
           Try it risk-free. If DopeNotch doesn't fit your workflow, email us within 14 days and we'll refund your purchase.
         </p>
       </div>
 
       {/* ─── SIGNATURE NOTCHED WHITE PRICING CARD (1:1 SUPASTE DESIGN) ───── */}
-      <div className="w-full max-w-[440px] bg-white rounded-[36px] shadow-[0_25px_70px_rgba(0,0,0,0.14)] p-8 sm:p-10 text-black relative flex flex-col items-center border border-black/5 z-10">
+      <div className="w-full max-w-[440px] bg-white rounded-[36px] shadow-[0_25px_70px_rgba(0,0,0,0.12)] p-8 sm:p-10 text-black relative flex flex-col items-center border border-black/[0.04] z-10">
         
         {/* Card's Top Hardware Notch with Seamless Concave Ears */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-start z-20 pointer-events-none">
@@ -95,7 +96,7 @@ export const Pricing: React.FC = () => {
 
         {/* ─── Big Price Display ($15 $29) ────────────────────────────────── */}
         <div className="flex items-baseline justify-center gap-3 mb-5">
-          <span className="text-6xl sm:text-7xl font-black text-black tracking-tight">{current.price}</span>
+          <span className="text-6xl sm:text-7xl font-bold text-[#111113] tracking-tight">{current.price}</span>
           <span className="text-3xl font-normal text-zinc-300 line-through tracking-normal">{current.oldPrice}</span>
         </div>
 
@@ -106,7 +107,7 @@ export const Pricing: React.FC = () => {
             <span className="text-[11px] text-zinc-500 font-medium font-sans">5 spots left</span>
           </div>
           <div className="w-full h-2 rounded-full bg-zinc-200/80 overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full w-[75%] transition-all duration-500" />
+            <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full w-[75%] transition-all duration-500 shadow-xs" />
           </div>
         </div>
 
