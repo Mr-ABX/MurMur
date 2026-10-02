@@ -9,6 +9,7 @@ import {
   Sparkles,
   Command,
   Check,
+  Search,
 } from 'lucide-react';
 import { useAppStore, OverlayStyle } from '../../stores/appStore';
 import { invoke } from '@tauri-apps/api/core';
@@ -341,6 +342,30 @@ export const PreferencesView: React.FC = () => {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+
+            {/* SuperNotch HUD Shortcut Box */}
+            <div className="p-5 rounded-2xl bg-[#121215] border border-[#1e1e24] space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-[#ededed] flex items-center gap-1.5">
+                    <Search className="w-3.5 h-3.5 text-amber-400" /> SuperNotch HUD Shortcut (Search & Shelf)
+                  </p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Opens the top SuperNotch HUD anywhere on macOS to search clips, run Raycast tools, or browse clipboard cards.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <kbd className="px-3 py-1.5 rounded-xl bg-[#09090b] text-amber-400 border border-[#2a2a32] font-mono text-xs font-semibold shadow-inner">
+                    ⌥V (Option + V)
+                  </kbd>
+                  <span className="text-[10px] text-zinc-500 font-mono">or</span>
+                  <kbd className="px-3 py-1.5 rounded-xl bg-[#09090b] text-zinc-300 border border-[#2a2a32] font-mono text-xs shadow-inner">
+                    ⇧⌘V
+                  </kbd>
                 </div>
               </div>
             </div>

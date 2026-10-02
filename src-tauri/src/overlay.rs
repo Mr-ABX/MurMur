@@ -58,6 +58,13 @@ pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
                 frame_rect
             }
 
+            unsafe extern "C" fn can_become_key(
+                _this: *mut AnyObject,
+                _cmd: Sel,
+            ) -> bool {
+                true
+            }
+
             let window_clone = window.clone();
             let _ = app.run_on_main_thread(move || {
                 if let Ok(ns_win) = window_clone.ns_window() {
@@ -79,8 +86,8 @@ pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
                         // CanJoinAllSpaces(1) | Stationary(16) | IgnoresCycle(64) | FullScreenAuxiliary(256) = 337
                         let _: () = msg_send![ns_win, setCollectionBehavior: 337u64];
 
-                        // 128 = NSWindowStyleMaskNonactivatingPanel (acts like a HUD/Panel)
-                        let _: () = msg_send![ns_win, setStyleMask: 128u64];
+                        // 0 = NSWindowStyleMaskBorderless (allows panel to become key window without nonactivating lock)
+                        let _: () = msg_send![ns_win, setStyleMask: 0u64];
                         
                         // Bring it to the absolute front
                         let _: () = msg_send![ns_win, orderFrontRegardless];
@@ -98,6 +105,26 @@ pub fn show_visualizer(app: &AppHandle, _settings: &AppSettings) {
                             sel_ptr.unwrap(),
                             imp,
                             types.as_ptr() as *const _,
+                        );
+
+                        // Allow NSPanel to become key window and main window so search input receives keyboard focus
+                        let sel_can_key = objc2::ffi::sel_registerName(b"canBecomeKeyWindow\0".as_ptr() as *const _);
+                        let imp_key: unsafe extern "C-unwind" fn() = std::mem::transmute(
+                            can_become_key as unsafe extern "C" fn(*mut AnyObject, Sel) -> bool
+                        );
+                        class_replaceMethod(
+                            class as *mut _,
+                            sel_can_key.unwrap(),
+                            imp_key,
+                            b"B@:\0".as_ptr() as *const _,
+                        );
+
+                        let sel_can_main = objc2::ffi::sel_registerName(b"canBecomeMainWindow\0".as_ptr() as *const _);
+                        class_replaceMethod(
+                            class as *mut _,
+                            sel_can_main.unwrap(),
+                            imp_key,
+                            b"B@:\0".as_ptr() as *const _,
                         );
 
                         // Get full screen frame (NOT visibleFrame — visibleFrame excludes menu bar)
@@ -334,9 +361,24 @@ pub fn resize_notch(app: &AppHandle, expanded: bool) {
                             };
                             let _: () = msg_send![ns_win, setFrame: target_frame, display: true, animate: false];
                         }
+
+                        if expanded {
+                            let _: () = msg_send![ns_win, makeKeyAndOrderFront: std::ptr::null_mut::<AnyObject>()];
+                            let app_cls = objc2::ffi::objc_getClass(b"NSApplication\0".as_ptr() as *const _);
+                            if !app_cls.is_null() {
+                                let ns_app: *mut AnyObject = msg_send![app_cls as *mut AnyObject, sharedApplication];
+                                if !ns_app.is_null() {
+                                    let _: () = msg_send![ns_app, activateIgnoringOtherApps: true];
+                                }
+                            }
+                        }
                     }
                 }
             });
+
+            if expanded {
+                let _ = window.set_focus();
+            }
         }
 
         #[cfg(not(target_os = "macos"))]

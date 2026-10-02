@@ -157,6 +157,7 @@ pub fn run() {
             commands::set_notch_expanded,
             commands::preview_notch,
             commands::paste_text_direct,
+            commands::toggle_hud,
         ])
         .build(tauri::generate_context!())
         .expect("error while building dopenotch")
@@ -253,6 +254,31 @@ pub fn setup_global_shortcut(app: &AppHandle, primary_hotkey: &str) {
         match result {
             Ok(_) => log::info!("Successfully registered global shortcut: '{}'", sc),
             Err(e) => log::debug!("Could not register shortcut '{}': {}", sc, e),
+        }
+    }
+
+    // Register shortcuts to toggle the SuperNotch HUD (Search & Shelf)
+    let hud_aliases = [
+        "Option+V",
+        "Alt+V",
+        "CommandOrControl+Shift+V",
+    ];
+
+    for hud_sc in hud_aliases {
+        let app_h = app_clone.clone();
+        let sc_name = hud_sc.to_string();
+        let result = app.global_shortcut().on_shortcut(hud_sc, move |_app, _shortcut, event| {
+            if event.state() == ShortcutState::Pressed {
+                log::info!("[global_shortcut] Toggle HUD shortcut triggered: '{}'", sc_name);
+                let app_inner = app_h.clone();
+                tauri::async_runtime::spawn(async move {
+                    commands::toggle_hud(app_inner);
+                });
+            }
+        });
+        match result {
+            Ok(_) => log::info!("Successfully registered HUD global shortcut: '{}'", hud_sc),
+            Err(e) => log::debug!("Could not register HUD shortcut '{}': {}", hud_sc, e),
         }
     }
 }

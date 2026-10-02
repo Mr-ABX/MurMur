@@ -686,3 +686,11 @@ pub fn preview_notch(app: tauri::AppHandle, state: State<'_, MurmurState>) {
         }
     });
 }
+
+#[tauri::command]
+pub fn toggle_hud(app: tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("notch") {
+        let _ = window.show();
+    }
+    let _ = app.emit("murmur://toggle-hud", ());
+}

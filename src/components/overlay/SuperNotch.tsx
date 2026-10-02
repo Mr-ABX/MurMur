@@ -17,6 +17,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import {
   useAppStore,
@@ -278,19 +279,44 @@ export const SuperNotch: React.FC = () => {
         .catch(() => {});
       invoke('set_notch_expanded', { expanded: true }).catch(() => {});
       getCurrentWindow().setFocus().catch(() => {});
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 80);
+      const focusSearch = () => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      };
+      setTimeout(focusSearch, 40);
+      setTimeout(focusSearch, 120);
+      setTimeout(focusSearch, 260);
     } else {
       invoke('set_notch_expanded', { expanded: false }).catch(() => {});
     }
   }, [activeMode, setClipboardItems]);
 
-  // Auto-close notch on blur (window losing focus)
+  // Listen for global shortcut toggle HUD event (Option+V / Cmd+Shift+V)
+  useEffect(() => {
+    let unlistenFn: (() => void) | null = null;
+    listen('murmur://toggle-hud', () => {
+      setSuperNotchMode(superNotchMode === 'shelf' ? 'idle' : 'shelf');
+      if (superNotchMode !== 'shelf') {
+        setSuperNotchHudView('search');
+      }
+    }).then((fn) => {
+      unlistenFn = fn;
+    });
+
+    return () => {
+      if (unlistenFn) unlistenFn();
+    };
+  }, [superNotchMode, setSuperNotchMode, setSuperNotchHudView]);
+
+  // Auto-close notch on blur (window losing focus) with safety grace period
   useEffect(() => {
     if (activeMode !== 'shelf') return;
 
+    const mountedAt = Date.now();
     const handleBlur = () => {
+      // Allow 400ms grace period so initial window focus doesn't falsely trigger blur
+      if (Date.now() - mountedAt < 400) return;
       setSuperNotchMode('idle');
     };
 
@@ -565,7 +591,11 @@ export const SuperNotch: React.FC = () => {
                         placeholder="Search clips or type '/' for tools..."
                         value={clipboardSearchQuery}
                         onChange={(e) => setClipboardSearchQuery(e.target.value)}
-                        className="w-full bg-transparent border-none text-xs text-white placeholder:text-zinc-500 focus:outline-none"
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                        }}
+                        autoFocus
+                        className="w-full bg-transparent border-none text-xs text-white placeholder:text-zinc-500 focus:outline-none pointer-events-auto select-text cursor-text"
                       />
                       {clipboardSearchQuery && (
                         <button
