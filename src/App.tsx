@@ -2,6 +2,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ValueProp } from './components/ValueProp';
 import { RevoneShowcase } from './components/RevoneShowcase';
+import { AudienceShowcase } from './components/AudienceShowcase';
 import { Pricing } from './components/Pricing';
 import { FAQ } from './components/FAQ';
 import { OtherProducts } from './components/OtherProducts';
@@ -22,6 +23,9 @@ export function App() {
 
         {/* 1:1 Revone-Inspired Dark Mode 2-Column Workflow Showcase Section */}
         <RevoneShowcase />
+
+        {/* 1:1 Supaste-Inspired "Built for everything you copy" Audience Showcase */}
+        <AudienceShowcase />
 
         {/* 1:1 Notched Pricing Card Section */}
         <Pricing />
