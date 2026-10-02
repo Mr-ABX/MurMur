@@ -21,6 +21,7 @@ export type SidebarTab =
 export type OverlayStyle = 'notch' | 'minimal' | 'hidden';
 export type RecordingMode = 'dictate' | 'prompt' | 'rewrite' | 'command';
 export type SuperNotchMode = 'idle' | 'recording' | 'shelf';
+export type SuperNotchHudView = 'search' | 'shelf';
 export type ClipboardCategory = 'all' | 'dictation' | 'clipboard' | 'pinned' | 'code' | 'link' | 'color';
 
 export interface ClipboardItem {
@@ -164,6 +165,7 @@ interface AppState {
   streamingText: string;
   recordingMode: RecordingMode;
   superNotchMode: SuperNotchMode;
+  superNotchHudView: SuperNotchHudView;
   liveWPM: number;
   liveLatencyMs: number;
   setIsRecording: (recording: boolean) => void;
@@ -171,6 +173,7 @@ interface AppState {
   setStreamingText: (text: string) => void;
   setRecordingMode: (mode: RecordingMode) => void;
   setSuperNotchMode: (mode: SuperNotchMode) => void;
+  setSuperNotchHudView: (view: SuperNotchHudView) => void;
   setLiveMetrics: (wpm: number, latencyMs: number) => void;
 
   // SuPaste Clipboard Manager
@@ -478,6 +481,7 @@ export const useAppStore = create<AppState>((set) => ({
   streamingText: '',
   recordingMode: 'dictate',
   superNotchMode: 'idle',
+  superNotchHudView: 'search',
   liveWPM: 150,
   liveLatencyMs: 65,
   setIsRecording: (isRecording) => set({ isRecording }),
@@ -485,6 +489,7 @@ export const useAppStore = create<AppState>((set) => ({
   setStreamingText: (streamingText) => set({ streamingText }),
   setRecordingMode: (recordingMode) => set({ recordingMode }),
   setSuperNotchMode: (superNotchMode) => set({ superNotchMode }),
+  setSuperNotchHudView: (superNotchHudView) => set({ superNotchHudView }),
   setLiveMetrics: (liveWPM, liveLatencyMs) => set({ liveWPM, liveLatencyMs }),
 
   // SuPaste Clipboard Manager
