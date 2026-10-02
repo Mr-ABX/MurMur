@@ -133,24 +133,26 @@ export const Pricing: React.FC = () => {
         {/* ─── TIER 2: SIGNATURE NOTCHED PRO LIFETIME CARD ─────────────────── */}
         <div className="bg-[#f7f7f7] rounded-[40px] shadow-[0_25px_70px_rgba(0,0,0,0.14)] p-8 sm:p-10 text-black flex flex-col justify-between border-2 border-amber-500/20 relative">
           
-          {/* Card's Top Hardware Notch with Seamless Concave Ears */}
+          {/* Card's Top Hardware Notch with Seamless Concave Ears (1:1 Supaste Dimensions) */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-start z-20 pointer-events-none">
             {/* Left concave ear */}
-            <div className="w-4 h-4 flex-none relative overflow-visible -mr-[0.5px]">
-              <svg viewBox="0 0 20 20" className="w-4 h-4 fill-black flex-none" style={{ transform: 'scaleX(-1)' }} aria-hidden="true">
+            <div className="w-5 h-5 flex-none relative overflow-visible -mr-[0.5px]">
+              <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black flex-none" style={{ transform: 'scaleX(-1)' }} aria-hidden="true">
                 <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
               </svg>
             </div>
             {/* Black Notch Center Pill */}
-            <div className="bg-black text-white h-8 px-4 rounded-b-[16px] flex items-center justify-center gap-2 shadow-md flex-none">
-              <div className="w-3.5 h-3.5 rounded-md bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-[9px] font-black text-black">
+            <div className="bg-black text-white h-10 sm:h-11 px-5 sm:px-6 rounded-b-[18px] sm:rounded-b-[20px] flex items-center justify-center gap-2.5 shadow-md flex-none">
+              <div className="w-5 h-5 rounded-[6px] bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-black text-black shadow-xs">
                 ⚡
               </div>
-              <span className="text-[11px] font-bold tracking-tight">DopeNotch Pro for macOS</span>
+              <span className="text-[13px] sm:text-[14px] font-semibold tracking-tight text-white">
+                DopeNotch Pro for macOS
+              </span>
             </div>
             {/* Right concave ear */}
-            <div className="w-4 h-4 flex-none relative overflow-visible -ml-[0.5px]">
-              <svg viewBox="0 0 20 20" className="w-4 h-4 fill-black flex-none" aria-hidden="true">
+            <div className="w-5 h-5 flex-none relative overflow-visible -ml-[0.5px]">
+              <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black flex-none" aria-hidden="true">
                 <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
               </svg>
             </div>
@@ -158,7 +160,7 @@ export const Pricing: React.FC = () => {
 
           <div>
             {/* Device Selector Segmented Control (1:1 Supaste rounded-[14px]) */}
-            <div className="w-full grid grid-cols-3 gap-1.5 p-1 rounded-[14px] bg-white border border-black/[0.04] mt-6 mb-7 shadow-xs">
+            <div className="w-full grid grid-cols-3 gap-1.5 p-1 rounded-[14px] bg-white border border-black/[0.04] mt-9 sm:mt-10 mb-7 shadow-xs">
               {[1, 2, 3].map((num) => (
                 <button
                   key={num}

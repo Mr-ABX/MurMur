@@ -151,10 +151,10 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* GIGANTIC SUBTLE WATERMARK LOGO AT BOTTOM (1:1 Screenshot 1) */}
-      <div className="w-full flex justify-center overflow-hidden select-none pointer-events-none opacity-20 -mb-10 sm:-mb-16">
-        <span className="text-[14vw] font-black text-zinc-800 tracking-tighter leading-none">
-          Dopenotch
+      {/* GIGANTIC SUBTLE WATERMARK LOGO AT BOTTOM (1:1 Supaste Style) */}
+      <div className="w-full flex justify-center overflow-hidden select-none pointer-events-none -mb-10 sm:-mb-16">
+        <span className="text-[14vw] font-black text-[#1f1f23] tracking-tighter leading-none select-none">
+          DopeNotch
         </span>
       </div>
 
