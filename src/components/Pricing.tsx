@@ -133,28 +133,32 @@ export const Pricing: React.FC = () => {
         {/* ─── TIER 2: SIGNATURE NOTCHED PRO LIFETIME CARD ─────────────────── */}
         <div className="bg-[#f7f7f7] rounded-[40px] shadow-[0_25px_70px_rgba(0,0,0,0.14)] p-8 sm:p-10 text-black flex flex-col justify-between border-2 border-amber-500/20 relative">
           
-          {/* Card's Top Hardware Notch with Seamless Concave Ears (1:1 Supaste Dimensions) */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-start z-20 pointer-events-none">
-            {/* Left concave ear */}
-            <div className="w-5 h-5 flex-none relative overflow-visible -mr-[0.5px]">
-              <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black flex-none" style={{ transform: 'scaleX(-1)' }} aria-hidden="true">
-                <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
-              </svg>
-            </div>
-            {/* Black Notch Center Pill */}
-            <div className="bg-black text-white h-10 sm:h-11 px-5 sm:px-6 rounded-b-[18px] sm:rounded-b-[20px] flex items-center justify-center gap-2.5 shadow-md flex-none">
-              <div className="w-5 h-5 rounded-[6px] bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-black text-black shadow-xs">
+          {/* Card's Top Hardware Notch with Seamless Concave Ears (100% Mathematically Centered) */}
+          <div className="absolute top-0 inset-x-0 flex justify-center z-20 pointer-events-none">
+            <div className="relative bg-black text-white h-10 sm:h-11 px-5 sm:px-6 rounded-b-[18px] sm:rounded-b-[20px] flex items-center justify-center gap-2.5 shadow-md flex-none">
+              
+              {/* Left concave ear */}
+              <div className="absolute top-0 -left-[19.5px] w-5 h-5 overflow-visible pointer-events-none">
+                <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black" style={{ transform: 'scaleX(-1)' }} aria-hidden="true">
+                  <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
+                </svg>
+              </div>
+
+              {/* Icon & Label */}
+              <div className="w-5 h-5 rounded-[6px] bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-black text-black shadow-xs flex-none">
                 ⚡
               </div>
-              <span className="text-[13px] sm:text-[14px] font-semibold tracking-tight text-white">
+              <span className="text-[13px] sm:text-[14px] font-semibold tracking-tight text-white whitespace-nowrap">
                 DopeNotch Pro for macOS
               </span>
-            </div>
-            {/* Right concave ear */}
-            <div className="w-5 h-5 flex-none relative overflow-visible -ml-[0.5px]">
-              <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black flex-none" aria-hidden="true">
-                <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
-              </svg>
+
+              {/* Right concave ear */}
+              <div className="absolute top-0 -right-[19.5px] w-5 h-5 overflow-visible pointer-events-none">
+                <svg viewBox="0 0 20 20" className="w-5 h-5 fill-black" aria-hidden="true">
+                  <path d="M 0 0 L 20 0 C 8.954 0 0 8.954 0 20 Z" />
+                </svg>
+              </div>
+
             </div>
           </div>
 
